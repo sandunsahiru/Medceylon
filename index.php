@@ -21,7 +21,11 @@ switch ($page) {
         $controller = new DashboardController();
         $controller->index();
         break;
-    // Add more cases for other pages like appointments, doctors, etc.
+    case 'appointments':
+        $controller = new AppointmentController();
+        $controller->index();
+        break;
+    // Add more cases for other pages like doctors, patients, etc.
     default:
         // Handle 404
         echo 'Page not found';
