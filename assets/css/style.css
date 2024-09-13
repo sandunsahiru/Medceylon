@@ -1,0 +1,228 @@
+/* General Styles */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+}
+
+h1, h2, h3 {
+    margin: 0;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Topbar Styles */
+.topbar {
+    display: flex;
+    justify-content: flex-end; /* Align items to the right */
+    align-items: center;
+    background-color: #00857c;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    width: calc(100% - 220px); /* Adjust width to account for sidebar */
+    left: 220px; /* Align with the sidebar */
+    z-index: 101;
+    border-bottom: 1px solid #e0e0e0;
+    box-sizing: border-box;
+}
+
+.topbar .topbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.topbar .notification-icon {
+    font-size: 24px;
+    margin-right: 20px;
+    cursor: pointer;
+    color: white;
+}
+
+.topbar .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 220px; /* Adjusted width to accommodate the logo */
+    background-color: #006b64;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+    padding-top: 20px;
+}
+
+.sidebar .logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sidebar .logo img {
+    width: 150px; /* Adjust the logo size */
+}
+
+.sidebar .sidebar-menu {
+    padding-top: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar .menu-item {
+    margin-bottom: 10px;
+}
+
+.sidebar .menu-item a {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: #dfe6e9;
+}
+
+.sidebar .menu-item.active,
+.sidebar .menu-item a:hover {
+    background-color: #019875;
+}
+
+.sidebar .menu-item .icon {
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+/* Main Content Styles */
+.main-container {
+    display: flex;
+    margin-top: 60px;
+    margin-left: 220px; /* Adjusted for sidebar width */
+}
+
+.content {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+/* Widget Styles with Icons */
+.widgets {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.widget {
+    display: flex;
+    align-items: center; /* Align icon and text vertically */
+    background-color: #ffffff;
+    padding: 20px;
+    flex: 1;
+    margin-right: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.widget:last-child {
+    margin-right: 0;
+}
+
+.widget-icon {
+    margin-right: 15px; /* Space between icon and text */
+}
+
+.widget-img {
+    width: 40px; /* Adjust the size of the icon */
+    height: 40px;
+}
+
+.widget-info h3 {
+    font-size: 18px;
+    margin-bottom: 5px; /* Reduce space */
+}
+
+.widget-info p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #00857c;
+}
+
+
+.appointments-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.appointments-section h2 {
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table thead {
+    background-color: #f1f1f1;
+}
+
+table th, table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.patient-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.view-btn {
+    background-color: #00b894;
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.view-btn:hover {
+    background-color: #019875;
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 180px;
+    }
+
+    .topbar {
+        width: calc(100% - 180px);
+        left: 180px;
+    }
+
+    .main-container {
+        margin-left: 180px;
+    }
+
+    .widgets {
+        flex-direction: column;
+    }
+
+    .widget {
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+}
