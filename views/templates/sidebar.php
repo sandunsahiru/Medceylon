@@ -24,7 +24,7 @@
                     <span class="menu-text">Doctors</span>
                 </a>
             </li>
-            <li class="menu-item">
+            <li class="menu-item <?php echo ($page == 'patients') ? 'active' : ''; ?>">
                 <a href="?page=patients">
                     <span class="icon">👥</span>
                     <span class="menu-text">Patients</span>
