@@ -18,7 +18,7 @@
                     <span class="menu-text">Appointments</span>
                 </a>
             </li>
-            <li class="menu-item">
+            <li class="menu-item <?php echo ($page == 'doctors') ? 'active' : ''; ?>">
                 <a href="?page=doctors">
                     <span class="icon">👨‍⚕️</span>
                     <span class="menu-text">Doctors</span>
