@@ -29,7 +29,11 @@ switch ($page) {
         $controller = new DoctorController();
         $controller->index();
         break;
-    // Add more cases for other pages like patients, help, etc.
+    case 'patients':
+        $controller = new PatientController();
+        $controller->index();
+        break;
+    // Add more cases for other pages like help, etc.
     default:
         // Handle 404
         echo 'Page not found';

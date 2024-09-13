@@ -155,17 +155,22 @@ a {
     color: #00857c;
 }
 
-
-.appointments-section {
+/* Sections Styles */
+.appointments-section,
+.doctors-section,
+.patients-section {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 5px;
 }
 
-.appointments-section h2 {
+.appointments-section h2,
+.doctors-section h2,
+.patients-section h2 {
     margin-bottom: 20px;
 }
 
+/* Table Styles */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -181,7 +186,9 @@ table th, table td {
     border-bottom: 1px solid #e0e0e0;
 }
 
-.patient-avatar {
+/* Avatars */
+.patient-avatar,
+.doctor-avatar {
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -189,6 +196,7 @@ table th, table td {
     vertical-align: middle;
 }
 
+/* View Button */
 .view-btn {
     background-color: #00b894;
     color: #ffffff;
@@ -232,65 +240,36 @@ table th, table td {
     background-color: #006b64;
 }
 
-/* Adjustments for Appointments Page */
+/* Page Headings */
 .content h1 {
     margin-bottom: 20px;
 }
 
-/* Doctor Avatar */
-.doctor-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-/* Doctors Section */
-.doctors-section {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 5px;
-}
-
-.doctors-section h2 {
-    margin-bottom: 20px;
-}
-
-/* Table Styles (can reuse from appointments) */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-table thead {
-    background-color: #f1f1f1;
-}
-
-table th, table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.view-btn {
-    background-color: #00b894;
-    color: #ffffff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.view-btn:hover {
-    background-color: #019875;
-}
-
-
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    /* Existing responsive styles... */
+    .sidebar {
+        width: 180px;
+    }
 
+    .topbar {
+        width: calc(100% - 180px);
+        left: 180px;
+    }
+
+    .main-container {
+        margin-left: 180px;
+    }
+
+    .widgets {
+        flex-direction: column;
+    }
+
+    .widget {
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+
+    /* Search Bar Adjustments */
     .search-bar form {
         flex-direction: column;
     }
