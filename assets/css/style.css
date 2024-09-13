@@ -226,3 +226,57 @@ table th, table td {
         margin-bottom: 20px;
     }
 }
+/* Search Bar Styles */
+.search-bar {
+    margin-bottom: 20px;
+}
+
+.search-bar form {
+    display: flex;
+}
+
+.search-bar input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px 0 0 5px;
+}
+
+.search-bar button {
+    padding: 10px 20px;
+    background-color: #00857c;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 0 5px 5px 0;
+}
+
+.search-bar button:hover {
+    background-color: #006b64;
+}
+
+/* Adjustments for Appointments Page */
+.content h1 {
+    margin-bottom: 20px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    /* Existing responsive styles... */
+
+    .search-bar form {
+        flex-direction: column;
+    }
+
+    .search-bar input[type="text"],
+    .search-bar button {
+        width: 100%;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+
+    .search-bar button {
+        margin-bottom: 0;
+    }
+}

@@ -3,6 +3,7 @@
 
 class AppointmentModel {
     // In a real application, data would come from a database
+
     public function getSummaryData() {
         return [
             'new_appointments' => 20,
@@ -12,6 +13,11 @@ class AppointmentModel {
     }
 
     public function getNewAppointments() {
+        // Existing method
+        return $this->getAllAppointments(); // For simplicity
+    }
+
+    public function getAllAppointments() {
         return [
             [
                 'name' => 'Leslie Alexander',
@@ -22,7 +28,7 @@ class AppointmentModel {
                 'condition' => 'Mumps Stage II',
                 'avatar' => 'patient1.png'
             ],
-            // Add other patient data...
+            // Add more appointment data...
             [
                 'name' => 'Ronald Richards',
                 'email' => 'ronald.richards@example.com',
