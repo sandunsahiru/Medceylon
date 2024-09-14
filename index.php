@@ -33,10 +33,23 @@ switch ($page) {
         $controller = new PatientController();
         $controller->index();
         break;
-    // Add more cases for other pages like help, etc.
+    case 'chat':
+        $controller = new ChatController();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->sendMessage();
+        } elseif (isset($_GET['action'])) {
+            if ($_GET['action'] === 'fetchMessages') {
+                $controller->fetchMessages();
+            } elseif ($_GET['action'] === 'startConversation') {
+                $controller->startConversation();
+            }
+        } else {
+            $controller->index();
+        }
+        break;
+        // Add more cases for other pages like help, etc.
     default:
         // Handle 404
         echo 'Page not found';
         break;
 }
-?>
