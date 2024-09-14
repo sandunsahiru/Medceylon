@@ -1,8 +1,8 @@
 <!-- views/templates/sidebar.php -->
 
 <div class="sidebar">
-<div class="logo">
-<h1>MedCeylon</h1>
+    <div class="logo">
+        <h1>MedCeylon</h1>
     </div>
     <div class="sidebar-menu">
         <ul>
@@ -28,6 +28,12 @@
                 <a href="?page=patients">
                     <span class="icon">👥</span>
                     <span class="menu-text">Patients</span>
+                </a>
+            </li>
+            <li class="menu-item <?php echo ($page == 'chat') ? 'active' : ''; ?>">
+                <a href="?page=chat">
+                    <span class="icon">💬</span>
+                    <span class="menu-text">Chat</span>
                 </a>
             </li>
             <li class="menu-item">
