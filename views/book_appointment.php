@@ -1,5 +1,7 @@
 <!-- views/book_appointment.php -->
-<?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; 
+$pageTitle = 'Book Appointment';
+?>
 <?php include 'templates/topbar.php'; ?>
 
 <div class="main-container">

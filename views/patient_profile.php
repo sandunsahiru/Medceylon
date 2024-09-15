@@ -1,5 +1,7 @@
 <!-- views/patient_profile.php -->
-<?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; 
+$pageTitle = 'My Profile';
+?>
 <?php include 'templates/topbar.php'; ?>
 
 <div class="main-container">

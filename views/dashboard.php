@@ -1,5 +1,7 @@
 <!-- views/dashboard.php -->
-<?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; 
+$pageTitle = 'Dashboard';
+?>
 <?php include 'templates/topbar.php'; ?>
 
 <div class="main-container">
