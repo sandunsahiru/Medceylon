@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const messageForm = document.getElementById('message-form');
     const messagesBody = document.getElementById('messages-body');
     const conversationId = <?php echo json_encode($conversationId); ?>;
+    const userId = <?php echo json_encode($_SESSION['user_id']); ?>;
     const fetchInterval = 3000; // Fetch messages every 3 seconds
 
     function fetchMessages() {
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messages.forEach(message => {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
-            if (message.sender_id == <?php echo $_SESSION['user_id']; ?>) {
+            if (message.sender_id == userId) {
                 messageDiv.classList.add('sent');
             } else {
                 messageDiv.classList.add('received');
@@ -33,7 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const timestampDiv = document.createElement('div');
             timestampDiv.classList.add('message-timestamp');
-            timestampDiv.textContent = new Date(message.sent_time).toLocaleString();
+            const sentTime = new Date(message.sent_time);
+            timestampDiv.textContent = sentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             messageDiv.appendChild(contentDiv);
             messageDiv.appendChild(timestampDiv);
@@ -56,17 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             const formData = new FormData(messageForm);
 
-            fetch('index.php?page=chat', {
+            fetch('index.php?page=chat&action=sendMessage', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    messageForm.reset();
-                    fetchMessages();
-                }
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        messageForm.reset();
+                        fetchMessages();
+                    }
+                });
         });
     }
 });

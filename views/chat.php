@@ -12,6 +12,10 @@
                 <div class="contacts-header">
                     <h2>Chats</h2>
                 </div>
+                <!-- Search Bar -->
+                <div class="chat-search">
+                    <input type="text" id="contact-search" placeholder="Search doctor or medical department">
+                </div>
                 <ul class="contacts-list">
                     <?php foreach ($conversations as $conversation): ?>
                         <li class="contact-item <?php echo ($conversation['conversation_id'] == $conversationId) ? 'active' : ''; ?>">
@@ -19,7 +23,7 @@
                                 <img src="assets/images/<?php echo $conversation['profile_picture'] ?: 'default_avatar.png'; ?>" alt="<?php echo $conversation['first_name']; ?>" class="contact-avatar">
                                 <div class="contact-info">
                                     <span class="contact-name"><?php echo $conversation['first_name'] . ' ' . $conversation['last_name']; ?></span>
-                                    <!-- You can add last message preview or speciality here -->
+                                    <!-- Optional: Last message preview or specialty -->
                                 </div>
                                 <!-- Time since last message -->
                                 <span class="message-time"><?php echo date('H:i', strtotime($conversation['last_message_time'])); ?></span>
@@ -27,10 +31,6 @@
                         </li>
                     <?php endforeach; ?>
                 </ul>
-                <!-- Search Bar -->
-                <div class="chat-search">
-                    <input type="text" id="contact-search" placeholder="Search doctor or medical department">
-                </div>
             </div>
 
             <!-- Right Panel: Chat Messages -->
@@ -50,7 +50,7 @@
                         <form id="message-form">
                             <input type="hidden" name="conversation_id" value="<?php echo $conversationId; ?>">
                             <input type="text" name="message" id="message-input" placeholder="Start typing here" autocomplete="off">
-                            <button type="submit"><span class="send-icon">✈️</span></button>
+                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
                         </form>
                     </div>
                 <?php else: ?>
@@ -62,3 +62,5 @@
 </div>
 
 <?php include 'templates/footer.php'; ?>
+<!-- Include your JavaScript file -->
+<script src="assets/js/script.js"></script>
