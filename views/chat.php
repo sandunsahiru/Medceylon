@@ -1,5 +1,7 @@
 <!-- views/chat.php -->
-<?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; 
+$pageTitle = 'Chat';
+?>
 <?php include 'templates/topbar.php'; ?>
 
 <div class="main-container">

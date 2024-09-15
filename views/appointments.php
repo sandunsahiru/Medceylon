@@ -1,5 +1,7 @@
 <!-- views/appointments.php -->
-<?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; 
+$pageTitle = 'Appointments';
+?>
 <?php include 'templates/topbar.php'; ?>
 
 <div class="main-container">
