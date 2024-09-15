@@ -18,6 +18,18 @@ class ChatController {
 
         $userId = $_SESSION['user_id'];
 
+        // Get action
+        $action = isset($_GET['action']) ? $_GET['action'] : null;
+
+        // Handle AJAX requests
+        if ($action === 'sendMessage') {
+            $this->sendMessage();
+            exit();
+        } elseif ($action === 'fetchMessages') {
+            $this->fetchMessages();
+            exit();
+        }
+
         // Get selected conversation ID from GET or default to first conversation
         $conversationId = isset($_GET['conversation_id']) ? $_GET['conversation_id'] : null;
 
@@ -85,6 +97,7 @@ class ChatController {
         // Return messages as JSON
         echo json_encode(['status' => 'success', 'messages' => $messages]);
     }
+
     public function startConversation() {
         session_start();
         if (!isset($_SESSION['user_id'])) {
@@ -92,13 +105,13 @@ class ChatController {
             header('Location: index.php?page=login');
             exit();
         }
-    
+
         $userId = $_SESSION['user_id'];
         $otherUserId = $_GET['user_id'];
-    
+
         // Check if conversation already exists
         $conversation = $this->chatModel->getConversationByParticipants($userId, $otherUserId);
-    
+
         if ($conversation) {
             // Redirect to existing conversation
             header('Location: index.php?page=chat&conversation_id=' . $conversation['conversation_id']);
@@ -108,6 +121,5 @@ class ChatController {
             header('Location: index.php?page=chat&conversation_id=' . $conversationId);
         }
     }
-    
 }
 ?>
