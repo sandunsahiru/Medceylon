@@ -40,7 +40,8 @@ if (isset($_POST['role'])) {
             exit();
     }
     // Redirect to the dashboard
-    header('Location: index.php?page=dashboard');
+    $redirectPage = isset($_POST['redirect']) ? $_POST['redirect'] : 'dashboard';
+    header('Location: index.php?page=' . $redirectPage);
     exit();
 }
 
@@ -148,7 +149,18 @@ switch ($page) {
         }
         break;
 
-
+    case 'accommodation':
+        if ($userRole === 'Patient') {
+            $controller = new AccommodationController();
+            if (isset($_GET['action']) && $_GET['action'] === 'book') {
+                $controller->book();
+            } else {
+                $controller->index();
+            }
+        } else {
+            echo 'Unauthorized access';
+        }
+        break;
         // Add more cases for other pages like help, etc.
 
     default:

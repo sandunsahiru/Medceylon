@@ -38,10 +38,26 @@
 <body>
     <div class="role-selection">
         <h1>Select Your Role</h1>
+        <!-- General Doctor Form -->
         <form method="POST" action="index.php">
-            <button type="submit" name="role" value="GeneralDoctor">General Doctor</button>
-            <button type="submit" name="role" value="Doctor">Specialist Doctor</button>
-            <button type="submit" name="role" value="Patient">Patient</button>
+            <input type="hidden" name="role" value="GeneralDoctor">
+            <button type="submit">General Doctor</button>
+        </form>
+        <!-- Specialist Doctor Form -->
+        <form method="POST" action="index.php">
+            <input type="hidden" name="role" value="Doctor">
+            <button type="submit">Specialist Doctor</button>
+        </form>
+        <!-- Patient Form -->
+        <form method="POST" action="index.php">
+            <input type="hidden" name="role" value="Patient">
+            <button type="submit">Patient</button>
+        </form>
+        <!-- Accommodation as Patient Form -->
+        <form method="POST" action="index.php">
+            <input type="hidden" name="role" value="Patient">
+            <input type="hidden" name="redirect" value="accommodation">
+            <button type="submit">Accommodation as Patient</button>
         </form>
     </div>
 </body>

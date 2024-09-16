@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 14, 2024 at 05:55 PM
+-- Generation Time: Sep 16, 2024 at 08:50 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,6 +39,13 @@ CREATE TABLE `accommodationassistance` (
   `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `accommodationassistance`
+--
+
+INSERT INTO `accommodationassistance` (`accommodation_request_id`, `patient_id`, `check_in_date`, `check_out_date`, `accommodation_type`, `special_requests`, `status`, `accommodation_provider_id`, `last_updated`) VALUES
+(1, 1, '2024-09-19', '2024-09-21', 'Standard Room', 'Wheelchair access needed', 'Booked', 1, '2024-09-16 12:11:45');
+
 -- --------------------------------------------------------
 
 --
@@ -55,6 +62,14 @@ CREATE TABLE `accommodationproviders` (
   `services_offered` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `accommodationproviders`
+--
+
+INSERT INTO `accommodationproviders` (`provider_id`, `name`, `contact_info`, `address_line1`, `address_line2`, `city_id`, `services_offered`) VALUES
+(1, 'Comfort Stay', '+94112223344', '12 Lake Rd', '', 1, 'Short-term accommodation near hospitals'),
+(2, 'Healing Homes', '+94812223344', '34 Hill Rd', '', 2, 'Patient-friendly lodging');
+
 -- --------------------------------------------------------
 
 --
@@ -70,6 +85,13 @@ CREATE TABLE `accreditationdetails` (
   `accreditation_documents` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `accreditationdetails`
+--
+
+INSERT INTO `accreditationdetails` (`accreditation_id`, `hospital_id`, `accreditation_body`, `accreditation_date`, `expiration_date`, `accreditation_documents`) VALUES
+(1, 1, 'Joint Commission International', '2022-01-01', '2025-01-01', 'assets/documents/jci_accreditation.pdf');
+
 -- --------------------------------------------------------
 
 --
@@ -83,6 +105,13 @@ CREATE TABLE `appointmentdocuments` (
   `file_path` varchar(255) DEFAULT NULL,
   `upload_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `appointmentdocuments`
+--
+
+INSERT INTO `appointmentdocuments` (`document_id`, `appointment_id`, `document_type`, `file_path`, `upload_date`) VALUES
+(1, 1, 'Prescription', 'assets/documents/prescription_appointment1.pdf', '2024-09-16 12:20:13');
 
 -- --------------------------------------------------------
 
@@ -104,6 +133,14 @@ CREATE TABLE `appointments` (
   `notes` text DEFAULT NULL
 ) ;
 
+--
+-- Dumping data for table `appointments`
+--
+
+INSERT INTO `appointments` (`appointment_id`, `patient_id`, `doctor_id`, `appointment_date`, `appointment_time`, `appointment_status`, `booking_date`, `consultation_type`, `reason_for_visit`, `rescheduled_from`, `notes`) VALUES
+(1, 1, 1, '2024-09-20', '10:00:00', 'Scheduled', '2024-09-16 12:11:14', 'In-Person', 'Regular check-up', NULL, NULL),
+(2, 5, 1, '2024-09-21', '11:00:00', 'Scheduled', '2024-09-16 12:11:14', 'Online', 'Chest pain consultation', NULL, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -115,6 +152,18 @@ CREATE TABLE `cities` (
   `city_name` varchar(100) NOT NULL,
   `country_code` char(2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `cities`
+--
+
+INSERT INTO `cities` (`city_id`, `city_name`, `country_code`) VALUES
+(1, 'Colombo', 'LK'),
+(2, 'Kandy', 'LK'),
+(3, 'Galle', 'LK'),
+(4, 'New York', 'US'),
+(5, 'London', 'GB'),
+(6, 'Sydney', 'AU');
 
 -- --------------------------------------------------------
 
@@ -129,6 +178,14 @@ CREATE TABLE `conversations` (
   `last_message_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `conversations`
+--
+
+INSERT INTO `conversations` (`conversation_id`, `participant1_id`, `participant2_id`, `last_message_time`) VALUES
+(1, 1, 2, '2024-09-16 12:17:55'),
+(2, 1, 4, '2024-09-16 12:17:55');
+
 -- --------------------------------------------------------
 
 --
@@ -139,6 +196,17 @@ CREATE TABLE `countries` (
   `country_code` char(2) NOT NULL,
   `country_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `countries`
+--
+
+INSERT INTO `countries` (`country_code`, `country_name`) VALUES
+('AU', 'Australia'),
+('GB', 'United Kingdom'),
+('IN', 'India'),
+('LK', 'Sri Lanka'),
+('US', 'United States');
 
 -- --------------------------------------------------------
 
@@ -158,6 +226,13 @@ CREATE TABLE `doctors` (
   `is_active` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `doctors`
+--
+
+INSERT INTO `doctors` (`doctor_id`, `user_id`, `hospital_id`, `qualifications`, `years_of_experience`, `profile_description`, `license_number`, `is_verified`, `is_active`) VALUES
+(1, 2, 1, 'MBBS, MD (Cardiology)', 15, 'Experienced cardiologist specializing in heart diseases.', 'DOC123456', 1, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -168,6 +243,13 @@ CREATE TABLE `doctorspecializations` (
   `doctor_id` int(11) NOT NULL,
   `specialization_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `doctorspecializations`
+--
+
+INSERT INTO `doctorspecializations` (`doctor_id`, `specialization_id`) VALUES
+(1, 1);
 
 -- --------------------------------------------------------
 
@@ -185,6 +267,14 @@ CREATE TABLE `documents` (
   `associated_with_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `documents`
+--
+
+INSERT INTO `documents` (`document_id`, `user_id`, `document_type`, `file_path`, `upload_date`, `associated_with_type`, `associated_with_id`) VALUES
+(1, 1, 'Medical Report', 'assets/documents/medical_report_john_doe.pdf', '2024-09-16 12:17:35', 'Appointment', 1),
+(2, 2, 'License Certificate', 'assets/documents/license_dr_smith.pdf', '2024-09-16 12:17:35', 'Doctor', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -197,6 +287,14 @@ CREATE TABLE `faqs` (
   `answer` text DEFAULT NULL,
   `category` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `faqs`
+--
+
+INSERT INTO `faqs` (`faq_id`, `question`, `answer`, `category`) VALUES
+(1, 'How to book an appointment?', 'You can book an appointment by...', 'Appointments'),
+(2, 'What payment methods are accepted?', 'We accept credit cards and...', 'Payments');
 
 -- --------------------------------------------------------
 
@@ -217,6 +315,13 @@ CREATE TABLE `healthrecords` (
   `date_modified` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `healthrecords`
+--
+
+INSERT INTO `healthrecords` (`record_id`, `patient_id`, `doctor_id`, `appointment_id`, `diagnosis`, `treatment_plan`, `prescriptions`, `test_results`, `date_created`, `date_modified`) VALUES
+(1, 1, 1, 1, 'Healthy', 'Maintain regular exercise', NULL, NULL, '2024-09-16 12:11:30', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -228,6 +333,13 @@ CREATE TABLE `hospitaladmins` (
   `user_id` int(11) DEFAULT NULL,
   `hospital_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `hospitaladmins`
+--
+
+INSERT INTO `hospitaladmins` (`hospital_admin_id`, `user_id`, `hospital_id`) VALUES
+(1, 3, 1);
 
 -- --------------------------------------------------------
 
@@ -251,6 +363,14 @@ CREATE TABLE `hospitals` (
   `is_active` tinyint(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `hospitals`
+--
+
+INSERT INTO `hospitals` (`hospital_id`, `name`, `address_line1`, `address_line2`, `city_id`, `country_code`, `contact_number`, `email`, `website`, `description`, `latitude`, `longitude`, `is_active`) VALUES
+(1, 'Colombo General Hospital', '95 Kynsey Rd', '', 1, 'LK', '+94112345678', 'info@colombogh.lk', 'www.colombogh.lk', 'Leading government hospital in Colombo.', 6.915700, 79.861200, 1),
+(2, 'Kandy Teaching Hospital', 'Anniewatta Rd', '', 2, 'LK', '+94812345678', 'info@kandyhospital.lk', 'www.kandyhospital.lk', 'Main hospital in Kandy.', 7.290600, 80.633700, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -264,6 +384,68 @@ CREATE TABLE `hospitalservices` (
   `service_description` text DEFAULT NULL,
   `service_cost` decimal(10,2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `hospitalservices`
+--
+
+INSERT INTO `hospitalservices` (`service_id`, `hospital_id`, `service_name`, `service_description`, `service_cost`) VALUES
+(1, 1, 'Cardiac Surgery', 'Advanced heart surgeries', 5000.00),
+(2, 1, 'General Consultation', 'Outpatient services', 50.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hotels`
+--
+
+CREATE TABLE `hotels` (
+  `hotel_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `address_line1` varchar(100) NOT NULL,
+  `address_line2` varchar(100) DEFAULT NULL,
+  `city_id` int(11) NOT NULL,
+  `contact_number` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `image1` varchar(255) DEFAULT NULL,
+  `image2` varchar(255) DEFAULT NULL,
+  `image3` varchar(255) DEFAULT NULL,
+  `image4` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `hotels`
+--
+
+INSERT INTO `hotels` (`hotel_id`, `name`, `address_line1`, `address_line2`, `city_id`, `contact_number`, `email`, `description`, `image1`, `image2`, `image3`, `image4`) VALUES
+(1, 'Sea Breeze Hotel', '50 Beach Rd', '', 1, '+94112223344', 'seabreeze@example.com', 'Hotel with ocean views.', 'assets/images/hotels/seabreeze1.jpg', 'assets/images/hotels/seabreeze2.jpg', 'assets/images/hotels/seabreeze3.jpg', 'assets/images/hotels/seabreeze4.jpg'),
+(2, 'Mountain View Inn', '88 Peak Rd', '', 2, '+94812223344', 'mountainview@example.com', 'Cozy inn with mountain views.', 'assets/images/hotels/mountainview1.jpg', 'assets/images/hotels/mountainview2.jpg', 'assets/images/hotels/mountainview3.jpg', 'assets/images/hotels/mountainview4.jpg');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `hotel_rooms`
+--
+
+CREATE TABLE `hotel_rooms` (
+  `room_id` int(11) NOT NULL,
+  `hotel_id` int(11) NOT NULL,
+  `room_type` varchar(50) NOT NULL,
+  `price_per_night` decimal(10,2) NOT NULL,
+  `availability` int(11) NOT NULL,
+  `description` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `hotel_rooms`
+--
+
+INSERT INTO `hotel_rooms` (`room_id`, `hotel_id`, `room_type`, `price_per_night`, `availability`, `description`) VALUES
+(1, 1, 'Standard Room', 80.00, 5, 'Comfortable room with basic amenities.'),
+(2, 1, 'Deluxe Room', 120.00, 3, 'Spacious room with sea view.'),
+(3, 2, 'Single Room', 60.00, 4, 'Cozy room for solo travelers.'),
+(4, 2, 'Family Suite', 150.00, 2, 'Large suite suitable for families.');
 
 -- --------------------------------------------------------
 
@@ -280,6 +462,16 @@ CREATE TABLE `messages` (
   `is_read` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `messages`
+--
+
+INSERT INTO `messages` (`message_id`, `conversation_id`, `sender_id`, `message_text`, `sent_time`, `is_read`) VALUES
+(1, 1, 1, 'Hello Dr. Smith, I have a question about my medication.', '2024-09-16 12:18:06', 0),
+(2, 1, 2, 'Hello John, sure, please let me know.', '2024-09-16 12:18:06', 0),
+(3, 2, 1, 'I need help with my booking.', '2024-09-16 12:18:06', 0),
+(4, 2, 4, 'How can I assist you?', '2024-09-16 12:18:06', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -294,6 +486,15 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `date_created` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`notification_id`, `user_id`, `notification_text`, `notification_type`, `is_read`, `date_created`) VALUES
+(1, 1, 'Your appointment with Dr. Smith is confirmed for 2024-09-20.', 'Appointment', 0, '2024-09-16 12:18:21'),
+(2, 2, 'You have a new message from John Doe.', 'Message', 0, '2024-09-16 12:18:21'),
+(3, 1, 'Your room booking at Sea Breeze Hotel is confirmed.', 'Booking', 0, '2024-09-16 12:18:21');
 
 -- --------------------------------------------------------
 
@@ -310,6 +511,14 @@ CREATE TABLE `resources` (
   `date_published` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `resources`
+--
+
+INSERT INTO `resources` (`resource_id`, `title`, `content`, `resource_type`, `category`, `date_published`) VALUES
+(1, 'Healthy Living Tips', 'Content about healthy living...', 'Article', 'Health', '2024-09-16 12:17:02'),
+(2, 'Appointment Guide', 'How to schedule appointments...', 'PDF', 'User Guide', '2024-09-16 12:17:02');
+
 -- --------------------------------------------------------
 
 --
@@ -325,6 +534,14 @@ CREATE TABLE `reviews` (
   `review_text` text DEFAULT NULL,
   `review_date` datetime DEFAULT current_timestamp()
 ) ;
+
+--
+-- Dumping data for table `reviews`
+--
+
+INSERT INTO `reviews` (`review_id`, `patient_id`, `doctor_id`, `hospital_id`, `rating`, `review_text`, `review_date`) VALUES
+(1, 1, 1, 1, 5, 'Excellent care provided by Dr. Smith.', '2024-09-16 12:16:16'),
+(2, 5, NULL, 2, 4, 'Friendly staff and clean facilities.', '2024-09-16 12:16:16');
 
 -- --------------------------------------------------------
 
@@ -346,7 +563,33 @@ INSERT INTO `roles` (`role_id`, `role_name`, `description`) VALUES
 (1, 'Patient', 'User seeking medical services'),
 (2, 'Doctor', 'Medical professional providing services'),
 (3, 'HospitalAdmin', 'Administrator managing hospital data'),
-(4, 'SystemAdmin', 'Administrator managing the system');
+(4, 'SystemAdmin', 'Administrator managing the system'),
+(5, 'SupportAgent', 'User providing support services');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `room_bookings`
+--
+
+CREATE TABLE `room_bookings` (
+  `booking_id` int(11) NOT NULL,
+  `patient_id` int(11) NOT NULL,
+  `room_id` int(11) NOT NULL,
+  `check_in_date` date NOT NULL,
+  `check_out_date` date NOT NULL,
+  `guests` int(11) NOT NULL,
+  `special_requests` text DEFAULT NULL,
+  `status` enum('Pending','Confirmed','Canceled') DEFAULT 'Pending',
+  `booking_date` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `room_bookings`
+--
+
+INSERT INTO `room_bookings` (`booking_id`, `patient_id`, `room_id`, `check_in_date`, `check_out_date`, `guests`, `special_requests`, `status`, `booking_date`) VALUES
+(1, 1, 2, '2024-09-19', '2024-09-21', 1, 'High floor room', 'Confirmed', '2024-09-16 12:12:37');
 
 -- --------------------------------------------------------
 
@@ -359,6 +602,15 @@ CREATE TABLE `specializations` (
   `name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `specializations`
+--
+
+INSERT INTO `specializations` (`specialization_id`, `name`, `description`) VALUES
+(1, 'Cardiology', 'Heart and cardiovascular system'),
+(2, 'Neurology', 'Brain and nervous system'),
+(3, 'Orthopedics', 'Bones and musculoskeletal system');
 
 -- --------------------------------------------------------
 
@@ -377,6 +629,13 @@ CREATE TABLE `supporttickets` (
   `support_agent_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `supporttickets`
+--
+
+INSERT INTO `supporttickets` (`ticket_id`, `user_id`, `issue_category`, `issue_description`, `status`, `date_created`, `date_updated`, `support_agent_id`) VALUES
+(1, 1, 'Booking Issue', 'Unable to confirm hotel booking.', 'Open', '2024-09-16 12:16:33', '2024-09-16 12:16:33', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -390,6 +649,14 @@ CREATE TABLE `ticketmessages` (
   `message_text` text DEFAULT NULL,
   `sent_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `ticketmessages`
+--
+
+INSERT INTO `ticketmessages` (`message_id`, `ticket_id`, `sender_id`, `message_text`, `sent_time`) VALUES
+(1, 1, 1, 'I tried booking a room but received an error.', '2024-09-16 12:16:49'),
+(2, 1, 4, 'We are looking into this issue.', '2024-09-16 12:16:49');
 
 -- --------------------------------------------------------
 
@@ -410,6 +677,13 @@ CREATE TABLE `transportationassistance` (
   `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `transportationassistance`
+--
+
+INSERT INTO `transportationassistance` (`transport_request_id`, `patient_id`, `transport_type`, `pickup_location`, `dropoff_location`, `date`, `time`, `status`, `transport_provider_id`, `last_updated`) VALUES
+(1, 1, 'Taxi', 'Bandaranaike Airport', 'Sea Breeze Hotel', '2024-09-19', '08:00:00', 'Booked', 1, '2024-09-16 12:14:18');
+
 -- --------------------------------------------------------
 
 --
@@ -423,6 +697,14 @@ CREATE TABLE `transportproviders` (
   `services_offered` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `transportproviders`
+--
+
+INSERT INTO `transportproviders` (`provider_id`, `name`, `contact_info`, `services_offered`) VALUES
+(1, 'City Taxi', '+94119998888', 'Airport transfers, hospital pickups'),
+(2, 'Quick Ambulance', '+94118887777', 'Emergency and non-emergency transport');
+
 -- --------------------------------------------------------
 
 --
@@ -433,6 +715,17 @@ CREATE TABLE `userroles` (
   `username` varchar(50) NOT NULL,
   `role_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `userroles`
+--
+
+INSERT INTO `userroles` (`username`, `role_id`) VALUES
+('jane_doe', 1),
+('john_doe', 1),
+('dr_smith', 2),
+('admin_user', 4),
+('support_agent', 5);
 
 -- --------------------------------------------------------
 
@@ -462,6 +755,17 @@ CREATE TABLE `users` (
   `is_active` tinyint(1) DEFAULT 1
 ) ;
 
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`user_id`, `username`, `password_hash`, `email`, `first_name`, `last_name`, `date_of_birth`, `gender`, `phone_number`, `address_line1`, `address_line2`, `city_id`, `nationality`, `passport_number`, `profile_picture`, `role_id`, `registration_date`, `last_login`, `is_active`) VALUES
+(1, 'john_doe', '482c811da5d5b4bc6d497ffa98491e38', 'john.doe@example.com', 'John', 'Doe', '1985-06-15', 'Male', '+94112345678', '123 Main St', '', 1, 'US', 'A1234567', 'assets/images/profile_john_doe.jpg', 1, '2024-09-16 12:08:25', NULL, 1),
+(2, 'dr_smith', '482c811da5d5b4bc6d497ffa98491e38', 'dr.smith@example.com', 'Emily', 'Smith', '1975-04-20', 'Female', '+94115556789', '456 High St', '', 1, 'GB', 'B7654321', 'assets/images/profile_dr_smith.jpg', 2, '2024-09-16 12:08:25', NULL, 1),
+(3, 'admin_user', '25e4ee4e9229397b6b17776bfceaf8e7', 'admin@example.com', 'Admin', 'User', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 4, '2024-09-16 12:08:25', NULL, 1),
+(4, 'support_agent', 'a8736dd296ccfcd52d3c94e09614e528', 'support@example.com', 'Support', 'Agent', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 5, '2024-09-16 12:08:25', NULL, 1),
+(5, 'jane_doe', '482c811da5d5b4bc6d497ffa98491e38', 'jane.doe@example.com', 'Jane', 'Doe', '1990-08-25', 'Female', '+94113334455', '789 Park Ave', '', 2, 'LK', 'C9876543', 'assets/images/profile_jane_doe.jpg', 1, '2024-09-16 12:08:25', NULL, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -479,6 +783,13 @@ CREATE TABLE `visaassistance` (
   `last_updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `visaassistance`
+--
+
+INSERT INTO `visaassistance` (`visa_request_id`, `patient_id`, `visa_type`, `application_date`, `status`, `assistance_agent_id`, `visa_details`, `last_updated`) VALUES
+(1, 1, 'Medical Visa', '2024-09-16 12:14:35', 'Approved', 4, 'Visa approved for treatment purposes.', '2024-09-16 12:14:35');
+
 -- --------------------------------------------------------
 
 --
@@ -492,6 +803,14 @@ CREATE TABLE `visadocuments` (
   `file_path` varchar(255) DEFAULT NULL,
   `upload_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `visadocuments`
+--
+
+INSERT INTO `visadocuments` (`document_id`, `visa_request_id`, `document_type`, `file_path`, `upload_date`) VALUES
+(1, 1, 'Passport Copy', 'assets/documents/passport_john_doe.pdf', '2024-09-16 12:15:27'),
+(2, 1, 'Medical Report', 'assets/documents/medical_report_john_doe.pdf', '2024-09-16 12:15:27');
 
 --
 -- Indexes for dumped tables
@@ -618,6 +937,20 @@ ALTER TABLE `hospitalservices`
   ADD KEY `hospital_id` (`hospital_id`);
 
 --
+-- Indexes for table `hotels`
+--
+ALTER TABLE `hotels`
+  ADD PRIMARY KEY (`hotel_id`),
+  ADD KEY `city_id` (`city_id`);
+
+--
+-- Indexes for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  ADD PRIMARY KEY (`room_id`),
+  ADD KEY `hotel_id` (`hotel_id`);
+
+--
 -- Indexes for table `messages`
 --
 ALTER TABLE `messages`
@@ -653,6 +986,14 @@ ALTER TABLE `reviews`
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`role_id`),
   ADD UNIQUE KEY `role_name` (`role_name`);
+
+--
+-- Indexes for table `room_bookings`
+--
+ALTER TABLE `room_bookings`
+  ADD PRIMARY KEY (`booking_id`),
+  ADD KEY `patient_id` (`patient_id`),
+  ADD KEY `room_id` (`room_id`);
 
 --
 -- Indexes for table `specializations`
@@ -734,25 +1075,25 @@ ALTER TABLE `visadocuments`
 -- AUTO_INCREMENT for table `accommodationassistance`
 --
 ALTER TABLE `accommodationassistance`
-  MODIFY `accommodation_request_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `accommodation_request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `accommodationproviders`
 --
 ALTER TABLE `accommodationproviders`
-  MODIFY `provider_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `provider_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `accreditationdetails`
 --
 ALTER TABLE `accreditationdetails`
-  MODIFY `accreditation_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `accreditation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `appointmentdocuments`
 --
 ALTER TABLE `appointmentdocuments`
-  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `appointments`
@@ -761,76 +1102,82 @@ ALTER TABLE `appointments`
   MODIFY `appointment_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `cities`
---
-ALTER TABLE `cities`
-  MODIFY `city_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `conversations`
 --
 ALTER TABLE `conversations`
-  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `conversation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `doctors`
 --
 ALTER TABLE `doctors`
-  MODIFY `doctor_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `doctor_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `documents`
 --
 ALTER TABLE `documents`
-  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `faqs`
 --
 ALTER TABLE `faqs`
-  MODIFY `faq_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `faq_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `healthrecords`
 --
 ALTER TABLE `healthrecords`
-  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `record_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `hospitaladmins`
 --
 ALTER TABLE `hospitaladmins`
-  MODIFY `hospital_admin_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `hospital_admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `hospitals`
 --
 ALTER TABLE `hospitals`
-  MODIFY `hospital_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `hospital_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `hospitalservices`
 --
 ALTER TABLE `hospitalservices`
-  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `service_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `hotels`
+--
+ALTER TABLE `hotels`
+  MODIFY `hotel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  MODIFY `room_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `messages`
 --
 ALTER TABLE `messages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `notification_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `resources`
 --
 ALTER TABLE `resources`
-  MODIFY `resource_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `resource_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `reviews`
@@ -842,37 +1189,43 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT for table `room_bookings`
+--
+ALTER TABLE `room_bookings`
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `specializations`
 --
 ALTER TABLE `specializations`
-  MODIFY `specialization_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `specialization_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `supporttickets`
 --
 ALTER TABLE `supporttickets`
-  MODIFY `ticket_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `ticket_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `ticketmessages`
 --
 ALTER TABLE `ticketmessages`
-  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `transportationassistance`
 --
 ALTER TABLE `transportationassistance`
-  MODIFY `transport_request_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `transport_request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `transportproviders`
 --
 ALTER TABLE `transportproviders`
-  MODIFY `provider_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `provider_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -884,13 +1237,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `visaassistance`
 --
 ALTER TABLE `visaassistance`
-  MODIFY `visa_request_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `visa_request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `visadocuments`
 --
 ALTER TABLE `visadocuments`
-  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `document_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -991,6 +1344,18 @@ ALTER TABLE `hospitalservices`
   ADD CONSTRAINT `hospitalservices_ibfk_1` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`hospital_id`);
 
 --
+-- Constraints for table `hotels`
+--
+ALTER TABLE `hotels`
+  ADD CONSTRAINT `hotels_ibfk_1` FOREIGN KEY (`city_id`) REFERENCES `cities` (`city_id`);
+
+--
+-- Constraints for table `hotel_rooms`
+--
+ALTER TABLE `hotel_rooms`
+  ADD CONSTRAINT `hotel_rooms_ibfk_1` FOREIGN KEY (`hotel_id`) REFERENCES `hotels` (`hotel_id`);
+
+--
 -- Constraints for table `messages`
 --
 ALTER TABLE `messages`
@@ -1010,6 +1375,13 @@ ALTER TABLE `reviews`
   ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `users` (`user_id`),
   ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`doctor_id`) REFERENCES `doctors` (`doctor_id`),
   ADD CONSTRAINT `reviews_ibfk_3` FOREIGN KEY (`hospital_id`) REFERENCES `hospitals` (`hospital_id`);
+
+--
+-- Constraints for table `room_bookings`
+--
+ALTER TABLE `room_bookings`
+  ADD CONSTRAINT `room_bookings_ibfk_1` FOREIGN KEY (`patient_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `room_bookings_ibfk_2` FOREIGN KEY (`room_id`) REFERENCES `hotel_rooms` (`room_id`);
 
 --
 -- Constraints for table `supporttickets`
