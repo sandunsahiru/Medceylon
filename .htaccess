@@ -1,8 +1,13 @@
 <IfModule mod_rewrite.c>
     Options -Multiviews
-    RewriteEngine on
-    RewriteBase /medceylon/public
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+    RewriteEngine On
+    RewriteBase /Medceylon
+    
+    # Redirect all requests to public directory
+    RewriteCond %{REQUEST_URI} !^/Medceylon/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+    
+    # Prevent access to sensitive files
+    RewriteRule ^(app|system|vendor) - [F,L]
+    Options -Indexes
 </IfModule>
