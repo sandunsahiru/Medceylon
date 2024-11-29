@@ -228,7 +228,7 @@ include('header.php'); // Including header
             <div class="service">
                 <a href="caregivers.php">
                     <img src="images/Rectangle231573.jpg" alt="Connect with caregivers">
-                    <h3>Connect with caregivers</h3>
+                    <h3>Connect with me</h3>
                 </a>
             </div>
 
