@@ -1,0 +1,9 @@
+.footer-footer {
+  width: 1440px;
+  height: 500px;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  align-items: flex-start;
+  flex-shrink: 0;
+}

@@ -1,0 +1,73 @@
+/* Footer Styling */
+.footer {
+    background-color: #299d97;
+    color: white;
+    padding: 40px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Left Section: Tagline */
+.footer-tagline {
+    font-size: 24px;
+    font-weight: bold;
+    max-width: 50%;
+    line-height: 1.4;
+}
+
+/* Right Section: Links & Contact */
+.footer-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+/* Links Section */
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #e0f7f5;
+}
+
+/* Contact Section */
+.footer-contact {
+    font-size: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.footer-contact p {
+    margin: 0;
+    font-weight: bold;
+}
+
+.footer-contact a {
+    text-decoration: none;
+    color: black;
+    background-color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.footer-contact a:hover {
+    background-color: #e0f7f5;
+    color: black;
+}
