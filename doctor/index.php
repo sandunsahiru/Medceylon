@@ -58,11 +58,11 @@ $appointments = $conn->query($appointments_query);
                     <i class="ri-calendar-line"></i>
                     <span>Appointments</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="patients.php" class="nav-item">
                     <i class="ri-user-line"></i>
                     <span>Patients</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="all-doctors.php" class="nav-item">
                     <i class="ri-nurse-line"></i>
                     <span>Doctors</span>
                 </a>
