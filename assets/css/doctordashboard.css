@@ -177,6 +177,7 @@ body {
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    margin-bottom: 2rem;
 }
 
 .appointments-list {
@@ -836,4 +837,237 @@ body {
 .info-details span {
     color: var(--text-light);
     font-size: 0.9rem;
+}
+
+/* Add these to doctordashboard.css */
+
+/* View Details Button */
+.view-details {
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+/* Confirm Button */
+.confirm-appointment {
+    background: #DEF7EC;
+    color: #046C4E;
+}
+
+/* Reschedule Button */
+.reschedule-appointment {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+/* Appointment Status Tags */
+.status-tag {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-asked {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-confirmed {
+    background: #DEF7EC;
+    color: #046C4E;
+}
+
+/* Patient Notes in Modal */
+#appointmentDetails {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#appointmentDetails p {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+#appointmentDetails strong {
+    color: var(--text-dark);
+}
+
+/* Patient Details Modal */
+.patient-details {
+    padding: 1rem;
+}
+
+.profile-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.profile-header h3 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.patient-meta {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.contact-info {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    min-width: 24px;
+}
+
+.info-item span {
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+.medical-history {
+    margin-top: 2rem;
+}
+
+.medical-history h4 {
+    font-size: 1.2rem;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+}
+
+.appointment-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+    margin-bottom: 1rem;
+}
+
+/* .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -2rem;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: #E2E8F0;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: -2.35rem;
+    top: 0.5rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary-color);
+} */
+
+.timeline-date {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content {
+    background: var(--bg-light);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.appointment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.appointment-type {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.appointment-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.status-scheduled {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-completed {
+    background: #DEF7EC;
+    color: #046C4E;
+}
+
+.status-canceled {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.appointment-reason {
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.appointment-notes {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* Modal size and scrolling */
+.modal-content {
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #F1F1F1;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #C1C1C1;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #A1A1A1;
 }

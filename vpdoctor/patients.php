@@ -2,7 +2,6 @@
 session_start();
 require_once '../includes/config.php';
 
-// Basic error checking
 if (!isset($conn)) {
     die("Database connection failed");
 }
@@ -32,7 +31,7 @@ try {
     ];
 }
 
-// Get patients list
+// Get patients list with additional details
 $patients_query = "SELECT 
     u.user_id,
     u.first_name,
@@ -40,6 +39,10 @@ $patients_query = "SELECT
     u.email,
     u.phone_number,
     u.gender,
+    u.date_of_birth,
+    u.address_line1,
+    u.address_line2,
+    u.nationality,
     COUNT(a.appointment_id) as total_visits,
     MAX(a.appointment_date) as last_visit
     FROM appointments a
@@ -60,7 +63,6 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,10 +70,9 @@ try {
     <link rel="stylesheet" href="../assets/css/doctordashboard.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
-
 <body>
     <div class="container">
-        <aside class="sidebar">
+    <aside class="sidebar">
             <div class="logo">
                 <h1>MedCeylon</h1>
             </div>
@@ -89,10 +90,6 @@ try {
                     <i class="ri-user-line"></i>
                     <span>Patients</span>
                 </a>
-                <a href="all-doctors.php" class="nav-item">
-                    <i class="ri-nurse-line"></i>
-                    <span>Doctors</span>
-                </a>
                 <a href="#" class="nav-item">
                     <i class="ri-chat-1-line"></i>
                     <span>Chat</span>
@@ -104,9 +101,9 @@ try {
                 <span>Exit</span>
             </a>
         </aside>
-
+        
         <main class="main-content">
-            <header class="top-bar">
+        <header class="top-bar">
                 <h1>Patients</h1>
                 <div class="header-right">
                     <div class="search-box">
@@ -149,7 +146,7 @@ try {
                     </div>
                 </div>
             </div>
-
+            
             <section class="patients-wrapper">
                 <?php while ($patient = $patients->fetch_assoc()): ?>
                     <div class="patient-row" data-patient-name="<?php echo htmlspecialchars($patient['first_name'] . ' ' . $patient['last_name']); ?>">
@@ -179,13 +176,9 @@ try {
                         </div>
 
                         <div class="row-actions">
-                            <!-- <button class="view-btn" onclick="viewPatientHistory(<?php echo $patient['user_id']; ?>)">
-                                <i class="ri-file-list-line"></i>
-                                History
-                            </button> -->
-                            <button class="schedule-btn" onclick="scheduleAppointment(<?php echo $patient['user_id']; ?>)">
-                                <i class="ri-calendar-line"></i>
-                                History
+                            <button class="view-btn" onclick="viewPatient(<?php echo $patient['user_id']; ?>)">
+                                <i class="ri-eye-line"></i>
+                                View
                             </button>
                         </div>
                     </div>
@@ -194,67 +187,102 @@ try {
         </main>
     </div>
 
-    <div id="historyModal" class="modal" style="display: none;">
+    <!-- Patient Details Modal -->
+    <div id="patientModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Patient History</h2>
-                <button onclick="closeHistoryModal()" class="close-btn">&times;</button>
+                <h2>Patient Details</h2>
+                <button onclick="closePatientModal()" class="close-btn">&times;</button>
             </div>
-            <div id="historyContent"></div>
+            <div id="patientContent" class="patient-details">
+                <!-- Content will be loaded dynamically -->
+            </div>
         </div>
     </div>
-    <!-- Appointment History Modal -->
-    <div id="scheduleModal" class="modal" style="display: none;">
-        <div class="modal-content schedule-modal">
-            <div class="modal-header">
-                <h2>Appointment History</h2>
-                <button onclick="closeScheduleModal()" class="close-btn">&times;</button>
-            </div>
-            <div id="appointmentContent" class="appointment-list"></div>
-            
-            </button>
-        </div>
-    </div>
-
 
     <script>
-        function scheduleAppointment(patientId) {
-            fetch(`get_patient_appointments.php?patient_id=${patientId}&doctor_id=<?php echo $doctor_id; ?>`)
+        function viewPatient(patientId) {
+            fetch(`get_patient_details.php?patient_id=${patientId}&doctor_id=<?php echo $doctor_id; ?>`)
                 .then(response => response.json())
                 .then(data => {
-                    const appointmentContent = document.getElementById('appointmentContent');
-                    appointmentContent.innerHTML = '';
+                    const patientContent = document.getElementById('patientContent');
+                    const age = calculateAge(data.user.date_of_birth);
+                    
+                    patientContent.innerHTML = `
+                        <div class="patient-profile">
+                            <div class="profile-header">
+                                <h3>${data.user.first_name} ${data.user.last_name}</h3>
+                                <p class="patient-meta">
+                                    ${age} years old | ${data.user.gender} | ${data.user.nationality}
+                                </p>
+                            </div>
+                            
+                            <div class="contact-info">
+                                <div class="info-item">
+                                    <i class="ri-mail-line"></i>
+                                    <span>${data.user.email}</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="ri-phone-line"></i>
+                                    <span>${data.user.phone_number}</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="ri-map-pin-line"></i>
+                                    <span>${data.user.address_line1} ${data.user.address_line2}</span>
+                                </div>
+                            </div>
 
-                    data.forEach(appointment => {
-                        const statusClass = `status-${appointment.appointment_status.toLowerCase()}`;
-                        appointmentContent.innerHTML += `
-                    <div class="appointment-item">
-                        <div class="appointment-header">
-                            <span class="appointment-date">
-                                ${appointment.appointment_date} at ${appointment.appointment_time}
-                            </span>
-                            <span class="appointment-status ${statusClass}">
-                                ${appointment.appointment_status}
-                            </span>
+                            <div class="medical-history">
+                                <h4>Medical History</h4>
+                                <div class="appointment-timeline">
+                                    ${data.appointments.map(app => `
+                                        <div class="timeline-item">
+                                            <div class="timeline-date">
+                                                ${formatDate(app.appointment_date)}
+                                            </div>
+                                            <div class="timeline-content">
+                                                <div class="appointment-header">
+                                                    <span class="appointment-type">${app.consultation_type}</span>
+                                                    <span class="appointment-status status-${app.appointment_status.toLowerCase()}">
+                                                        ${app.appointment_status}
+                                                    </span>
+                                                </div>
+                                                <p class="appointment-reason">${app.reason_for_visit || 'No reason specified'}</p>
+                                                <p class="appointment-notes">${app.notes || 'No notes available'}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
-                        <div class="appointment-details">
-                            <p>Type: ${appointment.consultation_type}</p>
-                            <p>Reason: ${appointment.reason_for_visit || 'Not specified'}</p>
-                        </div>
-                    </div>
-                `;
-                    });
+                    `;
 
-                    document.getElementById('scheduleModal').style.display = 'block';
+                    document.getElementById('patientModal').style.display = 'block';
                 })
                 .catch(error => console.error('Error:', error));
         }
 
-        function closeScheduleModal() {
-            document.getElementById('scheduleModal').style.display = 'none';
+        function calculateAge(dateOfBirth) {
+            const today = new Date();
+            const birthDate = new Date(dateOfBirth);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function closePatientModal() {
+            document.getElementById('patientModal').style.display = 'none';
         }
     </script>
 
 </body>
-
 </html>
