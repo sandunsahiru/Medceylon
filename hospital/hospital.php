@@ -212,9 +212,6 @@ $requests = $conn->query($requests_query);
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Respond to Treatment Request</h2>
-                <button class="close-modal" onclick="closeModal()">
-                    <i class="ri-close-line"></i>
-                </button>
             </div>
             <form id="responseForm">
                 <input type="hidden" name="request_id" id="request_id">

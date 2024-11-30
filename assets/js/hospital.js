@@ -1,24 +1,49 @@
 // Main initialization
 document.addEventListener('DOMContentLoaded', function() {
+    initializeModal();
     initializeEventListeners();
     setupDashboardInteractions();
-    initializeToastContainer();
 });
 
-// Initialize all event listeners
+// Initialize Modal
+function initializeModal() {
+    const modal = document.querySelector('.modal');
+    const responseForm = document.getElementById('responseForm');
+    const closeButtons = document.querySelectorAll('.cancel-response, .close-modal');
+
+    // Add close button handlers
+    closeButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeModal();
+        });
+    });
+
+    // Close on outside click
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Handle form submission
+    responseForm?.addEventListener('submit', handleResponseSubmit);
+}
+
+// Initialize Event Listeners
 function initializeEventListeners() {
     // Navigation
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', handleNavigation);
     });
 
-    // Search
+    // Search functionality
     const searchInput = document.querySelector('.search-box input');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(handleSearch, 300));
     }
 
-    // Request actions
+    // Request action buttons
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.addEventListener('click', handleViewRequest);
     });
@@ -31,24 +56,6 @@ function initializeEventListeners() {
         btn.addEventListener('click', handleApprove);
     });
 
-    // Form submissions
-    const responseForm = document.getElementById('responseForm');
-    if (responseForm) {
-        responseForm.addEventListener('submit', handleResponseSubmit);
-    }
-
-    // Modal close buttons
-    document.querySelectorAll('.close-modal, .cancel-btn').forEach(btn => {
-        btn.addEventListener('click', () => closeModal());
-    });
-
-    // Close modal on outside click
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            closeModal();
-        }
-    });
-
     // Notifications
     const notificationBtn = document.querySelector('.notifications');
     if (notificationBtn) {
@@ -56,14 +63,12 @@ function initializeEventListeners() {
     }
 }
 
-// Setup dashboard interactions and animations
+// Dashboard Interactions
 function setupDashboardInteractions() {
     // Stats cards hover effects
-    const statsCards = document.querySelectorAll('.stats-card');
-    statsCards.forEach(card => {
+    document.querySelectorAll('.stats-card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.style.transform = 'translateY(-5px)';
-            card.style.transition = 'transform 0.3s ease';
         });
 
         card.addEventListener('mouseleave', () => {
@@ -72,11 +77,9 @@ function setupDashboardInteractions() {
     });
 
     // Request cards hover effects
-    const requestCards = document.querySelectorAll('.request-card');
-    requestCards.forEach(card => {
+    document.querySelectorAll('.request-card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.style.transform = 'translateX(5px)';
-            card.style.transition = 'transform 0.3s ease';
         });
 
         card.addEventListener('mouseleave', () => {
@@ -87,13 +90,9 @@ function setupDashboardInteractions() {
 
 // Event Handlers
 function handleNavigation(e) {
-    e.preventDefault();
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => item.classList.remove('active'));
-    this.classList.add('active');
-
     const href = this.getAttribute('href');
-    if (href !== '#') {
+    if (href && href !== '#') {
+        e.preventDefault();
         window.location.href = href;
     }
 }
@@ -103,22 +102,23 @@ function handleSearch(e) {
     const requestCards = document.querySelectorAll('.request-card');
 
     requestCards.forEach(card => {
-        const patientName = card.querySelector('.request-info h3').textContent.toLowerCase();
-        const treatmentType = card.querySelector('.treatment-type').textContent.toLowerCase();
-        const doctorName = card.querySelector('.doctor-preference').textContent.toLowerCase();
+        const patientName = card.querySelector('h3')?.textContent.toLowerCase() || '';
+        const treatmentType = card.querySelector('.treatment-type')?.textContent.toLowerCase() || '';
+        const doctorName = card.querySelector('.doctor-preference')?.textContent.toLowerCase() || '';
         
         const shouldShow = patientName.includes(searchTerm) || 
                           treatmentType.includes(searchTerm) || 
                           doctorName.includes(searchTerm);
         
-        card.style.display = shouldShow ? 'grid' : 'none';
+        card.style.display = shouldShow ? 'flex' : 'none';
     });
 }
 
 function handleViewRequest(e) {
     const requestId = e.currentTarget.dataset.id;
     showLoadingSpinner();
-    
+
+    // Replace with actual API call
     fetch(`api/requests/${requestId}`)
         .then(handleResponse)
         .then(data => {
@@ -133,27 +133,28 @@ function handleViewRequest(e) {
 }
 
 function handleRespond(e) {
+    e.preventDefault();
     const requestId = e.currentTarget.dataset.id;
-    const requestCard = e.currentTarget.closest('.request-card');
+    const modal = document.querySelector('.modal');
     
-    // Pre-fill form with existing data if available
+    // Set request ID and show modal
     document.getElementById('request_id').value = requestId;
-    if (requestCard) {
-        const estimatedCost = requestCard.querySelector('.cost')?.textContent.match(/\d+(\.\d+)?/)?.[0];
-        if (estimatedCost) {
-            document.getElementById('estimated_cost').value = estimatedCost;
-        }
-    }
+    modal.classList.add('show');
     
-    showModal('responseModal');
+    // Focus first input
+    const firstInput = modal.querySelector('input:not([type="hidden"])');
+    if (firstInput) {
+        firstInput.focus();
+    }
 }
 
 function handleApprove(e) {
     const requestId = e.currentTarget.dataset.id;
     
-    if (confirm('Are you sure you want to approve this treatment request?')) {
+    if (confirm('Are you sure you want to approve this request?')) {
         showLoadingSpinner();
         
+        // Replace with actual API call
         fetch(`api/requests/${requestId}/approve`, {
             method: 'POST',
             headers: {
@@ -162,7 +163,7 @@ function handleApprove(e) {
             }
         })
         .then(handleResponse)
-        .then(data => {
+        .then(() => {
             hideLoadingSpinner();
             showToast('Request approved successfully', 'success');
             setTimeout(() => location.reload(), 1500);
@@ -179,15 +180,16 @@ function handleResponseSubmit(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
-    const requestId = formData.get('request_id');
 
-    if (!validateResponseForm(form)) {
-        return;
-    }
+    if (!validateResponseForm(formData)) return;
 
-    showLoadingSpinner();
-    
-    fetch(`api/requests/${requestId}/respond`, {
+    const submitButton = form.querySelector('.send-response');
+    const originalText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="ri-loader-4-line"></i> Sending...';
+    submitButton.disabled = true;
+
+    // Replace with actual API call
+    fetch(`api/requests/${formData.get('request_id')}/respond`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -195,41 +197,47 @@ function handleResponseSubmit(e) {
         }
     })
     .then(handleResponse)
-    .then(data => {
-        hideLoadingSpinner();
+    .then(() => {
         showToast('Response sent successfully', 'success');
         closeModal();
         setTimeout(() => location.reload(), 1500);
     })
     .catch(error => {
-        hideLoadingSpinner();
         showToast('Error sending response', 'error');
         console.error('Error:', error);
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
     });
-}
-
-function handleNotifications() {
-    // Implement notifications panel logic
-    console.log('Notifications clicked');
 }
 
 // Utility Functions
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'flex';
-        const firstInput = modal.querySelector('input:not([type="hidden"]), textarea');
-        if (firstInput) {
-            firstInput.focus();
-        }
-    }
+function closeModal() {
+    const modal = document.querySelector('.modal');
+    const form = document.getElementById('responseForm');
+    
+    modal.classList.remove('show');
+    setTimeout(() => {
+        if (form) form.reset();
+    }, 300);
 }
 
-function closeModal() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.style.display = 'none';
-    });
+function validateResponseForm(formData) {
+    const cost = formData.get('estimated_cost');
+    const message = formData.get('response_message');
+    
+    if (!cost || cost <= 0) {
+        showToast('Please enter a valid cost', 'error');
+        return false;
+    }
+    
+    if (!message?.trim()) {
+        showToast('Please enter a response message', 'error');
+        return false;
+    }
+    
+    return true;
 }
 
 function showToast(message, type = 'info') {
@@ -237,12 +245,10 @@ function showToast(message, type = 'info') {
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
     
-    const toastContainer = document.querySelector('.toast-container');
-    toastContainer.appendChild(toast);
+    const container = document.querySelector('.toast-container') || createToastContainer();
+    container.appendChild(toast);
     
-    requestAnimationFrame(() => {
-        toast.classList.add('show');
-    });
+    requestAnimationFrame(() => toast.classList.add('show'));
     
     setTimeout(() => {
         toast.classList.remove('show');
@@ -250,12 +256,11 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-function initializeToastContainer() {
-    if (!document.querySelector('.toast-container')) {
-        const container = document.createElement('div');
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
 }
 
 function showLoadingSpinner() {
@@ -266,32 +271,11 @@ function showLoadingSpinner() {
 
 function hideLoadingSpinner() {
     const spinner = document.querySelector('.loading-spinner');
-    if (spinner) {
-        spinner.remove();
-    }
-}
-
-function validateResponseForm(form) {
-    const estimatedCost = form.querySelector('#estimated_cost').value;
-    const responseMessage = form.querySelector('#response_message').value;
-    
-    if (!estimatedCost || estimatedCost <= 0) {
-        showToast('Please enter a valid estimated cost', 'error');
-        return false;
-    }
-    
-    if (!responseMessage.trim()) {
-        showToast('Please enter a response message', 'error');
-        return false;
-    }
-    
-    return true;
+    if (spinner) spinner.remove();
 }
 
 function handleResponse(response) {
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
+    if (!response.ok) throw new Error('Network response was not ok');
     return response.json();
 }
 
@@ -307,18 +291,14 @@ function debounce(func, wait) {
     };
 }
 
-function displayRequestDetails(data) {
-    // Implement request details display logic
-    console.log('Displaying request details:', data);
+function handleNotifications() {
+    // Implement notifications panel logic
+    console.log('Notifications clicked');
 }
 
-// Date formatting utility
-function formatDate(date) {
-    return new Date(date).toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+function displayRequestDetails(data) {
+    // Implement request details display logic
+    console.log('Request details:', data);
 }
 
 // Error handling
@@ -326,20 +306,3 @@ window.addEventListener('error', function(e) {
     console.error('Global error:', e.error);
     showToast('An unexpected error occurred', 'error');
 });
-
-// Initialize tooltips if using them
-function initializeTooltips() {
-    const tooltipTriggers = document.querySelectorAll('[data-tooltip]');
-    tooltipTriggers.forEach(trigger => {
-        trigger.addEventListener('mouseenter', showTooltip);
-        trigger.addEventListener('mouseleave', hideTooltip);
-    });
-}
-
-// Export any functions that might be needed elsewhere
-export {
-    showToast,
-    showModal,
-    closeModal,
-    formatDate
-};
