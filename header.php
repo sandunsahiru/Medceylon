@@ -1,3 +1,26 @@
+<?php
+require_once 'includes/sessionmanager.php';
+$sessionManager = SessionManager::getInstance();
+
+// Redirect to home.php if logged in and currently on index.php
+if ($sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'index.php') {
+    header("Location: home.php");
+    exit();
+}
+
+// Redirect to index.php if not logged in and trying to access home.php
+if (!$sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'home.php') {
+    header("Location: index.php");
+    exit();
+}
+
+// Handle Logout if logout button is clicked
+if (isset($_GET['logout'])) {
+    $sessionManager->logout();
+    header("Location: index.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,23 +30,6 @@
     <link rel="stylesheet" href="header.css">
 </head>
 <body>
-    <?php
-    require_once 'sessionmanager.php';
-    $sessionManager = SessionManager::getInstance();
-    
-    // Redirect to home.php if logged in and currently on index.php
-    if ($sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'index.php') {
-        header("Location: home.php");
-        exit();
-    }
-    
-    // Redirect to index.php if not logged in and trying to access home.php
-    if (!$sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'home.php') {
-        header("Location: index.php");
-        exit();
-    }
-    ?>
-    
     <header class="header">
         <div class="logo">
             <a href="<?php echo $sessionManager->isLoggedIn() ? 'home.php' : 'index.php'; ?>" style="color: white; text-decoration: none;">MedCeylon</a>
@@ -31,7 +37,7 @@
         <nav class="nav-links">
             <a href="<?php echo $sessionManager->isLoggedIn() ? 'home.php' : 'index.php'; ?>">Home</a>
             <a href="about-us.php">About Us</a>
-            <a href="hospitals.php">Our Hospitals</a>
+            <a href="partner-hospitals.php">Our Hospitals</a>
             <?php if ($sessionManager->isLoggedIn()): ?>
                 <a href="book-appointment.php">Book Appointments</a>
             <?php else: ?>
@@ -48,7 +54,8 @@
                         <a href="my-account.php">My Account</a>
                     </div>
                 </div>
-                <a href="logout.php" class="btn logout" style="text-decoration: none;">Logout</a>
+                <!-- Added logout link with a GET parameter for logout -->
+                <a href="?logout=true" class="btn logout" style="text-decoration: none;">Logout</a>
             <?php else: ?>
                 <a href="register.php" class="btn logout" style="text-decoration: none;">Sign Up</a>
                 <a href="user_login.php" class="btn logout" style="text-decoration: none;">Sign In</a>

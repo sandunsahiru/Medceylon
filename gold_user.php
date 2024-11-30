@@ -194,11 +194,11 @@ include('header.php');
 </head>
 <body>
 
-    <div class="hero">
-        <h1>Your Health, Your Journey, Your Choice</h1>
-        <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
-        <a href="#book-now" class="cta-btn">Book Now!</a>
-    </div>
+<div class="hero">
+    <h1>Your Health, Your Journey, Your Choice</h1>
+    <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
+    <a href="gold-plan.php" class="cta-btn">Get your personalised plan now!</a>
+</div>
 
     <section class="services">
         <h2>Our Services</h2>

@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Redirect based on role
                 switch($user['role_id']) {
                     case 1: // Patient
-                        header("Location: patient_dashboard.php");
+                        header("Location: home.php");
                         break;
                     case 2: // Doctor
                         header("Location: doctor_dashboard.php");
@@ -224,8 +224,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <?php if (isset($error)) { echo "<p class='error'>$error</p>"; } ?>
 
             <div class="links">
-                <a href="register.php">Don't have an account? Register</a><br>
-                <a href="forgot_password.php">Forgot Password?</a>
+                <a href="register.php">Don't have an account? Register</a>
             </div>
         </form>
     </div>

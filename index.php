@@ -229,25 +229,21 @@ if ($sessionManager->isLoggedIn()) {
                 <h3>Book expert doctors</h3>
             </div>
             <div class="service">
-                <a href="application.php">
                     <img src="images/Rectangle201523.jpg" alt="Check visa details">
                     <h3>Check visa details</h3>
                 </a>
             </div>
             <div class="service">
-                <a href="accomodation.php">
                     <img src="images/Rectangle211523.jpg" alt="Find your perfect stay">
                     <h3>Find your perfect stay</h3>
                 </a>
             </div>
             <div class="service">
-                <a href="book.php">
                     <img src="images/Rectangle221523.jpg" alt="Explore transport options">
                     <h3>Explore transport options</h3>
                 </a>
             </div>
             <div class="service">
-                <a href="caregivers.php">
                     <img src="images/Rectangle231573.jpg" alt="Connect with caregivers">
                     <h3>Connect with caregivers</h3>
                 </a>
@@ -259,7 +255,6 @@ if ($sessionManager->isLoggedIn()) {
                 <h3>Discover Sri Lanka’s gems</h3>
             </div>
             <div class="service">
-                <a href="hospitals.php">
                     <img src="images/Rectangle251573.jpg" alt="Get personalized hospital support">
                     <h3>Get personalized hospital support</h3>
                 </a>
