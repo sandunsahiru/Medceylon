@@ -8,7 +8,7 @@
 </head>
 <body>
     <?php
-    require_once 'sessionmanager.php';
+    require_once 'includes/sessionmanager.php';
     $sessionManager = SessionManager::getInstance();
     
     // Redirect to home.php if logged in and currently on index.php
