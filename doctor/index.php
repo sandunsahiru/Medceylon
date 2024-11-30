@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config.php';
+require_once '../includes/config.php';
 
 // Get total patients count and gender distribution
 $total_query = "SELECT 
@@ -36,7 +36,7 @@ $appointments = $conn->query($appointments_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCare Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/doctordashboard.css">
     <!-- Include Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -161,7 +161,7 @@ $appointments = $conn->query($appointments_query);
 
         </main>
     </div>
-    <script src="script.js"></script>
+    <script src="../assets/js/doctorscript.js"></script>
 </body>
 
 </html>
