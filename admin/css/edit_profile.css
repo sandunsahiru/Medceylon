@@ -6,8 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    overflow: hidden; /* Prevent scrolling */
+    height: 100vh;/* Prevent scrolling */
 }
 
 .profile-edit-container {
