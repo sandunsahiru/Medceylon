@@ -9,7 +9,7 @@ include 'header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pricing Packages</title>
-    <link rel="stylesheet" href="pricing.css">
+    <link rel="stylesheet" href="./assets/css/pricing.css">
 </head>
 <body>
     <div class="main-container">

@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Account - MedCeylon</title>
-    <link rel="stylesheet" href="my-account.css">
+    <link rel="stylesheet" href="./assets/css/my-account.css">
 </head>
 <body>
     <div class="account-container">

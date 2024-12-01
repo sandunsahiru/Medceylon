@@ -51,8 +51,8 @@ if ($sessionManager->isLoggedIn()) {
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(to right, #299d97, #248c7f);
-            color: white;
+            background: url('assets/images/hero.jpg') no-repeat center center/cover;
+            color: black; 
             padding: 100px 20px;
             text-align: center;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
@@ -225,26 +225,26 @@ if ($sessionManager->isLoggedIn()) {
         <div class="services-grid">
             <!-- First Row -->
             <div class="service">
-                <img src="images/Rectangle181523.jpg" alt="Book expert doctors">
+                <img src="assets/images/Rectangle181523.jpg" alt="Book expert doctors">
                 <h3>Book expert doctors</h3>
             </div>
             <div class="service">
-                    <img src="images/Rectangle201523.jpg" alt="Check visa details">
+                    <img src="assets/images/Rectangle201523.jpg" alt="Check visa details">
                     <h3>Check visa details</h3>
                 </a>
             </div>
             <div class="service">
-                    <img src="images/Rectangle211523.jpg" alt="Find your perfect stay">
+                    <img src="assets/images/Rectangle211523.jpg" alt="Find your perfect stay">
                     <h3>Find your perfect stay</h3>
                 </a>
             </div>
             <div class="service">
-                    <img src="images/Rectangle221523.jpg" alt="Explore transport options">
+                    <img src="assets/images/Rectangle221523.jpg" alt="Explore transport options">
                     <h3>Explore transport options</h3>
                 </a>
             </div>
             <div class="service">
-                    <img src="images/Rectangle231573.jpg" alt="Connect with caregivers">
+                    <img src="assets/images/Rectangle231573.jpg" alt="Connect with caregivers">
                     <h3>Connect with caregivers</h3>
                 </a>
             </div>

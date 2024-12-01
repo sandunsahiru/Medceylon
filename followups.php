@@ -40,7 +40,7 @@ $appointments = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Follow-Up Appointments</title>
     <!-- Link to the external CSS file -->
-    <link rel="stylesheet" href="follows.css"> <!-- Ensure the CSS file is in the same directory -->
+    <link rel="stylesheet" href="./assets/css/follows.css"> <!-- Ensure the CSS file is in the same directory -->
 </head>
 <body>
 

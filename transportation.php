@@ -42,8 +42,6 @@ if (isset($_POST['update_booking'])) {
     mysqli_query($conn, $query);
 }
 
-// Fetch bookings for display
-$bookings = mysqli_query($conn, "SELECT * FROM transportationassistance WHERE patient_id = 1");
 ?>
 
 <!DOCTYPE html>
@@ -55,62 +53,118 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance WHERE pa
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h2 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
         }
         .form-container {
-            margin: 20px;
-            padding: 20px;
-            border: 1px solid #299d97;
-            border-radius: 5px;
-            background-color: #ffffff;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
         }
-        table {
+        .form-container input, .form-container select, .form-container button {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: auto;
-            background-color: #ffffff;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #333;
         }
-        th, td {
-            border: 1px solid #299d97;
-            padding: 10px;
-            text-align: left;
+        .form-container input:focus, .form-container select:focus, .form-container button:focus {
+            border-color: #299d97;
+            outline: none;
         }
-        th {
+        .form-container input[type="text"], .form-container input[type="date"], .form-container input[type="time"] {
+            background: #fafafa;
+        }
+        .form-container select {
+            background: #fafafa;
+        }
+        .form-container button {
             background-color: #299d97;
             color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-container button:hover {
+            background-color: #257f6e;
         }
         .autocomplete-results {
-            border: 1px solid #299d97;
             background: #fff;
             max-height: 150px;
             overflow-y: auto;
             position: absolute;
             z-index: 10;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: -10px;
         }
         .autocomplete-results div {
+            padding: 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .autocomplete-results div:hover {
+            background: #f4f4f4;
+        }
+        .btn-link {
+            background-color: transparent;
+            border: none;
+            color: #299d97;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
             padding: 10px;
             cursor: pointer;
         }
-        .autocomplete-results div:hover {
-            background: #f0f0f0;
+        .btn-link:hover {
+            color: #257f6e;
+            text-decoration: underline;
         }
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-        button {
+        footer {
+            margin-top: auto;
             background-color: #299d97;
             color: white;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 20px;
+            text-align: center;
         }
-        button:hover {
-            background-color: #257f6e;
+        .form-section {
+            display: flex;
+            flex-direction: column;
         }
+        .form-section label {
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .form-section input, .form-section select {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
     </style>
+
     <script>
         async function fetchLocations(query, target) {
             if (query.length < 3) return;
@@ -133,88 +187,57 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance WHERE pa
     </script>
 </head>
 <body>
-<div class="form-container">
-    <h2>Book Transportation Assistance</h2>
-    <form method="POST">
-        <label for="pickup_location">Pickup Location:</label>
-        <input type="text" id="pickup_location" name="pickup_location" oninput="fetchLocations(this.value, 'pickup_location')" required>
-        <div class="autocomplete-results" id="pickup_location-results"></div>
-        <br><br>
 
-        <label for="dropoff_location">Dropoff Location:</label>
-        <input type="text" id="dropoff_location" name="dropoff_location" oninput="fetchLocations(this.value, 'dropoff_location')" required>
-        <div class="autocomplete-results" id="dropoff_location-results"></div>
-        <br><br>
+<div class="container">
+    <div class="form-container">
+        <h2>Book Your Transportation Assistance</h2>
+        <form method="POST">
+            <div class="form-section">
+                <label for="pickup_location">Pickup Location</label>
+                <input type="text" id="pickup_location" name="pickup_location" placeholder="Enter pickup location" oninput="fetchLocations(this.value, 'pickup_location')" required>
+                <div class="autocomplete-results" id="pickup_location-results"></div>
+            </div>
 
-        <label for="date">Date:</label>
-        <input type="date" id="date" name="date" required><br><br>
+            <div class="form-section">
+                <label for="dropoff_location">Dropoff Location</label>
+                <input type="text" id="dropoff_location" name="dropoff_location" placeholder="Enter dropoff location" oninput="fetchLocations(this.value, 'dropoff_location')" required>
+                <div class="autocomplete-results" id="dropoff_location-results"></div>
+            </div>
 
-        <label for="time">Time:</label>
-        <input type="time" id="time" name="time" required><br><br>
+            <div class="form-section">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
 
-        <label for="transport_type">Transport Type:</label>
-        <select id="transport_type" name="transport_type" required>
-            <option value="Car">Car</option>
-            <option value="Ambulance">Ambulance</option>
-            <option value="Wheelchair Accessible Van">Wheelchair Accessible Van</option>
-        </select><br><br>
+            <div class="form-section">
+                <label for="time">Time</label>
+                <input type="time" id="time" name="time" required>
+            </div>
 
-        <button type="submit" name="book_transport">Book Now</button>
-    </form>
+            <div class="form-section">
+                <label for="transport_type">Transport Type</label>
+                <select id="transport_type" name="transport_type" required>
+                    <option value="Car">Car</option>
+                    <option value="Ambulance">Ambulance</option>
+                    <option value="Wheelchair Accessible Van">Wheelchair Accessible Van</option>
+                </select>
+            </div>
+
+            <button type="submit" name="book_transport">Book Now</button>
+        </form>
+    </div>
+
+    <div class="form-container">
+        <h2>View Your Bookings</h2>
+        <form action="view_bookings.php">
+            <button type="submit" class="btn-link">View Bookings</button>
+        </form>
+    </div>
 </div>
 
-<div class="form-container">
-    <h2>Your Bookings</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Pickup</th>
-                <th>Dropoff</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($row = mysqli_fetch_assoc($bookings)): ?>
-                <tr>
-                    <form method="POST">
-                        <td>
-                            <input type="text" name="pickup_location" value="<?= $row['pickup_location'] ?>">
-                        </td>
-                        <td>
-                            <input type="text" name="dropoff_location" value="<?= $row['dropoff_location'] ?>">
-                        </td>
-                        <td>
-                            <input type="date" name="date" value="<?= $row['date'] ?>">
-                        </td>
-                        <td>
-                            <input type="time" name="time" value="<?= $row['time'] ?>">
-                        </td>
-                        <td>
-                            <select name="transport_type">
-                                <option value="Car" <?= $row['transport_type'] == 'Car' ? 'selected' : '' ?>>Car</option>
-                                <option value="Ambulance" <?= $row['transport_type'] == 'Ambulance' ? 'selected' : '' ?>>Ambulance</option>
-                                <option value="Wheelchair Accessible Van" <?= $row['transport_type'] == 'Wheelchair Accessible Van' ? 'selected' : '' ?>>Wheelchair Accessible Van</option>
-                            </select>
-                        </td>
-                        <td><?= $row['status'] ?></td>
-                        <td class="actions">
-                            <input type="hidden" name="booking_id" value="<?= $row['transport_request_id'] ?>">
-                            <button type="submit" name="update_booking">Update</button>
-                            <?php if (strtotime($row['last_updated']) >= strtotime('-5 minutes')): ?>
-                                <button type="submit" name="delete_booking" onclick="return confirm('Are you sure you want to delete this booking?')">Delete</button>
-                            <?php endif; ?>
-                        </td>
-                    </form>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
-</div>
+<footer>
+    <?php include('footer.php'); // Include the footer ?>
+</footer>
 
-<?php include('footer.php'); // Include the footer ?>
 </body>
 </html>

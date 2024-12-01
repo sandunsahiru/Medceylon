@@ -29,7 +29,7 @@ $submitted_requests = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request to Hospitals</title>
-    <link rel="stylesheet" href="hospital-requests.css">
+    <link rel="stylesheet" href="./assets/css/hospital-requests.css">
 </head>
 <body>
     <div class="requests-container">

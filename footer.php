@@ -16,4 +16,4 @@
         </div>
     </div>
 </footer>
-<link rel="stylesheet" href="footer-styles.css">
+<link rel="stylesheet" href="./assets/css/footer-styles.css">

@@ -9,7 +9,7 @@ include 'header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Plan - Medical Tourism Journey</title>
-    <link rel="stylesheet" href="gold-plan.css">
+    <link rel="stylesheet" href="./assets/css/gold-plan.css">
 </head>
 <body>
     <div class="main-container">

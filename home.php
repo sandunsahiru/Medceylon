@@ -39,8 +39,8 @@ include('header.php');
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(to right, #299d97, #248c7f);
-            color: white;
+            background: url('assets/images/hero.jpg') no-repeat center center/cover;
+            color: black; 
             padding: 100px 20px;
             text-align: center;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
@@ -205,48 +205,48 @@ include('header.php');
         <div class="services-grid">
             <!-- First Row -->
             <div class="service">
-                <img src="images/Rectangle181523.jpg" alt="Book expert doctors">
+                <img src="assets/images/Rectangle181523.jpg" alt="Book expert doctors">
                 <h3>Book expert doctors</h3>
             </div>
             <div class="service">
                 <a href="visa_guidance.php">
-                    <img src="images/Rectangle201523.jpg" alt="Check visa details">
+                    <img src="assets/images/Rectangle201523.jpg" alt="Check visa details">
                     <h3>Check visa details</h3>
                 </a>
             </div>
             <div class="service">
                 <a href="accomodation.php">
-                    <img src="images/Rectangle211523.jpg" alt="Find your perfect stay">
+                    <img src="assets/images/Rectangle211523.jpg" alt="Find your perfect stay">
                     <h3>Find your perfect stay</h3>
                 </a>
             </div>
             <div class="service">
                 <a href="transportation.php">
-                    <img src="images/Rectangle221523.jpg" alt="Explore transport options">
+                    <img src="assets/images/Rectangle221523.jpg" alt="Explore transport options">
                     <h3>Explore transport options</h3>
                 </a>
             </div>
             <div class="service">
                 <a href="caregivers.php">
-                    <img src="images/Rectangle231573.jpg" alt="Connect with caregivers">
+                    <img src="assets/images/Rectangle231573.jpg" alt="Connect with caregivers">
                     <h3>Connect with caregivers</h3>
                 </a>
             </div>
 
             <!-- Second Row -->
             <div class="service">
-                <img src="images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
+                <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
                 <h3>Discover Sri Lanka’s gems</h3>
             </div>
             <div class="service">
                 <a href="hospital-requests.php">
-                    <img src="images/Rectangle251573.jpg" alt="Get personalized hospital support">
+                    <img src="assets/images/Rectangle251573.jpg" alt="Get personalized hospital support">
                     <h3>Get personalized hospital support</h3>
                 </a>
             </div>
             <div class="service">
             <a href="followups.php">
-                <img src="images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
+                <img src="assets/images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
                 <h3>Manage follow-ups effortlessly</h3>
             </div>
         </div>
@@ -257,19 +257,19 @@ include('header.php');
 
         <div class="testimonials-row">
             <div class="testimonial">
-                <img src="images/testimonial1.jpg" alt="Client 1">
+                <img src="assets/images/testimonial1.jpg" alt="Client 1">
                 <p>"The team at MedCeylon helped me find the best healthcare options and provided exceptional service throughout my stay in Sri Lanka. Highly recommended!"</p>
                 <p class="name">Sarah W.</p>
             </div>
 
             <div class="testimonial">
-                <img src="images/testimonial2.jpg" alt="Client 2">
+                <img src="assets/images/testimonial2.jpg" alt="Client 2">
                 <p>"Thanks to MedCeylon, my treatment journey was seamless. They took care of all the details, and I felt completely supported the entire time."</p>
                 <p class="name">John D.</p>
             </div>
 
             <div class="testimonial">
-                <img src="images/testimonial3.jpg" alt="Client 3">
+                <img src="assets/images/testimonial3.jpg" alt="Client 3">
                 <p>"Amazing experience! MedCeylon made sure I had everything I needed from accommodation to medical care. I couldn’t have asked for better service."</p>
                 <p class="name">Emma R.</p>
             </div>

@@ -35,7 +35,7 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance");
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Partner Dashboard</title>
-    <link rel="stylesheet" href="travel_partner_dashboard.css">
+    <link rel="stylesheet" href="./assets/css/travel_partner_dashboard.css">
     <style>
         body { font-family: Arial, sans-serif; }
         .form-container { margin: 20px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }

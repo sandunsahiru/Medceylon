@@ -9,7 +9,7 @@ include 'header.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Us - MedCeylon</title>
-    <link rel="stylesheet" href="about-us.css">
+    <link rel="stylesheet" href="./assets/css/about-us.css">
 </head>
 <body>
     <div class="about-us-container">

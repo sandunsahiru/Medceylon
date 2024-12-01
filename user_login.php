@@ -17,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'general_doctor', 'special_doctor' => 2,
         'caretaker' => 5,
         'admin' => 4,
-        'support_agent' => 5,
         default => 1
     };
 
@@ -70,9 +69,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         break;
                     case 4: // Admin
                         header("Location: admin_dashboard.php");
-                        break;
-                    case 5: // Support/Caretaker
-                        header("Location: support_dashboard.php");
                         break;
                     default:
                         header("Location: dashboard.php");
@@ -215,7 +211,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="special_doctor">Special Doctor</option>
                     <option value="caretaker">Caretaker</option>
                     <option value="admin">Admin</option>
-                    <option value="support_agent">Support Agent</option>
                 </select>
             </div>
 
