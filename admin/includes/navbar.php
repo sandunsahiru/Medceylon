@@ -33,7 +33,5 @@
             </li>
         </ul>
     </nav>
-    <div class="settings">
-        <a href="#">Settings</a>
-    </div>
+
 </div>
