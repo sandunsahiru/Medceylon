@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config.php';
+require_once '../includes/config.php';
 
 // Check if doctor is logged in
 // if (!isset($_SESSION['doctor_id'])) {
@@ -71,7 +71,7 @@ $availability = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCare Dashboard - Appointments</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/doctordashboard.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
 <body>
@@ -91,13 +91,17 @@ $availability = $stmt->get_result();
                     <i class="ri-calendar-line"></i>
                     <span>Appointments</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="patients.php" class="nav-item">
                     <i class="ri-user-line"></i>
                     <span>Patients</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="all-doctors.php" class="nav-item">
                     <i class="ri-nurse-line"></i>
-                    <span>Profile</span>
+                    <span>Doctors</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="ri-chat-1-line"></i>
+                    <span>Chat</span>
                 </a>
             </nav>
 
@@ -235,6 +239,13 @@ $availability = $stmt->get_result();
                     </form>
                 </div>
             </div>
+            
+
+
+
+
+
+
         </main>
     </div>
 

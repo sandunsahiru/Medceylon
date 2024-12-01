@@ -237,6 +237,7 @@ include('header.php');
             <div class="service">
                 <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
                 <h3>Discover Sri Lanka’s gems</h3>
+
             </div>
             <div class="service">
                 <a href="hospital-requests.php">

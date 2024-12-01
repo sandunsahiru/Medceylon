@@ -70,6 +70,26 @@ body {
 .nav-item i {
     font-size: 1.25rem;
 }
+.exit-button {
+    margin-top: auto;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #EF4444;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.exit-button:hover {
+    background: #FEE2E2;
+}
+
+.exit-button i {
+    font-size: 1.25rem;
+}
 
 /* Main Content Styles */
 .main-content {
@@ -171,57 +191,135 @@ body {
     font-weight: 600;
 }
 
-/* Appointments Section */
-.appointments-section {
+/* Treatment Requests Section */
+.requests-section {
     background: var(--white);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
 }
 
-.appointments-list {
-    margin-top: 1.5rem;
-}
-
-.appointment-card {
+.section-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background: var(--bg-light);
-    border-radius: 12px;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.appointment-time {
-    width: 80px;
+.section-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.view-all {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.request-card {
+    background: var(--bg-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: transform 0.2s ease;
+}
+
+.request-card:hover {
+    transform: translateX(5px);
+}
+
+.request-status {
+    align-self: flex-start;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.request-status.pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.request-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.request-info h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--text-dark);
 }
 
-.appointment-info {
-    flex: 1;
-}
-
-.appointment-info h3 {
-    margin-bottom: 0.25rem;
-}
-
-.appointment-info p {
+.request-info p {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     color: var(--text-light);
     font-size: 0.9rem;
 }
 
-.appointment-actions {
+.request-info p i {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.request-details {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cost, 
+.requirements {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.cost i, 
+.requirements i {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.request-actions {
+    align-self: flex-end;
+    display: flex;
+    gap: 0.75rem;
 }
 
 .action-btn {
-    background: var(--white);
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    padding: 0.5rem;
     border-radius: 8px;
+    background: var(--white);
+    color: var(--text-light);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -229,236 +327,36 @@ body {
 .action-btn:hover {
     background: var(--primary-light);
     color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .action-btn i {
-    font-size: 1.1rem;
-}
-.exit-button {
-    margin-top: auto;
-    padding: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: #EF4444;
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    transition: all 0.3s ease;
-    margin-bottom: 1rem;
-}
-
-.exit-button:hover {
-    background: #FEE2E2;
-}
-
-.exit-button i {
     font-size: 1.25rem;
 }
 
-
-
-
-/* Additional styles for appointments page */
-.filters-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
+/* Treatment Type Icons */
+.treatment-type i {
+    color: #059669; /* Green */
 }
 
-.filter-tabs {
-    display: flex;
-    gap: 1rem;
+/* Doctor Icon */
+.doctor-preference i {
+    color: #6366F1; /* Indigo */
 }
 
-.filter-tab {
-    padding: 0.5rem 1.5rem;
-    border: 1px solid var(--primary-color);
-    border-radius: 20px;
-    background: none;
-    color: var(--primary-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
+/* Date Icon */
+.preferred-date i {
+    color: #8B5CF6; /* Purple */
 }
 
-.filter-tab.active {
-    background: var(--primary-color);
-    color: var(--white);
+/* Cost Icon */
+.cost i {
+    color: #F59E0B; /* Amber */
 }
 
-.appointments-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.appointment-row {
-    background: var(--white);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.appointment-row:hover {
-    transform: translateY(-2px);
-    transition: transform 0.2s ease;
-    box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.1);
-}
-
-.patient-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-width: 250px;
-}
-
-.avatar {
-    width: 48px;
-    height: 48px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.avatar i {
-    color: var(--primary-color);
-    font-size: 1.5rem;
-}
-
-.info-details h3 {
-    margin-bottom: 0.25rem;
-    color: var(--text-dark);
-}
-
-.info-details span {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-.status {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    background: var(--primary-light);
-    color: var(--primary-color);
-}
-
-.appointment-info {
-    display: flex;
-    gap: 2rem;
-    flex: 1;
-    align-items: center;
-}
-
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-light);
-}
-
-.info-item i {
-    color: var(--primary-color);
-}
-
-.row-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.edit-btn, .cancel-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.edit-btn {
-    background: var(--primary-light);
-    color: var(--primary-color);
-}
-
-.cancel-btn {
-    background: #FEE2E2;
-    color: #DC2626;
-}
-
-.edit-btn:hover, .cancel-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-/* Available Times Section */
-.availability-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem; /* Increased gap between time slots */
-}
-
-.time-slot-card {
-    background: var(--white);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-
-.time-slot-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem; /* Space between day and time */
-}
-
-.time-slot-info h3 {
-    font-size: 1.25rem;
-    color: var(--text-dark);
-    font-weight: 600;
-}
-
-.time {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-light);
-    font-size: 1rem;
-}
-
-.slot-actions {
-    display: flex;
-    gap: 1rem; /* Space between action buttons */
-}
-
-.slot-actions button {
-    padding: 0.5rem;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.slot-actions button:first-child {
-    background: var(--primary-light);
-    color: var(--primary-color);
-}
-
-.slot-actions button:last-child {
-    background: #FEE2E2;
-    color: #DC2626;
+/* Requirements Icon */
+.requirements i {
+    color: #EC4899; /* Pink */
 }
 
 /* Modal styles */
@@ -469,19 +367,33 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
+    display: none; /* Changed from flex to none */
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
 }
 
 .modal-content {
     background: var(--white);
     padding: 2rem;
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     width: 100%;
-    max-width: 400px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    box-shadow: var(--shadow);
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
 }
 
 .modal-content h2 {
@@ -490,33 +402,33 @@ body {
     color: var(--text-dark);
 }
 
+/* Modal Form Updates */
 .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     color: var(--text-dark);
-    font-size: 0.95rem;
+    font-weight: 500;
 }
 
-.form-group select,
-.form-group input {
+.form-group input,
+.form-group textarea {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #E2E8F0;
     border-radius: 8px;
     font-size: 0.95rem;
-    color: var(--text-dark);
-    background: white;
+    transition: all 0.2s ease;
 }
 
-.form-group select:focus,
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(41, 157, 151, 0.1);
+    box-shadow: 0 0 0 3px rgba(41, 157, 151, 0.1);
 }
 
 .form-actions {
@@ -529,13 +441,18 @@ body {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     transition: all 0.2s ease;
 }
 
 .submit-btn {
     background: var(--primary-color);
-    color: white;
+    color: var(--white);
     border: none;
     flex: 1;
 }
@@ -552,12 +469,5 @@ body {
 }
 
 .cancel-btn:hover {
-    background: #FEE2E2;
     opacity: 0.9;
-}
-
-.error-message {
-    color: #DC2626;
-    font-size: 0.85rem;
-    margin-top: 0.25rem;
 }

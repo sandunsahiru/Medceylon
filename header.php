@@ -1,26 +1,19 @@
 <?php
-require_once 'includes/sessionmanager.php';
-$sessionManager = SessionManager::getInstance();
-
-// Redirect to home.php if logged in and currently on index.php
-if ($sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'index.php') {
-    header("Location: home.php");
-    exit();
-}
-
-// Redirect to index.php if not logged in and trying to access home.php
-if (!$sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'home.php') {
-    header("Location: index.php");
-    exit();
-}
-
-// Handle Logout if logout button is clicked
-if (isset($_GET['logout'])) {
-    $sessionManager->logout();
-    header("Location: index.php");
-    exit();
-}
-?>
+    require_once 'includes/sessionmanager.php';
+    $sessionManager = SessionManager::getInstance();
+    
+    // Redirect to home.php if logged in and currently on index.php
+    if ($sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'index.php') {
+        header("Location: home.php");
+        exit();
+    }
+    
+    // Redirect to index.php if not logged in and trying to access home.php
+    if (!$sessionManager->isLoggedIn() && basename($_SERVER['PHP_SELF']) === 'home.php') {
+        header("Location: index.php");
+        exit();
+    }
+    ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
