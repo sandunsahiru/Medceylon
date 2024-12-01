@@ -10,6 +10,11 @@ body {
     width: 85%;
     flex-grow: 1;
     padding: 10px 30px 30px 30px;
+    margin-left: 360px; /* Space for the sidebar */
+    padding: 30px; /* Add padding for the content */
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto; 
 }
 
 header {

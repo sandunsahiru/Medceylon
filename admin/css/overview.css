@@ -185,7 +185,7 @@ body {
 
 .patient-percentage {
     background: #fff;
-    padding: 20px;
+    padding: 20px 40px 20px 40px;
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     max-width: 500px;
@@ -205,9 +205,10 @@ h2 {
 .tabs button {
     padding: 5px 15px;
     border: 1px solid #ccc;
-    background: #f4f4f4;
+    background: #047865;
     border-radius: 5px;
     cursor: pointer;
+    color: white;
     font-size: 14px;
 }
 

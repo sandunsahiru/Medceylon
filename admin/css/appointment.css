@@ -76,8 +76,8 @@ h2 {
 }
 
 button {
-    background: #007bff;
-    color: white;
+    background: #f5f5e6;
+    color: #000000;
     border: none;
     padding: 10px;
     margin: 10px 5px 0 0;
@@ -236,4 +236,119 @@ button {
     font-weight: 600;
     color: #10B981;
     /* Green color */
+}
+
+/* appointment view Section */
+.appointments-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.appointment-row {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.appointment-row:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+    box-shadow: 0 6px 8px -2px rgba(0, 0, 0, 0.1);
+}
+
+.patient-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 250px;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.info-details h3 {
+    margin-bottom: 0.25rem;
+    color: var(--text-dark);
+}
+
+.info-details span {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.appointment-info {
+    display: flex;
+    gap: 2rem;
+    flex: 1;
+    align-items: center;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+}
+
+.info-item i {
+    color: var(--primary-color);
+}
+
+.row-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.edit-btn, .cancel-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.edit-btn {
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.cancel-btn {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.edit-btn:hover, .cancel-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }

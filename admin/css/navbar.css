@@ -1,8 +1,14 @@
 .sidebar {
+    position: fixed; /* Fixes the sidebar */
+    top: 0;
+    left: 0;
     width: 300px;
+    height: 100vh; /* Full height */
     background-color: #FFFFFF;
     padding: 30px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Keeps it on top */
+    overflow-y: auto; /* Allows scrolling if content exceeds height */
 }
 
 .profile {
@@ -65,19 +71,16 @@ nav ul li a {
     color: #8E8E90;
     border-radius: 5px;
     transition: background-color 0.3s;
-
 }
 
 nav a {
     font-weight: bold;
 }
 
-
 nav ul li:hover, nav ul li.active {
     display: flex;
     border-radius: 5px;
     background-color: #f5f5e6;
-
 }
 
 .settings {
@@ -89,3 +92,4 @@ nav ul li:hover, nav ul li.active {
     text-decoration: none;
     color: #555;
 }
+
