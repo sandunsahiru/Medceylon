@@ -99,7 +99,7 @@ include "./includes/header.php";
 
                         // If it's a patient, show age and gender
                         if ($page === 'patients') {
-                            echo '<img src="' . $row['profile_picture'] . '" alt="' . $row['first_name'] . '" class="profile-img">';
+                            echo '<img src="./img/user.jpg" alt="' . $row['first_name'] . '" class="profile-img">';
                             echo '<h2>' . $row['first_name'] . ' ' . $row['last_name'] . '</h2>';
                             echo '</div>';
                             echo '<div class="profile-details">';
@@ -117,7 +117,7 @@ include "./includes/header.php";
                         }
                         // If it's a doctor, show role and specialization
                         elseif ($page === 'doctors') {
-                            echo '<img src="' . $row['profile_picture'] . '" alt="' . $row['first_name'] . '" class="profile-img">';
+                            echo '<img src="./img/user.jpg" alt="' . $row['first_name'] . '" class="profile-img">';
                             echo '<h2>' . $row['first_name'] . ' ' . $row['last_name'] . '</h2>';
                             echo '</div>';
                             echo '<div class="profile-details">';
@@ -135,7 +135,7 @@ include "./includes/header.php";
                         }
                         // If it's a hospital, show hospital name and city
                         elseif ($page === 'hospitals') {
-                            echo '<img src="' . $row['profile_picture'] . '" alt="' . $row['hospital_name'] . '" class="profile-img">';
+                            echo '<img src="./img/user.jpg" alt="' . $row['hospital_name'] . '" class="profile-img">';
                             echo '<h2>' . $row['hospital_name'] . '</h2>';
                             echo '</div>';
                             echo '<div class="profile-details">';
@@ -173,7 +173,6 @@ include "./includes/header.php";
 
     function navigateprofile(user_id) {
         window.location.href = `edit_user.php?user_id=${user_id}`;
-        console.log(user_id);
     }
 
     function navigateToAddUser() {

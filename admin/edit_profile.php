@@ -58,6 +58,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $city_error = "City does not exist in the database.";
         }
+
+        //retrieve nationality from countries table
+        $nationality = mysqli_real_escape_string($conn, $_POST['country_name']);
+        $nationality_query = "SELECT country_code FROM countries WHERE country_name = '$nationality' LIMIT 1";
+        $nationality_result = $conn->query($nationality_query);
+
+        if ($nationality_result->num_rows > 0) {
+            // Fetch the country_code from the result
+            $nationality_data = $nationality_result->fetch_assoc();
+            $nationality = $nationality_data['country_code'];
+        } else {
+            $nationality_error = "Country does not exist in the database.";
+        }
+        
+
         // Update logic for Both Doctors and Patients
         $user_id = intval($_POST['user_id']); // Sanitize user ID
         $first_name = $conn->real_escape_string($_POST['first_name']);
@@ -66,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone_number = $conn->real_escape_string($_POST['phone_number']);
         $address = $conn->real_escape_string($_POST['address']);
         $city = $city_id; // Assuming city is a numeric ID
-        $nationality = $conn->real_escape_string($_POST['country']); // Primary key in countries table
+        $nationality = $nationality;
         $password = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_BCRYPT) : null;
 
         // Doctor-specific fields

@@ -1,12 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Registration</title>
     <link rel="stylesheet" href="register.css">
 </head>
+
 <body>
     <div class="form-container">
         <form action="add_user.php" method="POST" id="registrationForm">
@@ -29,13 +30,37 @@
 
             <!-- Common Fields -->
             <div class="field">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required>
+                <label for="firstname">First Name</label>
+                <input type="text" id="firstname" name="firstname" required>
+
+                <label for="lastname">Last Name</label>
+                <input type="text" id="lastname" name="lastname" required>
+            </div>
+
+            <div class="field" style="display:flex; gap:10px; align-items:center;">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" required>
+
+
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" required>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="contact_number">Contact Number</label>
+                <input type="text" id="contact_number" name="contact_number">
             </div>
 
             <div class="field">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
             </div>
 
             <div class="field">
@@ -53,10 +78,7 @@
 
             <!-- Doctor Fields -->
             <div id="doctor_fields" class="user-type-fields" style="display:none;">
-                <div class="field">
-                    <label for="contact_number">Contact Number</label>
-                    <input type="text" id="contact_number" name="contact_number">
-                </div>
+
                 <div class="field">
                     <label for="slmc_registration_number">SLMC Registration Number</label>
                     <input type="text" id="slmc_registration_number" name="slmc_registration_number">
@@ -88,12 +110,12 @@
         function toggleFields() {
             const userType = document.getElementById('user_type').value;
             const userTypeFields = document.querySelectorAll('.user-type-fields');
-            
+
             // Hide all specific fields
             userTypeFields.forEach(field => field.style.display = 'none');
-            
+
             // Show relevant fields based on user type
-            switch(userType) {
+            switch (userType) {
                 case 'patient':
                     document.getElementById('patient_fields').style.display = 'block';
                     break;
@@ -123,5 +145,5 @@
         }
     </script>
 </body>
-</html>
 
+</html>

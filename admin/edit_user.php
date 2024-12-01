@@ -6,8 +6,7 @@ include('./includes/db_connection.php');
 if (isset($_GET['user_id'])) {
 
     // Get user_id from the GET request and sanitize
-    $user_id = intval($_GET['user_id']); // Sanitize input
-    echo "Received user_id: " . $user_id . "<br>";
+    $user_id = intval($_GET['user_id']); // Sanitize inputs
 
     // First query to fetch role_name only
     $role_query = "
@@ -21,7 +20,6 @@ if (isset($_GET['user_id'])) {
     if ($role_result->num_rows > 0) {
         $role_data = $role_result->fetch_assoc();
         $role_name = $role_data['role_name']; // Get the role name
-        echo "User Role: " . $role_name . "<br>"; // Output role name (for debugging)
 
         // Now decide which query to run based on the role
         if (in_array($role_name, ['General Doctor', 'Specialist Doctor'])) {
@@ -107,8 +105,7 @@ if (isset($_GET['user_id'])) {
         </div>
 
         <form method="POST" action="edit_profile.php">
-            <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
-            <?php echo "Debug: user_id in form is " . $user['user_id']; ?>
+            <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">    
 
             <!-- General User Details -->
             <div>
@@ -145,9 +142,7 @@ if (isset($_GET['user_id'])) {
             <div>
                 <label for="country">Country</label>
                 <input type="text" id="country_name" name="country_name"
-                    value="<?php echo htmlspecialchars($user['country_name']); ?>" readonly>
-                <input type="hidden" id="country" name="country"
-                    value="<?php echo htmlspecialchars($user['nationality']); ?>">
+                    value="<?php echo htmlspecialchars($user['country_name']); ?>">
             </div>
             <div>
                 <label for="password">Password</label>
