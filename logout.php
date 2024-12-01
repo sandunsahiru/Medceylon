@@ -1,5 +1,5 @@
 <?php
-require_once 'sessionmanager.php';
+require_once 'includes/sessionmanager.php';
 $sessionManager = SessionManager::getInstance();
 
 // Destroy the session
