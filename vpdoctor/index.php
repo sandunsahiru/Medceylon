@@ -152,7 +152,7 @@ $appointments_count = $stmt->get_result()->fetch_assoc();
                         <h2><?php echo $total_data['total']; ?></h2>
                         <p>Patients</p>
                     </div>
-                    <div class="stats-details">
+                    <!-- <div class="stats-details">
                         <div class="gender-stat">
                             <i class="ri-women-line"></i>
                             <span>Women <?php echo $total_data['total'] > 0 ? round(($total_data['women'] / $total_data['total']) * 100) : 0; ?>%</span>
@@ -161,7 +161,7 @@ $appointments_count = $stmt->get_result()->fetch_assoc();
                             <i class="ri-men-line"></i>
                             <span>Men <?php echo $total_data['total'] > 0 ? round(($total_data['men'] / $total_data['total']) * 100) : 0; ?>%</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="stats-card">
