@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Redirect based on role
                 switch($user['role_id']) {
                     case 1: // Patient
-                        header("Location: patient_dashboard.php");
+                        header("Location: home.php");
                         break;
                     case 2: // Doctor
                         header("Location: doctor_dashboard.php");
