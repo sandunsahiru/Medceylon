@@ -1,0 +1,148 @@
+<?php
+    $page = "overview";
+    include "./includes/header.php" 
+?>
+<link rel="stylesheet" href="./css/overview.css">
+
+<body>
+    <?php include "./includes/navbar.php" ?>
+
+    <div class="main-content">
+        <header>
+            <h1>Overview</h1>
+        </header>
+
+        <div class="content">
+            <div class="cards">
+                <span class="material-symbols-rounded" style="font-size: 30px; color: black;">stethoscope</span>
+                <div class="cards-item">
+                    <p>Doctors</p>
+                    <h2>23</h2>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="apppointment-list">
+                        <h3>Appointments</h3>
+                        <ul id="appointments" class="info-list">
+                            <li class="info-card">
+                                <div class="event-details">
+                                    <span class="event-label">Doctor:</span>
+                                    <span class="event-value">Dr Smith House</span>
+                                </div>
+                                <div class="amount-details">
+                                    <span class="amount-label">Time</span>
+                                    <span class="amount-value">1.00pm - 2.00pm</span>
+                                </div>
+                            </li>
+
+                            <li class="info-card">
+                                <div class="event-details">
+                                    <span class="event-label">Doctor:</span>
+                                    <span class="event-value">Dr Smith House</span>
+                                </div>
+                                <div class="amount-details">
+                                    <span class="amount-label">Time</span>
+                                    <span class="amount-value">1.00pm - 2.00pm</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+
+        .cards {
+    gap: 5px;
+    width: 250px;
+    height: 60px;
+    display: flex;
+    padding: 20px;
+    flex-grow: 1;
+    align-items: center;
+    flex-shrink: 0;
+    border-color: rgba(232, 221, 206, 1);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    justify-content: center;
+    background-color: #fdfdf3
+}
+
+.cards-items{
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+    align-items: center;
+}
+
+.cards p{
+    font-size: 18px;
+    font-weight: 500;
+}
+
+
+echo '<div id="options-' . $row['user_id'] . '" class="options" style="display: none;">';
+                        echo '<button>Edit</button>';
+                        echo '<button>Delete</button>';
+                        echo '<button>View Details</button>';
+
+
+                        <div class="user-list">
+                <?php
+                // Determine the table to query based on the page parameter
+                $page = $_GET['page'] ?? 'doctors'; // Default to doctors if no page is specified
+                $tableMap = [
+                    'doctors' => 'doctors_table',
+                    'patients' => 'users',
+                    'hospitals' => 'hospitals',
+                    'caretakers' => 'caretakers_table'
+                ];
+
+                $table = $tableMap[$page] ?? 'doctors_table'; // Default to 'doctors_table' if invalid page
+                
+                // Build the query dynamically
+                $query = "SELECT users.first_name, users.last_name, users.gender, users.user_id, FLOOR(DATEDIFF(CURDATE(), users.date_of_birth) / 365) AS age
+                 FROM users
+                 JOIN roles ON users.role_id = roles.role_id
+                 WHERE roles.role_name = 'Patient'";
+                
+
+                $query = "SELECT users.first_name, users.last_name, roles.role_name, 
+                specializations.specialization_name
+                FROM users
+                JOIN roles ON users.role_id = roles.role_id
+                LEFT JOIN specializations ON users.specialization_id = specializations.specialization_id
+                WHERE roles.role_name IN ('Specialist Doctor', 'General Doctor')";
+
+
+                $result = $conn->query($query);
+
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        echo '<div class="profile-card">';
+                        echo '<div class="profile-header">';
+                        echo '<img src="' . $row['profile_picture'] . '" alt="' . $row['first_name'] . '" class="profile-img">';
+                        echo '<h2>' . $row['first_name'] . ' ' . $row['last_name'] . '</h2>';
+                        echo '</div>';
+                        echo '<div class="profile-details">';
+                        echo '<div class="detail">';
+                        echo '<h3>' . $row['gender'] . '</h3>';
+                        echo '<p>Patient Gender</p>';
+                        echo '</div>';
+                        echo '<div class="detail">';
+                        echo '<h3>' . $row['age'] . '</h3>';
+                        echo '<p>Years Old</p>';
+                        echo '</div>';
+                        echo '</div>';
+                        echo '<button class="profile-button" onclick="navigateprofile(' . $row['user_id'] . ')">View Profile</button>';
+                        echo '</div>';
+                    }
+                } else {
+                    echo '<p>No records found.</p>';
+                }
+
+                $conn->close();
+                ?>
+            </div>
