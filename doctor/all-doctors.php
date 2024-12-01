@@ -225,7 +225,7 @@ $stats = $conn->query($stats_query)->fetch_assoc();
                 </select>
             </div>
             <div class="form-group">
-                <label for="medical_history">Medical History:</label>
+                <label for="medical_history">Notes:</label>
                 <textarea name="medical_history" rows="4"></textarea>
             </div>
             <div class="form-group">

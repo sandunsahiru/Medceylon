@@ -100,7 +100,7 @@ $appointments = $conn->query($appointments_query);
                         <h2>5</h2>
                         <p>Patients</p>
                     </div>
-                    <div class="stats-details">
+                    <!-- <div class="stats-details">
                         <div class="gender-stat">
                             <i class="ri-women-line"></i>
                             <span>Women 40%</span>
@@ -109,7 +109,7 @@ $appointments = $conn->query($appointments_query);
                             <i class="ri-men-line"></i>
                             <span>Men 20%</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="stats-card">
