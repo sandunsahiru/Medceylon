@@ -24,7 +24,7 @@ try {
         JOIN hospitals h ON d.hospital_id = h.hospital_id
         WHERE a.patient_id = ?
         ORDER BY a.appointment_date, a.appointment_time 
-        LIMIT 5";
+        LIMIT 20";
 
     if (!$conn) throw new Exception("Database connection failed");
 
