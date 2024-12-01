@@ -6,7 +6,7 @@
         <div class="footer-links">
             <a href="legal-agreements.php">Terms & Conditions</a>
             <a href="faq.php">FAQs</a>
-            <a href="contact_us.php">Contact Us</a>
+            <a href="contact-us.php">Contact Us</a>
             <a href="rateyourdoctor.php">Rate your doctor</a>
         </div>
         <div class="footer-contact">
@@ -16,4 +16,4 @@
         </div>
     </div>
 </footer>
-<link rel="stylesheet" href="footer-styles.css">
+<link rel="stylesheet" href="./assets/css/footer-styles.css">
