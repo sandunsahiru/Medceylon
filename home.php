@@ -235,6 +235,7 @@ include('header.php');
 
             <!-- Second Row -->
             <div class="service">
+                <a href="/Travel/destination/destinations.php">
                 <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
                 <h3>Discover Sri Lanka’s gems</h3>
 

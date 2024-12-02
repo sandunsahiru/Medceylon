@@ -251,16 +251,16 @@ if ($sessionManager->isLoggedIn()) {
 
             <!-- Second Row -->
             <div class="service">
-                <img src="images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
+                <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
                 <h3>Discover Sri Lanka’s gems</h3>
             </div>
             <div class="service">
-                    <img src="images/Rectangle251573.jpg" alt="Get personalized hospital support">
+                    <img src="assets/images/Rectangle251573.jpg" alt="Get personalized hospital support">
                     <h3>Get personalized hospital support</h3>
                 </a>
             </div>
             <div class="service">
-                <img src="images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
+                <img src="assets/images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
                 <h3>Manage follow-ups effortlessly</h3>
             </div>
         </div>
@@ -271,19 +271,19 @@ if ($sessionManager->isLoggedIn()) {
 
         <div class="testimonials-row">
             <div class="testimonial">
-                <img src="images/testimonial1.jpg" alt="Client 1">
+                <img src="assets/images/testimonial1.jpg" alt="Client 1">
                 <p>"The team at MedCeylon helped me find the best healthcare options and provided exceptional service throughout my stay in Sri Lanka. Highly recommended!"</p>
                 <p class="name">Sarah W.</p>
             </div>
 
             <div class="testimonial">
-                <img src="images/testimonial2.jpg" alt="Client 2">
+                <img src="assets/images/testimonial2.jpg" alt="Client 2">
                 <p>"Thanks to MedCeylon, my treatment journey was seamless. They took care of all the details, and I felt completely supported the entire time."</p>
                 <p class="name">John D.</p>
             </div>
 
             <div class="testimonial">
-                <img src="images/testimonial3.jpg" alt="Client 3">
+                <img src="assets/images/testimonial3.jpg" alt="Client 3">
                 <p>"Amazing experience! MedCeylon made sure I had everything I needed from accommodation to medical care. I couldn’t have asked for better service."</p>
                 <p class="name">Emma R.</p>
             </div>
