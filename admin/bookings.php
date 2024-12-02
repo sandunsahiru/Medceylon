@@ -22,18 +22,18 @@ include "./includes/header.php";
             <div class="info-card">
                 <div class="info-header">
                     <div class="header-details">
-                        <div class="org-name">Rotaract Club - University of Colombo School of Computing</div>
-                        <div class="time-ago">3 days ago</div>
+                        <div class="org-name">Patient: Eren Yaeger</div>
+                        <div class="time-ago">Online Consultation</div>
                     </div>
                 </div>
                 <div class="info-body">
                     <div class="event-details">
-                        <span class="event-label">Event Name</span>
-                        <span class="event-value">Fitness Challenge 2.0</span>
+                        <span class="event-label">Doctor</span>
+                        <span class="event-value">Erwin Smith</span>
                     </div>
                     <div class="amount-details">
-                        <span class="amount-label">Amount</span>
-                        <span class="amount-value">Rs. 120,000</span>
+                        <span class="amount-label">Plan Type</span>
+                        <span class="amount-value">Gold Plan</span>
                     </div>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 <?php
+$page = 'overview';
 include './includes/db_connection.php'; // Include your database connection
 
 // Query to count the number of patients
@@ -117,7 +118,7 @@ include 'includes/header.php';
                 <div class="info-card">
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">Dr. William Smith</div>
+                            <div class="org-name">Dr. Lakmal</div>
                             <div class="time-ago">Cardiologist</div>
                         </div>
                     </div>
@@ -129,7 +130,7 @@ include 'includes/header.php';
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">20 / 12 / 2024</div>
+                            <div class="org-name">11 / 12 / 2024</div>
                             <div class="time-ago">Date and Time</div>
                         </div>
                     </div>
@@ -138,19 +139,19 @@ include 'includes/header.php';
                 <div class="info-card">
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">Dr. William Smith</div>
-                            <div class="time-ago">Cardiologist</div>
+                            <div class="org-name">Dr. Sahiru Bandara</div>
+                            <div class="time-ago">Neurologist</div>
                         </div>
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">William Smith</div>
+                            <div class="org-name">John keels</div>
                             <div class="time-ago">Patient</div>
                         </div>
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">20 / 12 / 2024</div>
+                            <div class="org-name">16 / 12 / 2024</div>
                             <div class="time-ago">Date and Time</div>
                         </div>
                     </div>
@@ -159,13 +160,13 @@ include 'includes/header.php';
                 <div class="info-card">
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">Dr. William Smith</div>
-                            <div class="time-ago">Cardiologist</div>
+                            <div class="org-name">Dr. Kumara Jayaweera</div>
+                            <div class="time-ago">General Doctor</div>
                         </div>
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">William Smith</div>
+                            <div class="org-name">Lasith Chamara</div>
                             <div class="time-ago">Patient</div>
                         </div>
                     </div>
@@ -179,19 +180,19 @@ include 'includes/header.php';
                 <div class="info-card">
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">Dr. William Smith</div>
+                            <div class="org-name">Dr. Lakmal</div>
                             <div class="time-ago">Cardiologist</div>
                         </div>
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">William Smith</div>
+                            <div class="org-name">David Robert</div>
                             <div class="time-ago">Patient</div>
                         </div>
                     </div>
                     <div class="info-header">
                         <div class="header-details">
-                            <div class="org-name">20 / 12 / 2024</div>
+                            <div class="org-name">24 / 12 / 2024</div>
                             <div class="time-ago">Date and Time</div>
                         </div>
                     </div>
