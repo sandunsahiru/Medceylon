@@ -32,9 +32,30 @@ $appointments = [
     ],
 ];
 ?>
+<style>
+    /* Next button in the top-right corner */
+    .next-button {
+        position: absolute;
+        bottom: 250px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: #299d97;
+        color: white;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .next-button:hover {
+        background-color: #247f7a;
+    }
+</style>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,56 +63,59 @@ $appointments = [
     <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="./assets/css/follows.css"> <!-- Ensure the CSS file is in the same directory -->
 </head>
+
 <body>
+    <!-- Next button -->
+    <a href="rateyourdoctor.php">
+        <button class="next-button">Next</button>
+    </a>
 
+    <!-- Main Content -->
+    <div class="appointments-container">
+        <h2>Follow-Up Appointments</h2>
+        <p>Here are your upcoming follow-up appointments with Dr. Nirmala Wijesuriya to track your recovery progress:</p>
 
-
-<!-- Main Content -->
-<div class="appointments-container">
-    <h2>Follow-Up Appointments</h2>
-    <p>Here are your upcoming follow-up appointments with Dr. Nirmala Wijesuriya to track your recovery progress:</p>
-    
-    <!-- Cards Section -->
-    <div class="appointments-grid">
-        <?php foreach ($appointments as $appointment): ?>
-        <div class="appointment-card">
-            <div class="appointment-details">
-                <h3><?php echo $appointment['doctor_name']; ?></h3>
-                <p><strong>Specialty:</strong> <?php echo $appointment['specialty']; ?></p>
-                <p><strong>Date:</strong> <?php echo date('F j, Y', strtotime($appointment['date'])); ?></p>
-                <p><strong>Time:</strong> <?php echo $appointment['time']; ?></p>
-                <p><strong>Frequency:</strong> <?php echo $appointment['frequency']; ?></p>
-                <p><strong>Consultation Fee:</strong> <?php echo $appointment['fee']; ?></p>
-                <p><strong>Message from the doctor:</strong> <?php echo $appointment['message']; ?></p>
-                <button class="get-link-btn" onclick="showLinkPopup()">Get Link</button>
-            </div>
+        <!-- Cards Section -->
+        <div class="appointments-grid">
+            <?php foreach ($appointments as $appointment): ?>
+                <div class="appointment-card">
+                    <div class="appointment-details">
+                        <h3><?php echo $appointment['doctor_name']; ?></h3>
+                        <p><strong>Specialty:</strong> <?php echo $appointment['specialty']; ?></p>
+                        <p><strong>Date:</strong> <?php echo date('F j, Y', strtotime($appointment['date'])); ?></p>
+                        <p><strong>Time:</strong> <?php echo $appointment['time']; ?></p>
+                        <p><strong>Frequency:</strong> <?php echo $appointment['frequency']; ?></p>
+                        <p><strong>Consultation Fee:</strong> <?php echo $appointment['fee']; ?></p>
+                        <p><strong>Message from the doctor:</strong> <?php echo $appointment['message']; ?></p>
+                        <button class="get-link-btn" onclick="showLinkPopup()">Get Link</button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
-        <?php endforeach; ?>
     </div>
-</div>
 
-<!-- Modal Popup for Google Meet Link -->
-<div id="linkPopup" class="popup">
-    <div class="popup-content">
-        <h4>Google Meet Link</h4>
-        <p>Here is your Google Meet link for the appointment:</p>
-        <a href="https://meet.google.com/fake-link" target="_blank">https://meet.google.com/fake-link</a>
-        <button class="close-btn" onclick="closePopup()">Close</button>
+    <!-- Modal Popup for Google Meet Link -->
+    <div id="linkPopup" class="popup">
+        <div class="popup-content">
+            <h4>Google Meet Link</h4>
+            <p>Here is your Google Meet link for the appointment:</p>
+            <a href="https://meet.google.com/fake-link" target="_blank">https://meet.google.com/fake-link</a>
+            <button class="close-btn" onclick="closePopup()">Close</button>
+        </div>
     </div>
-</div>
 
-<?php
-include('footer.php');
-?>
+    <?php
+    include('footer.php');
+    ?>
 
-<script>
-// Function to show the Google Meet link popup
-function showLinkPopup() {
-    document.getElementById('linkPopup').style.display = 'flex';
-}
+    <script>
+        // Function to show the Google Meet link popup
+        function showLinkPopup() {
+            document.getElementById('linkPopup').style.display = 'flex';
+        }
 
-// Function to close the popup
-function closePopup() {
-    document.getElementById('linkPopup').style.display = 'none';
-}
-</script>
+        // Function to close the popup
+        function closePopup() {
+            document.getElementById('linkPopup').style.display = 'none';
+        }
+    </script>

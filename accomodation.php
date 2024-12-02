@@ -177,9 +177,30 @@ include 'header.php';
                 grid-template-columns: 1fr;
             }
         }
+        /* Next button in the top-right corner */
+        .next-button {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #299d97;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .next-button:hover {
+            background-color: #247f7a;
+        }
     </style>
 </head>
 <body>
+    <!-- Next button -->
+    <a href="transportation.php">
+        <button class="next-button">Next</button>
+    </a>
     <div class="accommodation-container">
         <section class="search-section">
             <h2>Stay Close to Your Care</h2>

@@ -27,14 +27,40 @@ $records = $stmt->get_result();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical History - MediCare</title>
     <link rel="stylesheet" href="../assets/css/patients.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* Next button in the top-right corner */
+        .next-button {
+            position: absolute;
+            bottom: 50px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #299d97;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .next-button:hover {
+            background-color: #247f7a;
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Next button -->
+    <a href="../caregivers.php">
+        <button class="next-button">Next</button>
+    </a>
     <div class="container">
         <aside class="sidebar">
             <div class="logo">
@@ -59,7 +85,7 @@ $records = $stmt->get_result();
                     <span>Profile</span>
                 </a>
             </nav>
-            
+
             <a href="../logout.php" class="exit-button">
                 <i class="ri-logout-box-line"></i>
                 <span>Exit</span>
@@ -74,7 +100,7 @@ $records = $stmt->get_result();
             <section class="appointments-section">
                 <div class="medical-records">
                     <?php if ($records->num_rows > 0): ?>
-                        <?php while($record = $records->fetch_assoc()): ?>
+                        <?php while ($record = $records->fetch_assoc()): ?>
                             <div class="record-card">
                                 <div class="record-header">
                                     <div class="record-date">
@@ -87,35 +113,35 @@ $records = $stmt->get_result();
                                         Dr. <?php echo htmlspecialchars($record['doctor_name']); ?>
                                     </div>
                                 </div>
-                                
+
                                 <div class="record-content">
                                     <div class="record-item">
                                         <h3>Hospital</h3>
                                         <p><?php echo htmlspecialchars($record['hospital_name']); ?></p>
                                     </div>
-                                    
+
                                     <div class="record-item">
                                         <h3>Diagnosis</h3>
                                         <p><?php echo htmlspecialchars($record['diagnosis']); ?></p>
                                     </div>
-                                    
+
                                     <div class="record-item">
                                         <h3>Treatment Plan</h3>
                                         <p><?php echo htmlspecialchars($record['treatment_plan']); ?></p>
                                     </div>
-                                    
+
                                     <?php if ($record['prescriptions']): ?>
-                                    <div class="record-item">
-                                        <h3>Prescriptions</h3>
-                                        <p><?php echo nl2br(htmlspecialchars($record['prescriptions'])); ?></p>
-                                    </div>
+                                        <div class="record-item">
+                                            <h3>Prescriptions</h3>
+                                            <p><?php echo nl2br(htmlspecialchars($record['prescriptions'])); ?></p>
+                                        </div>
                                     <?php endif; ?>
-                                    
+
                                     <?php if ($record['test_results']): ?>
-                                    <div class="record-item">
-                                        <h3>Test Results</h3>
-                                        <p><?php echo nl2br(htmlspecialchars($record['test_results'])); ?></p>
-                                    </div>
+                                        <div class="record-item">
+                                            <h3>Test Results</h3>
+                                            <p><?php echo nl2br(htmlspecialchars($record['test_results'])); ?></p>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -130,4 +156,5 @@ $records = $stmt->get_result();
         </main>
     </div>
 </body>
+
 </html>

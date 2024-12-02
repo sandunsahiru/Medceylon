@@ -1,5 +1,8 @@
 <?php include('header.php'); ?>
-
+<!-- Next button -->
+<a href="Travel/destination/destinations">
+        <button class="next-button">Next</button>
+    </a>
 <div class="container">
     <h2>Select Caregivers for Medical Tourism in Sri Lanka</h2>
 
@@ -195,4 +198,23 @@
     .message-btn:hover {
         background-color: #1b6c60;
     }
+
+        /* Next button in the top-right corner */
+        .next-button {
+            position: absolute;
+            bottom: 250px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #299d97;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .next-button:hover {
+            background-color: #247f7a;
+        }
 </style>

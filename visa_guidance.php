@@ -16,7 +16,7 @@ if ($result->num_rows > 0) {
 $country_details = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['country_code'])) {
     $country_code = $_POST['country_code'];
-    
+
     // Fetch embassy details and visa requirements based on the selected country
     $sql = "SELECT country_name, visa_required, application_steps, embassy_link FROM countries WHERE country_code = '$country_code'";
     $result = $conn->query($sql);
@@ -28,6 +28,7 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +44,9 @@ $conn->close();
             display: flex;
             flex-direction: column;
         }
-        header, footer {
+
+        header,
+        footer {
             width: 100%;
             flex-shrink: 0;
             background-color: #299d97;
@@ -51,6 +54,7 @@ $conn->close();
             padding: 10px;
             text-align: center;
         }
+
         .container {
             flex-grow: 1;
             margin: 20px auto;
@@ -60,27 +64,32 @@ $conn->close();
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             text-align: center;
             color: #299d97;
         }
+
         form {
             margin-top: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         label {
             font-size: 1rem;
             font-weight: bold;
             color: #299d97;
         }
+
         select {
             padding: 10px;
             font-size: 1rem;
             border: 2px solid #299d97;
             border-radius: 5px;
         }
+
         button {
             padding: 10px;
             background-color: #299d97;
@@ -91,23 +100,29 @@ $conn->close();
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         button:hover {
             background-color: #247f7a;
         }
+
         .details {
             margin-top: 20px;
         }
+
         .details h2 {
             color: #299d97;
             margin-bottom: 10px;
         }
+
         a {
             color: #299d97;
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: underline;
         }
+
         pre {
             background: #f1f9f9;
             border-left: 4px solid #299d97;
@@ -115,11 +130,34 @@ $conn->close();
             border-radius: 5px;
             white-space: pre-wrap;
         }
+
+        /* Next button in the top-right corner */
+        .next-button {
+            position: absolute;
+            bottom: 250px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #299d97;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .next-button:hover {
+            background-color: #247f7a;
+        }
     </style>
 </head>
+
 <body>
     <?php include('header.php'); ?>
-
+    <!-- Next button -->
+    <a href="hospital-requests.php">
+        <button class="next-button">Next</button>
+    </a>
     <div class="container">
         <h1>Sri Lanka Visa Information</h1>
         <form method="POST">
@@ -150,4 +188,5 @@ $conn->close();
 
     <?php include('footer.php'); ?>
 </body>
+
 </html>

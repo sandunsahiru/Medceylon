@@ -25,16 +25,42 @@ $submitted_requests = [
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request to Hospitals</title>
     <link rel="stylesheet" href="./assets/css/hospital-requests.css">
+    <style>
+        /* Next button in the top-right corner */
+        .next-button {
+            position: absolute;
+            bottom: 250px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #299d97;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .next-button:hover {
+            background-color: #247f7a;
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Next button -->
+    <a href="accomodation.php">
+        <button class="next-button">Next</button>
+    </a>
     <div class="requests-container">
         <h1>Request to Hospitals</h1>
-        
+
         <!-- Request Form -->
         <form class="request-form" method="POST" action="submit_request.php">
             <div class="form-group">
@@ -83,9 +109,10 @@ $submitted_requests = [
         </div>
     </div>
 
-<?php
-// Include the footer
-include 'footer.php';
-?>
+    <?php
+    // Include the footer
+    include 'footer.php';
+    ?>
 </body>
+
 </html>

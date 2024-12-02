@@ -197,17 +197,13 @@ include('header.php');
     <div class="hero">
         <h1>Your Health, Your Journey, Your Choice</h1>
         <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
-        <a href="#book-now" class="cta-btn">Book Now!</a>
+        <a href="patient/book-appointment.php" class="cta-btn">Book Now!</a>
     </div>
 
     <section class="services">
         <h2>Our Services</h2>
         <div class="services-grid">
             <!-- First Row -->
-            <div class="service">
-                <img src="assets/images/Rectangle181523.jpg" alt="Book expert doctors">
-                <h3>Book expert doctors</h3>
-            </div>
             <div class="service">
                 <a href="visa_guidance.php">
                     <img src="assets/images/Rectangle201523.jpg" alt="Check visa details">
@@ -236,9 +232,9 @@ include('header.php');
             <!-- Second Row -->
             <div class="service">
                 <a href="/Travel/destination/destinations.php">
-                <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
-                <h3>Discover Sri Lanka’s gems</h3>
-
+                    <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
+                    <h3>Discover Sri Lanka’s gems</h3>
+                </a>
             </div>
             <div class="service">
                 <a href="hospital-requests.php">
@@ -247,9 +243,16 @@ include('header.php');
                 </a>
             </div>
             <div class="service">
-            <a href="followups.php">
-                <img src="assets/images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
-                <h3>Manage follow-ups effortlessly</h3>
+                <a href="followups.php">
+                    <img src="assets/images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
+                    <h3>Manage follow-ups effortlessly</h3>
+                </a>
+            </div>
+            <div class="service">
+                <a href="rateyourdoctor.php">
+                    <img src="assets/images/Rectangle271573.jpg" alt="Rate your doctor">
+                    <h3>Rate your doctor</h3>
+                </a>
             </div>
         </div>
     </section>
@@ -267,21 +270,21 @@ include('header.php');
             <div class="testimonial">
                 <img src="assets/images/testimonial2.jpg" alt="Client 2">
                 <p>"Thanks to MedCeylon, my treatment journey was seamless. They took care of all the details, and I felt completely supported the entire time."</p>
-                <p class="name">John D.</p>
+                <p class="name">John P.</p>
             </div>
 
             <div class="testimonial">
                 <img src="assets/images/testimonial3.jpg" alt="Client 3">
-                <p>"Amazing experience! MedCeylon made sure I had everything I needed from accommodation to medical care. I couldn’t have asked for better service."</p>
-                <p class="name">Emma R.</p>
+                <p>"An unforgettable experience. From airport pick-up to medical services, everything was top-notch. I highly recommend MedCeylon for medical tourism."</p>
+                <p class="name">Emily T.</p>
             </div>
         </div>
     </section>
 
+    <?php
+    // Including footer
+    include('footer.php');
+    ?>
+
 </body>
 </html>
-
-<?php
-// Including footer
-include('footer.php');
-?>
