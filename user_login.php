@@ -17,6 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'general_doctor', 'special_doctor' => 2,
         'caretaker' => 5,
         'admin' => 4,
+        'travel_partner' => 6, // Added travel_partner role
         default => 1
     };
 
@@ -28,6 +29,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['user_type'] = 'admin';
         
         header("Location: admin_dashboard.php");
+        exit();
+    // Check if the user is a travel partner with fixed credentials
+    } elseif ($user_type === 'travel_partner' && $email === 'partner@example.com' && $password === 'partner123') {
+        $_SESSION['user_id'] = 6; // Assign a unique user_id for travel partner
+        $_SESSION['name'] = 'Travel Partner';
+        $_SESSION['role_id'] = 6; // New role_id for travel partner
+        $_SESSION['user_type'] = 'travel_partner';
+        
+        header("Location: travel_partner_dashboard.php");
         exit();
     } else {
         // Prepare SQL statement to fetch user details
@@ -69,6 +79,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         break;
                     case 4: // Admin
                         header("Location: admin_dashboard.php");
+                        break;
+                    case 6: // Travel Partner
+                        header("Location: travel_partner_dashboard.php");
                         break;
                     default:
                         header("Location: dashboard.php");
@@ -193,16 +206,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <h1>Login to MedCeylon</h1>
 
             <div class="field">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-
-            <div class="field">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <div class="field">
                 <label for="user_type">User Type</label>
                 <select id="user_type" name="user_type" required>
                     <option value="" disabled selected>Select your role</option>
@@ -211,7 +214,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="special_doctor">Special Doctor</option>
                     <option value="caretaker">Caretaker</option>
                     <option value="admin">Admin</option>
+                    <option value="travel_partner">Travel Partner</option> <!-- Added travel_partner option -->
                 </select>
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
             </div>
 
             <button type="submit">Login</button>
@@ -232,6 +246,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (this.value === 'admin') {
                 email.value = 'admin@example.com';
                 password.value = 'admin123';
+                email.readOnly = true;
+                password.readOnly = true;
+            } else if (this.value === 'travel_partner') {
+                email.value = 'partner@example.com';
+                password.value = 'partner123';
                 email.readOnly = true;
                 password.readOnly = true;
             } else {
