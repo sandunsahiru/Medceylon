@@ -251,8 +251,10 @@ if ($sessionManager->isLoggedIn()) {
 
             <!-- Second Row -->
             <div class="service">
-                <img src="assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
-                <h3>Discover Sri Lanka’s gems</h3>
+                <a href="travel/destinations.php">
+                    <img src="images/Rectangle241573.jpg" alt="Discover Sri Lanka’s gems">
+                    <h3>Discover Sri Lanka’s gems</h3>
+                </a>
             </div>
             <div class="service">
                     <img src="assets/images/Rectangle251573.jpg" alt="Get personalized hospital support">
