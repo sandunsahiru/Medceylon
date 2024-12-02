@@ -1,14 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MedCeylon</title>
-    <link rel="stylesheet" href="header.css">
-</head>
-<body>
-    <?php
-    require_once 'sessionmanager.php';
+<?php
+    require_once 'includes/sessionmanager.php';
     $sessionManager = SessionManager::getInstance();
     
     // Redirect to home.php if logged in and currently on index.php
@@ -23,7 +14,15 @@
         exit();
     }
     ?>
-    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCeylon</title>
+    <link rel="stylesheet" href="./assets/css/header.css">
+</head>
+<body>
     <header class="header">
         <div class="logo">
             <a href="<?php echo $sessionManager->isLoggedIn() ? 'home.php' : 'index.php'; ?>" style="color: white; text-decoration: none;">MedCeylon</a>
@@ -31,7 +30,7 @@
         <nav class="nav-links">
             <a href="<?php echo $sessionManager->isLoggedIn() ? 'home.php' : 'index.php'; ?>">Home</a>
             <a href="about-us.php">About Us</a>
-            <a href="hospitals.php">Our Hospitals</a>
+            <a href="partner-hospitals.php">Our Hospitals</a>
             <?php if ($sessionManager->isLoggedIn()): ?>
                 <a href="book-appointment.php">Book Appointments</a>
             <?php else: ?>
@@ -48,7 +47,8 @@
                         <a href="my-account.php">My Account</a>
                     </div>
                 </div>
-                <a href="logout.php" class="btn logout" style="text-decoration: none;">Logout</a>
+                <!-- Added logout link with a GET parameter for logout -->
+                <a href="?logout=true" class="btn logout" style="text-decoration: none;">Logout</a>
             <?php else: ?>
                 <a href="register.php" class="btn logout" style="text-decoration: none;">Sign Up</a>
                 <a href="user_login.php" class="btn logout" style="text-decoration: none;">Sign In</a>

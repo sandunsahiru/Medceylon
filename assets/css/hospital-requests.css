@@ -1,0 +1,113 @@
+/* General styling */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Container styling */
+.requests-container {
+    flex: 1;
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 40px 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Headings */
+.requests-container h1,
+.requests-container h2 {
+    color: #299d97;
+    margin-bottom: 20px;
+}
+
+/* Form styling */
+.request-form {
+    margin-bottom: 40px;
+}
+
+.request-form .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.request-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+.request-form select,
+.request-form input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.request-form .submit-btn {
+    background-color: #299d97;
+    color: #fff;
+    font-size: 1em;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.request-form .submit-btn:hover {
+    background-color: #217b72;
+}
+
+/* Submitted requests section */
+.submitted-requests {
+    text-align: left;
+}
+
+.requests-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.request-card {
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    width: calc(33% - 20px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+.request-card p {
+    margin: 8px 0;
+    color: #333;
+}
+
+.request-card strong {
+    color: #299d97;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .request-card {
+        width: 100%;
+    }
+
+    .request-form select,
+    .request-form input {
+        font-size: 0.9em;
+    }
+}

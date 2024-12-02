@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config.php';
+require_once '../includes/config.php';
 
 // Get total patients count and gender distribution
 $total_query = "SELECT 
@@ -36,7 +36,7 @@ $appointments = $conn->query($appointments_query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCare Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/doctordashboard.css">
     <!-- Include Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 </head>
@@ -58,11 +58,11 @@ $appointments = $conn->query($appointments_query);
                     <i class="ri-calendar-line"></i>
                     <span>Appointments</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="patients.php" class="nav-item">
                     <i class="ri-user-line"></i>
                     <span>Patients</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="all-doctors.php" class="nav-item">
                     <i class="ri-nurse-line"></i>
                     <span>Doctors</span>
                 </a>
@@ -100,7 +100,7 @@ $appointments = $conn->query($appointments_query);
                         <h2>5</h2>
                         <p>Patients</p>
                     </div>
-                    <div class="stats-details">
+                    <!-- <div class="stats-details">
                         <div class="gender-stat">
                             <i class="ri-women-line"></i>
                             <span>Women 40%</span>
@@ -109,7 +109,7 @@ $appointments = $conn->query($appointments_query);
                             <i class="ri-men-line"></i>
                             <span>Men 20%</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="stats-card">
@@ -161,7 +161,7 @@ $appointments = $conn->query($appointments_query);
 
         </main>
     </div>
-    <script src="script.js"></script>
+    <script src="../assets/js/doctorscript.js"></script>
 </body>
 
 </html>
