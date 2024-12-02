@@ -1,0 +1,39 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    display: flex;
+    height: 100vh;
+}
+
+
+.main-content {
+    width: 85%;
+    flex-grow: 1;
+    padding: 10px 30px 30px 30px;
+    margin-left: 360px; /* Space for the sidebar */
+    padding: 30px; /* Add padding for the content */
+    width: 100%;
+    height: 100vh;
+    overflow-y: auto; 
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    align-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+i {
+    margin-left: 10px;
+    font-size: 30px; 
+    color: #047865;
+}

@@ -167,7 +167,7 @@ try {
                             </div>
                             <div class="stat-item">
                                 <i class="ri-calendar-check-line"></i>
-                                <span><?php echo $patient['total_visits']; ?> visits</span>
+                                <span><?php echo $patient['total_visits']; ?> Schedule/s</span>
                             </div>
                             <div class="stat-item">
                                 <i class="ri-time-line"></i>
