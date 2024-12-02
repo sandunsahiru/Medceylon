@@ -45,9 +45,30 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance");
         .actions { display: flex; gap: 10px; }
         .message { margin: 20px; padding: 10px; border: 1px solid green; color: green; background: #e6ffe6; }
         .error { margin: 20px; padding: 10px; border: 1px solid red; color: red; background: #ffe6e6; }
+        
+        /* Logout button styles */
+        .logout-btn {
+            position: absolute;
+            top: 70px; /* Moved down */
+            right: 100px; /* Moved to the left */
+            padding: 10px 15px;
+            background-color: #248c7f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .logout-btn:hover {
+            background-color: #1d7364;
+        }
     </style>
 </head>
 <body>
+    <!-- Logout button -->
+    <a href="user_login.php">
+        <button class="logout-btn">Logout</button>
+    </a>
+
 <div class="form-container">
     <h2>Travel Partner Dashboard</h2>
 
@@ -64,6 +85,7 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance");
             <tr>
                 <th>Request ID</th>
                 <th>Patient ID</th>
+                <th>Email</th> <!-- Added Email Column -->
                 <th>Pickup Location</th>
                 <th>Dropoff Location</th>
                 <th>Date</th>
@@ -75,10 +97,19 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance");
         </thead>
         <tbody>
             <?php while ($row = mysqli_fetch_assoc($bookings)): ?>
+                <?php
+                // Fetch the email for the patient based on the patient_id
+                $patient_id = $row['patient_id'];
+                $email_query = "SELECT email FROM users WHERE user_id = '$patient_id'";
+                $email_result = mysqli_query($conn, $email_query);
+                $email_row = mysqli_fetch_assoc($email_result);
+                $email = $email_row ? $email_row['email'] : 'N/A';  // If no email found, display 'N/A'
+                ?>
                 <tr>
                     <form method="POST">
                         <td><?= $row['transport_request_id'] ?></td>
                         <td><?= $row['patient_id'] ?></td>
+                        <td><?= htmlspecialchars($email) ?></td> <!-- Display the email -->
                         <td><?= $row['pickup_location'] ?></td>
                         <td><?= $row['dropoff_location'] ?></td>
                         <td><?= $row['date'] ?></td>

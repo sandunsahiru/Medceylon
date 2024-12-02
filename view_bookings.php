@@ -5,8 +5,15 @@ include('header.php');
 // Handle booking deletion
 if (isset($_POST['delete_booking'])) {
     $booking_id = $_POST['booking_id'];
-    $query = "DELETE FROM transportationassistance WHERE transport_request_id = '$booking_id'";
-    mysqli_query($conn, $query);
+    $status = $_POST['status']; // Get the booking status
+
+    // Check if the status is pending before deletion
+    if ($status === 'Pending') {
+        $query = "DELETE FROM transportationassistance WHERE transport_request_id = '$booking_id'";
+        mysqli_query($conn, $query);
+    } else {
+        echo "<script>alert('Booking is confirmed. Contact the MedCeylon Team.');</script>";
+    }
 }
 
 // Handle booking update
@@ -17,15 +24,21 @@ if (isset($_POST['update_booking'])) {
     $date = $_POST['date'];
     $time = $_POST['time'];
     $transport_type = $_POST['transport_type'];
+    $status = $_POST['status']; // Get the booking status
 
-    $query = "UPDATE transportationassistance 
-              SET pickup_location = '$pickup_location', 
-                  dropoff_location = '$dropoff_location', 
-                  date = '$date', 
-                  time = '$time', 
-                  transport_type = '$transport_type' 
-              WHERE transport_request_id = '$booking_id'";
-    mysqli_query($conn, $query);
+    // Check if the status is pending before updating
+    if ($status === 'Pending') {
+        $query = "UPDATE transportationassistance 
+                  SET pickup_location = '$pickup_location', 
+                      dropoff_location = '$dropoff_location', 
+                      date = '$date', 
+                      time = '$time', 
+                      transport_type = '$transport_type' 
+                  WHERE transport_request_id = '$booking_id'";
+        mysqli_query($conn, $query);
+    } else {
+        echo "<script>alert('Booking is confirmed. Contact the MedCeylon Team.');</script>";
+    }
 }
 
 // Fetch bookings for display
@@ -171,12 +184,12 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance WHERE pa
                 <?php while ($row = mysqli_fetch_assoc($bookings)): ?>
                     <tr>
                         <td><?= $row['transport_request_id'] ?></td>
-                        <td><input type="text" name="pickup_location" value="<?= $row['pickup_location'] ?>" required></td>
-                        <td><input type="text" name="dropoff_location" value="<?= $row['dropoff_location'] ?>" required></td>
-                        <td><input type="date" name="date" value="<?= $row['date'] ?>" required></td>
-                        <td><input type="time" name="time" value="<?= $row['time'] ?>" required></td>
+                        <td><input type="text" name="pickup_location" value="<?= $row['pickup_location'] ?>" required <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>></td>
+                        <td><input type="text" name="dropoff_location" value="<?= $row['dropoff_location'] ?>" required <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>></td>
+                        <td><input type="date" name="date" value="<?= $row['date'] ?>" required <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>></td>
+                        <td><input type="time" name="time" value="<?= $row['time'] ?>" required <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>></td>
                         <td>
-                            <select name="transport_type" required>
+                            <select name="transport_type" required <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>>
                                 <option value="Car" <?= $row['transport_type'] == 'Car' ? 'selected' : '' ?>>Car</option>
                                 <option value="Ambulance" <?= $row['transport_type'] == 'Ambulance' ? 'selected' : '' ?>>Ambulance</option>
                                 <option value="Wheelchair Accessible Van" <?= $row['transport_type'] == 'Wheelchair Accessible Van' ? 'selected' : '' ?>>Wheelchair Accessible Van</option>
@@ -185,12 +198,9 @@ $bookings = mysqli_query($conn, "SELECT * FROM transportationassistance WHERE pa
                         <td><?= $row['status'] ?></td>
                         <td class="form-actions">
                             <input type="hidden" name="booking_id" value="<?= $row['transport_request_id'] ?>">
-                            <button type="submit" name="update_booking">Update</button>
-                            <?php if (strtotime($row['last_updated']) >= strtotime('-5 minutes')): ?>
-                                <button type="submit" name="delete_booking" onclick="return confirm('Are you sure you want to delete this booking?')">Delete</button>
-                            <?php else: ?>
-                                <button type="submit" name="delete_booking" disabled>Delete</button>
-                            <?php endif; ?>
+                            <input type="hidden" name="status" value="<?= $row['status'] ?>">
+                            <button type="submit" name="update_booking" <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>>Update</button>
+                            <button type="submit" name="delete_booking" onclick="return confirm('Are you sure you want to delete this booking?')" <?= $row['status'] !== 'Pending' ? 'disabled' : '' ?>>Delete</button>
                         </td>
                     </tr>
                 <?php endwhile; ?>

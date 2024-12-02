@@ -184,6 +184,22 @@ if (isset($_POST['update_booking'])) {
                 resultsContainer.appendChild(div);
             });
         }
+
+        // Set the minimum date for the date input field to today's date
+        window.onload = function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').setAttribute('min', today);
+        }
+
+        // Close autocomplete results when clicking outside
+        document.addEventListener('click', function(event) {
+            const resultsContainers = document.querySelectorAll('.autocomplete-results');
+            resultsContainers.forEach(container => {
+                if (!container.contains(event.target) && event.target !== container.previousElementSibling) {
+                    container.innerHTML = '';
+                }
+            });
+        });
     </script>
 </head>
 <body>
