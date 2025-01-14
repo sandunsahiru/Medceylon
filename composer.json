@@ -1,0 +1,14 @@
+{
+    "name": "medceylon/app",
+    "description": "MedCeylon Healthcare System",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "version": "1.0.0",
+    "license": "proprietary"
+}
