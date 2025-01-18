@@ -7,8 +7,8 @@ class AuthMiddleware {
         $config = require ROOT_PATH . '/app/config/app.php';
         
         if (!$session->isLoggedIn()) {
-            header('Location: ' . $config['base_url'] . '/login');
-            return false;
+            header('Location: ' . $config['base_url'] . '/');
+            exit();
         }
         return true;
     }

@@ -1,5 +1,4 @@
 <?php
-// public/index.php
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -23,7 +22,13 @@ $config = require_once ROOT_PATH . '/app/config/app.php';
 try {
     $router = new \App\Core\Router();
 
-    // Define routes
+    // Public routes (no authentication required)
+    $router->get('/', 'HomeController', 'index');
+    $router->get('/index.php', 'HomeController', 'index');
+    $router->get('/about-us', 'HomeController', 'aboutUs');
+    $router->get('/partner-hospitals', 'HomeController', 'partnerHospitals');
+    $router->get('/pricing', 'HomeController', 'pricing');
+
     // Auth routes
     $router->get('/login', 'AuthController', 'login');
     $router->post('/login', 'AuthController', 'login');
@@ -31,8 +36,7 @@ try {
     $router->post('/register', 'AuthController', 'register');
     $router->get('/logout', 'AuthController', 'logout');
 
-    // Home routes
-    $router->get('/', 'HomeController', 'index');
+    // Protected routes (require authentication)
     $router->get('/home', 'HomeController', 'home', \App\Core\Middleware\AuthMiddleware::class);
 
     // Admin routes
@@ -44,7 +48,6 @@ try {
     $router->get('/doctor/appointments', 'DoctorController', 'appointments', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/doctor/patients', 'DoctorController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
 
-    // Patient routes
     // Patient routes
     $router->get('/patient/dashboard', 'PatientController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/book-appointment', 'PatientController', 'bookAppointment', \App\Core\Middleware\AuthMiddleware::class);

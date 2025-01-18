@@ -1,8 +1,23 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /Medceylon/
-    
-    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteBase /Medceylon/public/
+
+    # Prevent directory listing
+    Options -Indexes
+
+    # If the request is not for a valid directory
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^ index.php [QSA,L]
+    # If the request is not for a valid file
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # Route everything through index.php
+    RewriteRule ^ index.php [L]
 </IfModule>
+
+# Disable directory browsing
+Options All -Indexes
+
+# Block access to sensitive files
+<FilesMatch "^(\.htaccess|\.env|composer\.json|composer\.lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
