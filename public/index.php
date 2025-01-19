@@ -43,12 +43,33 @@ try {
     $router->get('/admin/dashboard', 'AdminController', 'dashboard', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/overview', 'AdminController', 'overview', \App\Core\Middleware\AdminMiddleware::class);
 
-    // Doctor routes
-    $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/doctor/appointments', 'DoctorController', 'appointments', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/doctor/patients', 'DoctorController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
+    // Doctor Dashboard Routes
+    $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/appointments', 'DoctorController', 'appointments', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/patients', 'DoctorController', 'patients', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/profile', 'DoctorController', 'profile', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/all-doctors', 'DoctorController', 'allDoctors', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/availability', 'DoctorController', 'availability', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
-    // Patient routes
+    // Doctor POST routes for forms and actions
+    $router->post('/doctor/appointments/update', 'DoctorController', 'handleAppointmentActions', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->post('/doctor/profile/update', 'DoctorController', 'updateProfile', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->post('/doctor/availability/update', 'DoctorController', 'updateAvailability', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Doctor API routes
+    $router->get('/doctor/get-time-slots', 'DoctorController', 'getTimeSlots', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/get-doctor-profile', 'DoctorController', 'getDoctorProfile', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/get-patient-appointments', 'DoctorController', 'getPatientAppointments', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/get-patient-history', 'DoctorController', 'getPatientHistory', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Specialist booking routes
+    $router->post('/doctor/process-booking', 'DoctorController', 'processBooking', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Future Chat routes (placeholder)
+    $router->get('/doctor/chat', 'DoctorController', 'chat', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/chat/messages', 'DoctorController', 'getChatMessages', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->post('/doctor/chat/send', 'DoctorController', 'sendMessage', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    // Patient routes (existing)
     $router->get('/patient/dashboard', 'PatientController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/book-appointment', 'PatientController', 'bookAppointment', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/process-appointment', 'PatientController', 'processAppointment', \App\Core\Middleware\AuthMiddleware::class);
