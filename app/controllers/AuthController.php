@@ -110,6 +110,7 @@ class AuthController extends BaseController {
        $redirects = [
            1 => $this->basePath . '/patient/dashboard',
            2 => $this->basePath . '/doctor/dashboard',
+           3 => $this->basePath . '/vpdoctor/dashboard',
            4 => $this->basePath . '/admin/dashboard', 
            5 => $this->basePath . '/caregiver/dashboard',
            6 => $this->basePath . '/travel-partner/dashboard'

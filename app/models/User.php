@@ -111,7 +111,8 @@ class User {
     private function getRoleIdFromUserType($userType) {
         return match($userType) {
             'patient' => 1,
-            'general_doctor', 'special_doctor' => 2,
+            'general_doctor' => 2,
+            'special_doctor' => 3,
             'caretaker' => 5,
             'admin' => 4,
             'travel_partner' => 6,
