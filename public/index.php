@@ -128,6 +128,14 @@ try {
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/patients', 'CaregiverController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
 
+    //travel routes
+    $router->get('/travel/destinations', 'TravelPlanController', 'destinations', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travel/add-destination', 'TravelPlanController', 'addDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travel/edit-plan', 'TravelPlanController','editDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travel/delete-destination', 'TravelPlanController','deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travel/travel-plans', 'TravelPlanController','TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travel/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
+
     // Set 404 handler
     $router->setNotFound(function () {
         header("HTTP/1.0 404 Not Found");

@@ -1,11 +1,12 @@
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/edit-destination.css">
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/edit-destination.css">
+
 
 <div id="editDestinationModal" class="edit-modal-container">
     <div class="editModal">
         <div class="editModal-top">
             <h1>Edit Destination in Travel Plan</h1>
             <span class="close" id="closeEditModal">&times;</span>
-        </div>
+        </div>```````````````````````````````````````````````````````````````````````````````````````````````````````````````````
 
         <div class="modal-form">
             <form id="editDestinationForm" action="<?php echo URLROOT; ?>/TravelPlan/editDestination" method="post">

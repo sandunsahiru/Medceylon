@@ -1,5 +1,5 @@
 <!-- Modal Structure -->
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/add-destination.css">
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/add-destination.css">
 
 <div id="addToPlanModal" class="add-modal-container">
     <div class="addModal">

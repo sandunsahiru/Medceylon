@@ -1,6 +1,6 @@
-<?php require APPROOT . '/views/includes/header.php'; ?>
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/destinations.css">
+<?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
 
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/destinations.css">
 
     <br>
     <h2>Make Customized Travel Plan</h2>
@@ -33,7 +33,8 @@
 </div>
 
     <br>
-    <button id="ViewPlan" onclick="window.location.href='<?php echo APPROOT; ?> . /controllers/destination/destinations';">View All Plans</button>
+    <button id="ViewPlan"> View All Plans</button>
+    <a href="<?php echo $basePath; ?>/travel-plans"></a>
 
     <br>
     <br>

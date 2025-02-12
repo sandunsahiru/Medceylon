@@ -1,5 +1,6 @@
-<?php require APPROOT . '/views/includes/header.php'; ?>
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/travel-plans.css">
+<?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
+
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/travel-plans.css">
 
 <br>
 <h2>Your Travel Plans</h2>

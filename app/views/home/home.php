@@ -37,7 +37,7 @@
 
         <!-- Second Row -->
         <div class="service">
-            <a href="<?php echo $basePath; ?>/destinations">
+            <a href="<?php echo $basePath; ?>/travel/destinations">
                 <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka's gems">
                 <h3>Discover Sri Lanka's gems</h3>
             </a>
