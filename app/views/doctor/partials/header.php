@@ -6,6 +6,93 @@
     <title>MedCeylon - <?php echo $page_title ?? 'Doctor Dashboard'; ?></title>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/assets/css/doctordashboard.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <style>
+/* Override and extend modal styles */
+.large-modal {
+    width: 90% !important;
+    max-width: 900px !important;
+    margin: 2vh auto !important;
+    height: auto !important;
+    max-height: 96vh !important;
+}
+
+.modal-body {
+    max-height: calc(90vh - 120px);
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.report-item {
+    background: var(--bg-light);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.report-info h4 {
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.report-info p {
+    color: var(--text-light);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.report-info p strong {
+    color: var(--text-dark);
+    margin-right: 0.5rem;
+}
+
+.report-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.report-actions .view-btn {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.report-actions .view-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+}
+
+.no-data {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-light);
+    font-size: 1.1rem;
+}
+
+.error-message {
+    color: #DC2626;
+    text-align: center;
+    padding: 2rem;
+    background: #FEE2E2;
+    border-radius: var(--border-radius);
+    margin: 1rem 0;
+}
+</style>
 </head>
 <body>
     <div class="container">

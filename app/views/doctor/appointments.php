@@ -1,85 +1,88 @@
 <?php require_once ROOT_PATH . '/app/views/doctor/partials/header.php'; ?>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="top-bar">
-                <h1>Appointments</h1>
-                <div class="header-right">
-                    <div class="search-box">
-                        <i class="ri-search-line"></i>
-                        <input type="text" placeholder="Search appointments..." id="searchInput">
-                    </div>
-                    <div class="date">
-                        <i class="ri-calendar-line"></i>
-                        <?php echo date('l, d.m.Y'); ?>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Tab Navigation -->
-            <div class="filters-section">
-                <div class="filter-tabs">
-                    <button class="filter-tab active" data-tab="appointments">All Appointments</button>
-                    <button class="filter-tab" data-tab="availability">Set Available Times</button>
-                </div>
-                <button class="action-btn" onclick="showAddAvailabilityForm()">
-                    <i class="ri-add-line"></i>
-                    Add Time Slot
-                </button>
+<main class="main-content">
+    <header class="top-bar">
+        <h1>Appointments</h1>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="ri-search-line"></i>
+                <input type="text" placeholder="Search appointments..." id="searchInput">
             </div>
+            <div class="date">
+                <i class="ri-calendar-line"></i>
+                <?php echo date('l, d.m.Y'); ?>
+            </div>
+        </div>
+    </header>
 
-            <!-- Appointments Section -->
-            <section id="appointmentsTab" class="appointments-wrapper">
-                <?php if (!empty($appointments)): ?>
-                    <?php foreach ($appointments as $appointment): ?>
-                        <div class="appointment-row" data-patient-name="<?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?>">
-                            <div class="patient-info">
-                                <div class="avatar">
-                                    <i class="ri-user-line"></i>
-                                </div>
-                                <div class="info-details">
-                                    <h3><?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?></h3>
-                                    <span><?php echo htmlspecialchars($appointment['consultation_type']); ?></span>
-                                </div>
-                            </div>
+    <!-- Tab Navigation -->
+    <div class="filters-section">
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-tab="appointments">All Appointments</button>
+            <button class="filter-tab" data-tab="availability">Set Available Times</button>
+        </div>
+        <button class="action-btn" onclick="showAddAvailabilityForm()">
+            <i class="ri-add-line"></i>
+            Add Time Slot
+        </button>
+    </div>
 
-                            <div class="appointment-info">
-                                <div class="info-item">
-                                    <i class="ri-calendar-line"></i>
-                                    <span><?php echo date('d/m/Y', strtotime($appointment['appointment_date'])); ?></span>
-                                </div>
-                                <div class="info-item">
-                                    <i class="ri-time-line"></i>
-                                    <span><?php echo date('H:i', strtotime($appointment['appointment_time'])); ?></span>
-                                </div>
-                                <span class="status <?php echo strtolower($appointment['appointment_status']); ?>">
-                                    <?php echo htmlspecialchars($appointment['appointment_status']); ?>
-                                </span>
-                            </div>
-
-                            <div class="row-actions">
-                                <button class="edit-btn" onclick="updateAppointmentStatus(<?php echo $appointment['appointment_id']; ?>)">
-                                    <i class="ri-pencil-line"></i>
-                                    Update Status
-                                </button>
-                                <?php if($appointment['appointment_status'] === 'Scheduled'): ?>
-                                    <button class="cancel-btn" onclick="cancelAppointment(<?php echo $appointment['appointment_id']; ?>)">
-                                        <i class="ri-close-line"></i>
-                                        Cancel
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+    <!-- Appointments Section -->
+    <section id="appointmentsTab" class="appointments-wrapper">
+        <?php if (!empty($appointments)): ?>
+            <?php foreach ($appointments as $appointment): ?>
+                <div class="appointment-row" data-patient-name="<?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?>">
+                    <div class="patient-info">
+                        <div class="avatar">
+                            <i class="ri-user-line"></i>
                         </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="no-results">
-                        <p>No appointments found.</p>
+                        <div class="info-details">
+                            <h3><?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?></h3>
+                            <span><?php echo htmlspecialchars($appointment['consultation_type']); ?></span>
+                        </div>
                     </div>
-                <?php endif; ?>
-            </section>
 
-            <!-- Availability Section -->
-            <section id="availabilityTab" class="appointments-wrapper" style="display: none;">
+                    <div class="appointment-info">
+                        <div class="info-item">
+                            <i class="ri-calendar-line"></i>
+                            <span><?php echo date('d/m/Y', strtotime($appointment['appointment_date'])); ?></span>
+                        </div>
+                        <div class="info-item">
+                            <i class="ri-time-line"></i>
+                            <span><?php echo date('H:i', strtotime($appointment['appointment_time'])); ?></span>
+                        </div>
+                        <span class="status <?php echo strtolower($appointment['appointment_status']); ?>">
+                            <?php echo htmlspecialchars($appointment['appointment_status']); ?>
+                        </span>
+                    </div>
+
+                    <div class="row-actions">
+                        <button class="view-btn" onclick="viewAppointmentDetails(<?php echo $appointment['appointment_id']; ?>)">
+                            <i class="ri-eye-line"></i>
+                            View
+                        </button>
+                        <button class="edit-btn" onclick="updateAppointmentStatus(<?php echo $appointment['appointment_id']; ?>)">
+                            <i class="ri-pencil-line"></i>
+                            Update Status
+                        </button>
+                        <?php if($appointment['appointment_status'] === 'Scheduled'): ?>
+                            <button class="cancel-btn" onclick="cancelAppointment(<?php echo $appointment['appointment_id']; ?>)">
+                                <i class="ri-close-line"></i>
+                                Cancel
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="no-results">
+                <p>No appointments found.</p>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <!-- Availability Section -->
+    <section id="availabilityTab" class="appointments-wrapper" style="display: none;">
                 <div class="availability-grid">
                     <?php if (!empty($availability)): ?>
                         <?php foreach ($availability as $slot): ?>
@@ -154,12 +157,107 @@
                 </div>
             </div>
 
-        </main>
+    <!-- Appointment Details Modal -->
+    <div id="appointmentDetailsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Appointment Details</h2>
+                <button onclick="hideAppointmentDetails()" class="close-btn">&times;</button>
+            </div>
+            <div id="appointmentDetails" class="modal-body">
+                <!-- Details will be loaded here dynamically -->
+            </div>
+        </div>
     </div>
+</main>
 
-    <script>
-        // Tab switching
-        document.querySelectorAll('.filter-tab').forEach(tab => {
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.close-btn {
+    font-size: 24px;
+    color: #666;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.detail-row {
+    margin-bottom: 15px;
+}
+
+.detail-row strong {
+    display: block;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.view-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 8px;
+}
+
+.view-btn:hover {
+    background-color: #357abd;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status.scheduled { background-color: #4CAF50; color: white; }
+.status.completed { background-color: #2196F3; color: white; }
+.status.canceled { background-color: #f44336; color: white; }
+.status.rescheduled { background-color: #FF9800; color: white; }
+</style>
+
+<script>
+    const basePath = '<?php echo $basePath; ?>';
+    // Tab switching
+    document.querySelectorAll('.filter-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
@@ -248,7 +346,93 @@
         } else if (urlParams.has('error')) {
             alert('An error occurred: ' + urlParams.get('error'));
         }
-    </script>
+        function viewAppointmentDetails(appointmentId) {
+    // Show loading state
+    const modalContent = document.getElementById('appointmentDetails');
+    modalContent.innerHTML = '<div class="loading-spinner">Loading...</div>';
+    document.getElementById('appointmentDetailsModal').style.display = 'block';
+
+    // Use the correct endpoint matching the route in index.php
+    fetch(`${basePath}/doctor/getAppointmentDetails?appointment_id=${appointmentId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            const htmlContent = `
+                <div class="appointment-details">
+                    <div class="detail-row">
+                        <strong>Patient Name:</strong>
+                        <span>${data.first_name} ${data.last_name}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Contact Information:</strong>
+                        <span>Email: ${data.email || 'N/A'}</span><br>
+                        <span>Phone: ${data.phone_number || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Appointment Date:</strong>
+                        <span>${data.appointment_date}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Appointment Time:</strong>
+                        <span>${data.appointment_time}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Consultation Type:</strong>
+                        <span>${data.consultation_type || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Status:</strong>
+                        <span class="status ${data.appointment_status.toLowerCase()}">${data.appointment_status}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Reason for Visit:</strong>
+                        <p>${data.reason_for_visit || 'Not specified'}</p>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Medical History:</strong>
+                        <p>${data.medical_history || 'Not provided'}</p>
+                    </div>
+                </div>
+            `;
+            modalContent.innerHTML = htmlContent;
+        })
+        .catch(error => {
+            modalContent.innerHTML = `
+                <div class="error-message">
+                    <p>Error loading appointment details: ${error.message}</p>
+                    <p>Please try again or contact support if the problem persists.</p>
+                </div>
+            `;
+            console.error('Error:', error);
+        });
+}
+
+function hideAppointmentDetails() {
+    document.getElementById('appointmentDetailsModal').style.display = 'none';
+}
+
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const appointmentModal = document.getElementById('appointmentDetailsModal');
+        const availabilityModal = document.getElementById('availabilityModal');
+        
+        if (event.target === appointmentModal) {
+            hideAppointmentDetails();
+        }
+        if (event.target === availabilityModal) {
+            hideModal();
+        }
+    }
+</script>
 
 </body>
 </html>

@@ -113,4 +113,82 @@ class Patient {
             throw $e;
         }
     }
+    // Add these methods to your Patient class
+
+public function getMedicalReports($patientId) {
+    try {
+        $query = "SELECT * FROM medical_reports WHERE patient_id = ? ORDER BY upload_date DESC";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        return $stmt->get_result();
+    } catch (\Exception $e) {
+        error_log("Error in getMedicalReports: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+public function getMedicalReport($reportId) {
+    try {
+        $query = "SELECT * FROM medical_reports WHERE report_id = ? LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $reportId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    } catch (\Exception $e) {
+        error_log("Error in getMedicalReport: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+public function saveMedicalReport($data) {
+    try {
+        $this->db->begin_transaction();
+
+        $query = "INSERT INTO medical_reports (patient_id, report_name, report_type, description, file_path) 
+                 VALUES (?, ?, ?, ?, ?)";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param(
+            "issss",
+            $data['patient_id'],
+            $data['report_name'],
+            $data['report_type'],
+            $data['description'],
+            $data['file_path']
+        );
+
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+
+        $this->db->commit();
+        return true;
+    } catch (\Exception $e) {
+        $this->db->rollback();
+        error_log("Error in saveMedicalReport: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+public function deleteMedicalReport($reportId, $patientId) {
+    try {
+        $this->db->begin_transaction();
+
+        $query = "DELETE FROM medical_reports WHERE report_id = ? AND patient_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $reportId, $patientId);
+
+        if (!$stmt->execute()) {
+            throw new \Exception($stmt->error);
+        }
+
+        $this->db->commit();
+        return true;
+    } catch (\Exception $e) {
+        $this->db->rollback();
+        error_log("Error in deleteMedicalReport: " . $e->getMessage());
+        throw $e;
+    }
+}
 }

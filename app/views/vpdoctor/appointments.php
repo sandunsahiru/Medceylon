@@ -306,6 +306,7 @@
 </div>
 
 <script>
+    const basePath = '<?php echo $basePath; ?>';
     document.addEventListener('DOMContentLoaded', function() {
         initializeTabs();
         initializeSearch();
@@ -360,16 +361,22 @@
     }
 
     function initializeRescheduleForm() {
-        document.getElementById('rescheduleForm').addEventListener('submit', function(e) {
+        const form = document.getElementById('rescheduleForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
+
             const appointmentId = document.getElementById('rescheduleAppointmentId').value;
             const newDate = document.getElementById('newDate').value;
             const newTime = document.getElementById('newTime').value;
 
-            updateAppointmentStatus(appointmentId, 'Rescheduled', newDate, newTime);
-        });
+            if (!appointmentId || !newDate || !newTime) {
+                alert('Please fill in all required fields');
+                return;
+            }
 
-        document.getElementById('closeRescheduleModal').addEventListener('click', function() {
+            updateAppointmentStatus(appointmentId, 'Rescheduled', newDate, newTime);
             document.getElementById('rescheduleModal').style.display = 'none';
         });
     }
@@ -384,15 +391,32 @@
         });
     }
 
-    function showRescheduleForm(appointmentId) {
-        document.getElementById('rescheduleAppointmentId').value = appointmentId;
-        document.getElementById('rescheduleModal').style.display = 'flex';
-    }
-
     function confirmAppointment(appointmentId) {
         if (confirm('Are you sure you want to confirm this appointment?')) {
-            updateAppointmentStatus(appointmentId, 'Scheduled');
+            try {
+                updateAppointmentStatus(appointmentId, 'Scheduled');
+            } catch (error) {
+                console.error('Error in confirmAppointment:', error);
+                alert('Failed to confirm appointment. Please try again.');
+            }
         }
+    }
+
+    function showRescheduleForm(appointmentId) {
+        const modal = document.getElementById('rescheduleModal');
+        const appointmentIdInput = document.getElementById('rescheduleAppointmentId');
+
+        if (!modal || !appointmentIdInput) {
+            console.error('Required elements not found');
+            return;
+        }
+
+        appointmentIdInput.value = appointmentId;
+        modal.style.display = 'flex';
+
+        // Reset form fields
+        document.getElementById('newDate').value = '';
+        document.getElementById('newTime').value = '';
     }
 
     function completeAppointment(appointmentId) {
@@ -408,28 +432,51 @@
     }
 
     function updateAppointmentStatus(appointmentId, status, newDate = null, newTime = null) {
+        // Create form data
         const formData = new FormData();
         formData.append('appointment_id', appointmentId);
         formData.append('status', status);
         if (newDate) formData.append('new_date', newDate);
         if (newTime) formData.append('new_time', newTime);
-        formData.append('csrf_token', '<?php echo $csrfToken; ?>');
+        formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
 
+        // Disable buttons during request
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => btn.disabled = true);
+
+        // Make the request
         fetch(`${basePath}/vpdoctor/update-appointment-status`, {
                 method: 'POST',
-                body: formData
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                // Re-enable buttons
+                buttons.forEach(btn => btn.disabled = false);
+
                 if (data.success) {
+                    // Show success message
+                    alert(data.message || 'Appointment status updated successfully');
+                    // Reload the page
                     window.location.reload();
                 } else {
-                    alert('Failed to update appointment status. Please try again.');
+                    throw new Error(data.error || 'Failed to update appointment status');
                 }
             })
             .catch(error => {
+                // Re-enable buttons
+                buttons.forEach(btn => btn.disabled = false);
+                // Show error message
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert('An error occurred while updating the appointment: ' + error.message);
             });
     }
 

@@ -45,17 +45,32 @@ class DoctorController extends BaseController
     public function appointments()
     {
         try {
-            $doctorId = $this->validateDoctorSession();
+            // Get doctor_id from the users table and doctors table
+            $userId = $this->validateDoctorSession();
+
+            // Get doctor ID from the doctors table
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
 
             // Handle POST requests for appointment updates
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $this->handleAppointmentActions($_POST);
-                // Redirect to prevent form resubmission
                 header("Location: " . $this->basePath . "/doctor/appointments");
                 exit();
             }
 
-            $appointments = $this->doctorModel->getAppointmentHistory($doctorId);
+            // Get appointments using the doctor_id
+            $appointments = $this->appointmentModel->getDoctorAppointments($doctorId);
             $availability = $this->doctorModel->getDoctorAvailability($doctorId);
 
             $data = [
@@ -63,7 +78,8 @@ class DoctorController extends BaseController
                 'availability' => $availability,
                 'basePath' => $this->basePath,
                 'page_title' => 'Appointments',
-                'current_page' => 'appointments'
+                'current_page' => 'appointments',
+                'csrfToken' => $_SESSION['csrf_token'] ?? ''
             ];
 
             echo $this->view('doctor/appointments', $data);
@@ -72,7 +88,6 @@ class DoctorController extends BaseController
             $this->handleError($e);
         }
     }
-
     public function profile()
     {
         try {
@@ -139,6 +154,7 @@ class DoctorController extends BaseController
         }
     }
 
+
     public function availability()
     {
         try {
@@ -170,20 +186,35 @@ class DoctorController extends BaseController
     public function getTimeSlots()
     {
         try {
-            $doctorId = $this->validateDoctorSession();
-            $date = $_GET['date'] ?? date('Y-m-d');
+            header('Content-Type: application/json');
 
+            // Validate inputs
+            $doctorId = isset($_GET['doctor_id']) ? (int)$_GET['doctor_id'] : 0;
+            $date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+
+            if (!$doctorId) {
+                throw new \Exception('Doctor ID is required');
+            }
+
+            // Get available slots for the specialist
             $slots = $this->doctorModel->getAvailableTimeSlots($doctorId, $date);
 
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'slots' => $slots]);
+            echo json_encode([
+                'success' => true,
+                'slots' => $slots
+            ]);
             exit();
         } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            error_log("Error in getTimeSlots: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
             exit();
         }
     }
+
+
     // New method for all-doctors page
     public function allDoctors()
     {
@@ -218,90 +249,190 @@ class DoctorController extends BaseController
     }
 
     // Method to get doctor profile for modal
-    public function getDoctorProfile()
+    public function getDocProfile()
     {
         try {
-            $doctorId = $_GET['doctor_id'] ?? 0;
+            // Set JSON header early to prevent any HTML output
+            header('Content-Type: application/json');
 
-            if (!$doctorId) {
+            if (!isset($_GET['doctor_id'])) {
+                throw new \Exception('Doctor ID is required');
+            }
+
+            $doctorId = (int)$_GET['doctor_id'];
+            if ($doctorId <= 0) {
                 throw new \Exception('Invalid doctor ID');
             }
 
-            $profile = $this->doctorModel->getDoctorProfile($doctorId);
+            // Updated query with error handling
+            $query = "SELECT 
+            d.doctor_id,
+            d.qualifications,
+            d.years_of_experience,
+            d.profile_description,
+            u.first_name,
+            u.last_name,
+            u.email,
+            u.phone_number,
+            h.name as hospital_name,
+            GROUP_CONCAT(DISTINCT s.name) as specializations
+            FROM doctors d
+            JOIN users u ON d.user_id = u.user_id
+            LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+            LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
+            LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
+            WHERE d.doctor_id = ? 
+            AND d.is_active = 1
+            GROUP BY d.doctor_id, u.first_name, u.last_name, u.email, 
+                     u.phone_number, d.qualifications, d.years_of_experience, 
+                     h.name, d.profile_description";
 
-            header('Content-Type: application/json');
-            echo json_encode($profile);
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                throw new \Exception($this->db->error);
+            }
+
+            $stmt->bind_param("i", $doctorId);
+            if (!$stmt->execute()) {
+                throw new \Exception($stmt->error);
+            }
+
+            $result = $stmt->get_result();
+            $profile = $result->fetch_assoc();
+
+            if (!$profile) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Doctor profile not found'
+                ]);
+                exit();
+            }
+
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'first_name' => $profile['first_name'],
+                    'last_name' => $profile['last_name'],
+                    'qualifications' => $profile['qualifications'] ?? '',
+                    'years_of_experience' => $profile['years_of_experience'] ?? 0,
+                    'hospital_name' => $profile['hospital_name'] ?? '',
+                    'email' => $profile['email'] ?? '',
+                    'phone_number' => $profile['phone_number'] ?? '',
+                    'profile_description' => $profile['profile_description'] ?? '',
+                    'specializations' => $profile['specializations'] ?? ''
+                ]
+            ]);
             exit();
         } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
+            error_log("Error in getDocProfile: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
             exit();
         }
     }
-
     // Method to process specialist booking
     public function processBooking()
-    {
-        try {
-            $doctorId = $this->validateDoctorSession();
-
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new \Exception('Invalid request method');
-            }
-
-            $required = ['specialist_id', 'patient_id', 'consultation_type', 'preferred_date'];
-            foreach ($required as $field) {
-                if (!isset($_POST[$field]) || empty($_POST[$field])) {
-                    throw new \Exception("Missing required field: {$field}");
-                }
-            }
-
-            $bookingData = [
-                'specialist_id' => $_POST['specialist_id'],
-                'patient_id' => $_POST['patient_id'],
-                'consultation_type' => $_POST['consultation_type'],
-                'preferred_date' => $_POST['preferred_date'],
-                'medical_history' => $_POST['medical_history'] ?? '',
-                'referring_doctor_id' => $doctorId,
-                'notes' => "Referred by Doctor ID: " . $doctorId,
-                'appointment_status' => 'Asked'
-            ];
-
-            $appointmentId = $this->appointmentModel->bookAppointment($bookingData);
-
-            if ($appointmentId) {
-                header("Location: " . $this->basePath . "/doctor/all-doctors?booking=success");
-            } else {
-                throw new \Exception("Failed to book appointment");
-            }
-            exit();
-        } catch (\Exception $e) {
-            header("Location: " . $this->basePath . "/doctor/all-doctors?booking=error&message=" . urlencode($e->getMessage()));
-            exit();
+{
+    try {
+        // Get the referring doctor's ID (logged in general doctor)
+        $referringDoctorId = $this->validateDoctorSession();
+        
+        error_log("Request Method: " . $_SERVER['REQUEST_METHOD']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            throw new \Exception('Invalid request method');
         }
+
+        error_log("POST Data: " . print_r($_POST, true));
+
+        $required = ['specialist_id', 'patient_id', 'consultation_type', 'preferred_date', 'appointment_time'];
+        foreach ($required as $field) {
+            error_log("Checking field $field: " . (isset($_POST[$field]) ? $_POST[$field] : 'not set'));
+            if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                throw new \Exception("Missing required field: {$field}");
+            }
+        }
+
+        // Use specialist_id as doctor_id and referringDoctorId as the actual referring doctor
+        $bookingData = [
+            'doctor_id' => $_POST['specialist_id'],  // Specialist doctor who will handle the appointment
+            'patient_id' => $_POST['patient_id'],
+            'consultation_type' => $_POST['consultation_type'],
+            'preferred_date' => $_POST['preferred_date'],
+            'appointment_time' => $_POST['appointment_time'],
+            'reason_for_visit' => $_POST['medical_history'] ?? '',
+            'medical_history' => '',
+            'referring_doctor_id' => $referringDoctorId,  // General doctor who is making the referral
+            'notes' => "Referred by Doctor ID: " . $referringDoctorId,
+            'appointment_status' => 'Asked'
+        ];
+
+        error_log("Booking Data: " . print_r($bookingData, true));
+
+        $appointmentId = $this->appointmentModel->bookAppointment($bookingData);
+
+        header('Content-Type: application/json');
+        if ($appointmentId) {
+            error_log("Appointment booked successfully with ID: " . $appointmentId);
+            echo json_encode(['success' => true]);
+        } else {
+            throw new \Exception("Failed to book appointment");
+        }
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in processBooking: " . $e->getMessage());
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+        exit();
     }
+}
+
+
     public function patients()
     {
         try {
-            $doctorId = $this->validateDoctorSession();
+            // Get doctor_id from the users table and doctors table
+            $userId = $this->validateDoctorSession();
+
+            // Get doctor ID from the doctors table
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
 
             // Get basic statistics
             $stats = $this->doctorModel->getDoctorDashboardStats($doctorId);
 
-            // Get patients list with their appointment history
-            $patientsQuery = "SELECT 
+            // Get patients list with their appointment history and medical reports
+            $patientsQuery = "SELECT DISTINCT
                 u.user_id,
                 u.first_name,
                 u.last_name,
                 u.email,
                 u.phone_number,
                 u.gender,
-                COUNT(a.appointment_id) as total_visits,
-                MAX(a.appointment_date) as last_visit
+                COUNT(DISTINCT a.appointment_id) as total_visits,
+                MAX(a.appointment_date) as last_visit,
+                COUNT(DISTINCT mr.report_id) as total_reports
                 FROM appointments a
                 JOIN users u ON a.patient_id = u.user_id
+                LEFT JOIN medical_reports mr ON u.user_id = mr.patient_id
                 WHERE a.doctor_id = ?
-                GROUP BY u.user_id
+                GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender
                 ORDER BY last_visit DESC";
 
             $stmt = $this->db->prepare($patientsQuery);
@@ -330,6 +461,74 @@ class DoctorController extends BaseController
         }
     }
 
+    public function getPatientMedicalReports()
+    {
+        try {
+            $patientId = $_GET['patient_id'] ?? null;
+
+            if (!$patientId) {
+                throw new \Exception("Patient ID is required");
+            }
+
+            // Get current doctor's ID
+            $userId = $this->validateDoctorSession();
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $doctor = $stmt->get_result()->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            // Get medical reports
+            $query = "SELECT 
+            mr.*,
+            u.first_name,
+            u.last_name
+            FROM appointments a
+            JOIN users u ON a.patient_id = u.user_id
+            LEFT JOIN medical_reports mr ON u.user_id = mr.patient_id
+            WHERE a.patient_id = ? 
+            AND a.doctor_id = ?
+            AND mr.report_id IS NOT NULL
+            ORDER BY mr.upload_date DESC";
+
+            error_log("Executing query for patient ID: " . $patientId . " and doctor ID: " . $doctor['doctor_id']);
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("ii", $patientId, $doctor['doctor_id']);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            error_log("Found " . $result->num_rows . " medical reports");
+
+            $reports = [];
+            while ($row = $result->fetch_assoc()) {
+                $reports[] = [
+                    'report_id' => $row['report_id'],
+                    'report_name' => $row['report_name'] ?? 'Medical Report',
+                    'report_type' => $row['report_type'] ?? 'General',
+                    'description' => $row['description'],
+                    'upload_date' => date('F j, Y', strtotime($row['upload_date'])),
+                    'file_path' => 'uploads/medical-reports/' . basename($row['file_path']), // Modify the file path
+                    'patient_name' => $row['first_name'] . ' ' . $row['last_name']
+                ];
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode($reports);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in getPatientMedicalReports: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+            exit();
+        }
+    }
+
     // Add these patient-related methods as well
     public function getPatientAppointments()
     {
@@ -348,6 +547,63 @@ class DoctorController extends BaseController
             exit();
         } catch (\Exception $e) {
             header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+            exit();
+        }
+    }
+    public function getAppointmentDetails()
+    {
+        try {
+            // Get appointment_id from GET parameters
+            $appointmentId = $_GET['appointment_id'] ?? null;
+
+            if (!$appointmentId) {
+                throw new \Exception("Appointment ID is required");
+            }
+
+            // Get current doctor's ID
+            $userId = $this->validateDoctorSession();
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $doctor = $stmt->get_result()->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            // Get appointment details with validation
+            $query = "SELECT 
+            a.*, 
+            u.first_name,
+            u.last_name,
+            u.email,
+            u.phone_number
+            FROM appointments a
+            JOIN users u ON a.patient_id = u.user_id
+            WHERE a.appointment_id = ? 
+            AND a.doctor_id = ?";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("ii", $appointmentId, $doctor['doctor_id']);
+            $stmt->execute();
+            $details = $stmt->get_result()->fetch_assoc();
+
+            if (!$details) {
+                throw new \Exception("Appointment not found");
+            }
+
+            // Format date and time for display
+            $details['appointment_date'] = date('Y-m-d', strtotime($details['appointment_date']));
+            $details['appointment_time'] = date('g:i A', strtotime($details['appointment_time']));
+
+            header('Content-Type: application/json');
+            echo json_encode($details);
+            exit();
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
             exit();
         }
@@ -527,6 +783,43 @@ class DoctorController extends BaseController
             }
         } catch (\Exception $e) {
             error_log("Database reconnection failed: " . $e->getMessage());
+        }
+    }
+
+    public function getPatients()
+    {
+        try {
+            // Get current doctor's ID from session
+            $userId = $this->validateDoctorSession();
+            
+            // Get doctor ID from the doctors table
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
+            error_log("Fetching patients for doctor ID: " . $doctorId); // Debug log
+
+            // Get patients list
+            $patients = $this->doctorModel->getDoctorPatients($doctorId);
+            error_log("Retrieved " . count($patients) . " patients");
+
+            header('Content-Type: application/json');
+            echo json_encode($patients);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in getPatients: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+            exit();
         }
     }
 }
