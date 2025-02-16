@@ -35,7 +35,7 @@ class TravelPlanController extends BaseController
                 'basePath' => $this->basePath
             ];
             
-            echo $this->view('travel-plans/dashboard', $data);
+            echo $this->view('travelplan/travel-plans/', $data);
             exit();
         } catch (\Exception $e) {
             error_log("Error in dashboard: " . $e->getMessage());
@@ -66,7 +66,7 @@ class TravelPlanController extends BaseController
         } catch (\Exception $e) {
             error_log("Error in destinations: " . $e->getMessage());
             $this->session->setFlash('error', $e->getMessage());
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('travelplan/destinations'));
             exit();
         }
     }
