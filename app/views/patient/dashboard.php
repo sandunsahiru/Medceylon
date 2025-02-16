@@ -45,7 +45,7 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <h1>My Appointments</h1>
+                <h1>Dashboard</h1>
                 <div class="header-right">
                     <div class="search-box">
                         <i class="ri-search-line"></i>
@@ -62,27 +62,27 @@
                 <div class="appointments-list">
                     <?php if ($appointments && $appointments->num_rows > 0): ?>
                         <?php while ($appointment = $appointments->fetch_assoc()): ?>
-                            <div class="appointment-card" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                            <div class="appointment-card" data-appointment-id="<?php echo htmlspecialchars($appointment['appointment_id']); ?>">
                                 <div class="appointment-time">
                                     <?php
                                     $time = $appointment['appointment_time'];
                                     if ($time) {
-                                        echo date('H:i', strtotime($time));
+                                        echo htmlspecialchars(date('H:i', strtotime($time)));
                                     } else {
-                                        echo date('H:i');
+                                        echo htmlspecialchars(date('H:i'));
                                     }
                                     ?>
                                 </div>
                                 <div class="appointment-info">
                                     <h3>Dr. <?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?></h3>
-                                    <p><?php echo htmlspecialchars($appointment['specialization']); ?></p>
+                                    <p><?php echo isset($appointment['specialization']) ? htmlspecialchars($appointment['specialization']) : 'General Medicine'; ?></p>
                                     <p><?php
                                         $date = $appointment['appointment_date'];
-                                        echo $date ? date('d/m/Y', strtotime($date)) : date('d/m/Y');
+                                        echo htmlspecialchars($date ? date('d/m/Y', strtotime($date)) : date('d/m/Y'));
                                         ?></p>
-                                    <p><?php echo htmlspecialchars($appointment['hospital_name']); ?></p>
+                                    <p><?php echo htmlspecialchars($appointment['hospital_name'] ?? 'Hospital not specified'); ?></p>
                                 </div>
-                                <div class="status-badge <?php echo strtolower($appointment['appointment_status']); ?>">
+                                <div class="status-badge <?php echo strtolower(htmlspecialchars($appointment['appointment_status'])); ?>">
                                     <?php echo htmlspecialchars($appointment['appointment_status']); ?>
                                 </div>
                                 <div class="appointment-actions">

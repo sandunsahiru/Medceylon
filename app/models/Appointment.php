@@ -68,11 +68,14 @@ class Appointment {
                 a.reason_for_visit,
                 u.first_name, 
                 u.last_name,
-                h.name as hospital_name
+                h.name as hospital_name,
+                s.name as specialization
                 FROM appointments a
-                JOIN users u ON a.patient_id = u.user_id
+                JOIN users u ON a.doctor_id = u.user_id
                 JOIN doctors d ON a.doctor_id = d.doctor_id
                 LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
+                LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
                 WHERE a.patient_id = ?
                 ORDER BY a.appointment_date DESC, a.appointment_time DESC 
                 LIMIT ?";
