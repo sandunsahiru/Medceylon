@@ -42,7 +42,7 @@ class Hospital
                       FROM hospital_departments d
                       LEFT JOIN doctors doc ON d.head_doctor_id = doc.doctor_id
                       LEFT JOIN users u ON doc.user_id = u.user_id
-                      WHERE d.is_active = 1 
+                      WHERE doc.is_active = 1 
                       ORDER BY d.department_name ASC";
             return $this->db->query($query);
         } catch (\Exception $e) {
@@ -183,11 +183,11 @@ class Hospital
     {
         try {
             $query = "SELECT d.*, u.first_name, u.last_name, u.email, u.phone_number,
-                      hd.department_name,
-                      (SELECT COUNT(*) > 0 FROM doctor_schedules ds 
+                      hd.department_name
+                      /*(SELECT COUNT(*) > 0 FROM doctor_schedules ds 
                        WHERE ds.doctor_id = d.doctor_id 
                        AND ds.day = LOWER(DAYNAME(NOW()))
-                       AND ds.is_available = 1) as is_available
+                       AND ds.is_available = 1) as is_available*/
                       FROM doctors d 
                       JOIN users u ON d.user_id = u.user_id 
                       LEFT JOIN hospital_departments hd ON d.department_id = hd.department_id
