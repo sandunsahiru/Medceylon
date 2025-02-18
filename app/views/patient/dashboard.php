@@ -84,7 +84,7 @@
                                 </div>
                                 <div class="status-badge <?php echo strtolower($appointment['appointment_status']); ?>">
                                     <?php echo htmlspecialchars($appointment['appointment_status']); ?>
-                                </div>
+                                 </div>
                                 <div class="appointment-actions">
                                     <button class="action-btn view-details">
                                         <i class="ri-eye-line"></i>

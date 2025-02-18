@@ -108,17 +108,19 @@ class User {
         return ['success' => false, 'error' => 'Invalid credentials'];
     }
 
+    
     private function getRoleIdFromUserType($userType) {
-        return match($userType) {
+        return match ($userType) {
             'patient' => 1,
             'general_doctor' => 2,
             'special_doctor' => 3,
             'caretaker' => 5,
             'admin' => 4,
             'travel_partner' => 6,
-            default => 1
+            default => 1,
         };
     }
+    
 
     private function insertDoctorData($userId, $userData) {
         $stmt = $this->db->prepare("
