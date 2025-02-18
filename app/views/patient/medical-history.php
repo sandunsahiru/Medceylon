@@ -167,6 +167,10 @@
                     <i class="ri-calendar-line"></i>
                     <span>Book Appointment</span>
                 </a>
+                <a href="<?php echo $basePath; ?>/patient/chat" class="nav-item">
+                    <i class="ri-message-3-line"></i>
+                    <span>Chat</span>
+                </a>
                 <a href="<?php echo $basePath; ?>/patient/medical-history" class="nav-item active">
                     <i class="ri-file-list-line"></i>
                     <span>Medical History</span>

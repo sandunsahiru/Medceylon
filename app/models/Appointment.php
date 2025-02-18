@@ -14,10 +14,10 @@ class Appointment {
     public function getUpcomingAppointments($doctorId, $limit = 10) {
         try {
             $query = "SELECT a.*, 
-                     u.first_name, u.last_name,
-                     u.email, u.phone_number
+                     p.first_name, p.last_name,
+                     p.email, p.phone_number
                      FROM appointments a
-                     JOIN users u ON a.patient_id = u.user_id
+                     JOIN users p ON a.patient_id = p.user_id
                      WHERE a.doctor_id = ?
                      AND a.appointment_date >= CURDATE()
                      AND a.appointment_status = 'Scheduled'
@@ -66,13 +66,14 @@ class Appointment {
                 a.appointment_status, 
                 a.consultation_type, 
                 a.reason_for_visit,
-                u.first_name, 
-                u.last_name,
+                d.doctor_id,
+                u.first_name as doctor_first_name, 
+                u.last_name as doctor_last_name,
                 h.name as hospital_name,
                 s.name as specialization
                 FROM appointments a
-                JOIN users u ON a.doctor_id = u.user_id
                 JOIN doctors d ON a.doctor_id = d.doctor_id
+                JOIN users u ON d.user_id = u.user_id
                 LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
                 LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
                 LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
@@ -90,7 +91,7 @@ class Appointment {
         }
     }
     
-    // Add this new method to get appointments by doctor ID
+    // Get appointments by doctor ID
     public function getDoctorAppointments($doctorId) {
         try {
             $query = "SELECT 
@@ -100,12 +101,17 @@ class Appointment {
                 a.appointment_status, 
                 a.consultation_type, 
                 a.reason_for_visit,
-                p.first_name, 
-                p.last_name,
-                p.email,
-                p.phone_number
+                p.first_name as patient_first_name, 
+                p.last_name as patient_last_name,
+                p.email as patient_email,
+                p.phone_number as patient_phone,
+                d.doctor_id,
+                u.first_name as doctor_first_name,
+                u.last_name as doctor_last_name
                 FROM appointments a
                 JOIN users p ON a.patient_id = p.user_id
+                JOIN doctors d ON a.doctor_id = d.doctor_id
+                JOIN users u ON d.user_id = u.user_id
                 WHERE a.doctor_id = ?
                 ORDER BY a.appointment_date DESC, a.appointment_time DESC";
            
@@ -123,14 +129,21 @@ class Appointment {
     public function getAppointmentDetails($appointmentId) {
         try {
             $query = "SELECT 
-                a.*, u.first_name, u.last_name,
-                s.name as specialization, h.name as hospital_name,
+                a.*,
+                d.doctor_id,
+                u.first_name as doctor_first_name, 
+                u.last_name as doctor_last_name,
+                p.first_name as patient_first_name,
+                p.last_name as patient_last_name,
+                s.name as specialization, 
+                h.name as hospital_name,
                 orig.appointment_date as previous_date,
                 orig.appointment_time as previous_time,
                 orig.appointment_status as previous_status
                 FROM appointments a
                 JOIN doctors d ON a.doctor_id = d.doctor_id
                 JOIN users u ON d.user_id = u.user_id
+                JOIN users p ON a.patient_id = p.user_id
                 JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
                 JOIN specializations s ON ds.specialization_id = s.specialization_id
                 JOIN hospitals h ON d.hospital_id = h.hospital_id
@@ -144,8 +157,13 @@ class Appointment {
 
             return [
                 'doctor' => [
-                    'first_name' => $result['first_name'],
-                    'last_name' => $result['last_name']
+                    'id' => $result['doctor_id'],
+                    'first_name' => $result['doctor_first_name'],
+                    'last_name' => $result['doctor_last_name']
+                ],
+                'patient' => [
+                    'first_name' => $result['patient_first_name'],
+                    'last_name' => $result['patient_last_name']
                 ],
                 'specialization' => $result['specialization'],
                 'hospital' => $result['hospital_name'],
@@ -181,7 +199,7 @@ class Appointment {
                     throw new \Exception("Failed to prepare time slot check query: " . $this->db->error);
                 }
     
-                $checkDoctorId = $data['doctor_id'];  // This is the specialist's ID
+                $checkDoctorId = $data['doctor_id'];
                 $checkDate = $data['preferred_date'];
                 $checkTime = $data['appointment_time'];
                 
@@ -215,7 +233,7 @@ class Appointment {
     
             // Prepare all variables before binding
             $patientId = $data['patient_id'];
-            $doctorId = $data['doctor_id'];  // Specialist's ID
+            $doctorId = $data['doctor_id'];
             $appointmentDate = $data['preferred_date'];
             $appointmentTime = $data['appointment_time'];
             $consultationType = $data['consultation_type'];
@@ -291,7 +309,6 @@ class Appointment {
                             
                     $stmt = $this->db->prepare($query);
                     $db_path = 'uploads/' . $new_name;
-                    // Store in variables before binding
                     $docType = $file_ext;
                     $stmt->bind_param("iss", $appointmentId, $docType, $db_path);
                     $stmt->execute();
