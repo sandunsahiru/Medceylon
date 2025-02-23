@@ -32,7 +32,7 @@ class Hospital
         }
     }
 
-    // Department Methods
+    // Department Methoda
     public function getAllDepartments()
     {
         try {
@@ -178,16 +178,16 @@ class Hospital
         }
     }
 
-    // Doctor Methods
+    // Doctor Methoda
     public function getAllDoctors()
     {
         try {
             $query = "SELECT d.*, u.first_name, u.last_name, u.email, u.phone_number,
-                      hd.department_name
-                      /*(SELECT COUNT(*) > 0 FROM doctor_schedules ds 
-                       WHERE ds.doctor_id = d.doctor_id 
-                       AND ds.day = LOWER(DAYNAME(NOW()))
-                       AND ds.is_available = 1) as is_available*/
+                      hd.department_name,
+                      (SELECT COUNT(*) > 0 FROM doctor_availability da 
+                       WHERE da.doctor_id = d.doctor_id 
+                       AND da.day_of_week = LOWER(DAYNAME(NOW()))
+                       AND da.is_active = 1) as is_available
                       FROM doctors d 
                       JOIN users u ON d.user_id = u.user_id 
                       LEFT JOIN hospital_departments hd ON d.department_id = hd.department_id
@@ -427,7 +427,7 @@ class Hospital
         }
     }
 
-    // Patient Methods
+    // Patient Methoda
     public function getAllPatients()
     {
         try {
@@ -470,7 +470,7 @@ class Hospital
                       CONCAT(d.first_name, ' ', d.last_name) as doctor_name,
                       tr.treatment_type,
                       tr.request_status
-                      FROM health_records h
+                      FROM health_recorda h
                       JOIN treatment_requests tr ON h.request_id = tr.request_id
                       LEFT JOIN doctors doc ON h.doctor_id = doc.doctor_id
                       LEFT JOIN users d ON doc.user_id = d.user_id
@@ -494,7 +494,7 @@ class Hospital
         }
     }
 
-    // Treatment Request Methods
+    // Treatment Request Methoda
     public function getAllTreatmentRequests()
     {
         try {
@@ -560,7 +560,7 @@ class Hospital
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
-                "dssii",
+                "dasii",
                 $data['estimated_cost'],
                 $data['response_message'],
                 $data['additional_requirements'],

@@ -46,10 +46,10 @@ class TravelPlanController extends BaseController
             error_log("Starting destinations view");
             $destinations = $this->travelPlanModel->getAllDestinations();
             
-            /*if (!$destinations || $destinations->num_rows === 0) {
+            if  (!$destinations || count($destinations) === 0) {
                 error_log("No destinations found");
                 $this->session->setFlash('error', 'No destinations available');
-            }*/
+            }
             
             $data = [
                 'destinations' => $destinations,

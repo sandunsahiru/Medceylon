@@ -24,6 +24,8 @@ class TravelPlan {
             error_log("Error in getAlldestinations: " . $e->getMessage());
             throw new \Exception("Failed to retrieve destinations");
         }
+
+        
     }
 
     public function getAllTravelPlans($userId) {

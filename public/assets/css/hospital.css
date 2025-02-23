@@ -532,3 +532,9 @@ button {
     transition: all 0.2s ease;
 }
 
+.availability-status{
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
