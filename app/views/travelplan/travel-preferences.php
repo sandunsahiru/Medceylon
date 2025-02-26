@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/travel-preferences.css">
+<link rel="stylesheet" href="<?php echo ROOT_PATH; ?>/public/assets/css/travelmodal.css">
 
 <!-- Modal -->
 <div id="travelModal" class="modal">
@@ -7,7 +7,7 @@
         <h2>Create Your Customized Travel Plan</h2>
 
         <!-- Travel Preferences Form -->
-        <form id="travelForm" action="<?php echo URLROOT; ?>/controllers/TravelPlan/automatedTravelPlan" method="POST">
+        <form id="travelForm" action="<?php echo ROOT_PATH; ?>/controllers/TravelPlan/automatedTravelPlan" method="POST">
             <div class="form-row">
                 <div class="form-column">
                     <label for="travel_type">What type of travel do you prefer?</label><br>

@@ -36,23 +36,18 @@
 </div>
 
     <br>
-    <button id="ViewPlan"> View All Plans</button>
-    <a href="<?php echo $basePath; ?>/travel-plans"></a>
+
+    <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-plans';">View All Plans</button>
 
     <br>
     <br>
+    <br>
+
+    <!-- footer -->
+    <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>
     
     <?php include('add-destination.php'); ?>
-    <?php include('travel-preferences.php'); ?>
-   
+    <?php include('travel-preferences.php'); ?>   
 
-    
-
-        
-        
-        <!-- footer -->
-        <?php require APPROOT . '/views/includes/footer.php'; ?>
-
-        <script src="<?php echo ROOT_PATH;?>/js/add-destination.js"></script>
-        <script src="<?php echo ROOT_PATH;?>/js/travel.js"></script>
+    <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
     </body>

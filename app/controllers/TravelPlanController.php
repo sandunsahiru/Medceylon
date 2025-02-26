@@ -44,15 +44,15 @@ class TravelPlanController extends BaseController
     {
         try {
             error_log("Starting destinations view");
-            $destinations = $this->travelPlanModel->getAllDestinations();
+            $travelPlans = $this->travelPlanModel->getAllDestinations();
             
-            if  (!$destinations || count($destinations) === 0) {
+            if  (!$travelPlans || count($travelPlans) === 0) {
                 error_log("No destinations found");
                 $this->session->setFlash('error', 'No destinations available');
             }
             
             $data = [
-                'destinations' => $destinations,
+                'destinations' => $travelPlans,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
                 'basePath' => $this->basePath
@@ -88,14 +88,40 @@ class TravelPlanController extends BaseController
             exit();
         } catch (\Exception $e) {
             $this->session->setFlash('error', 'Error adding destination: ' . $e->getMessage());
-            header('Location: ' . $this->url('destination/destinations'));
+            header('Location: ' . $this->url('error/404'));
             exit();
         }
     }
 
     public function TravelPlans() {
-        $travelPlans = $this->travelPlanModel->getAllTravelPlans();
-        $this->view('travel-plans',['travelPlans' => $travelPlans]);
+
+        $userId = $this->session->getUserId();
+        $travelPlans = $this->travelPlanModel->getAllTravelPlans($userId);
+        $this->view('travelplan/travel-plans',['travelPlans' => $travelPlans]);
+        try {
+            error_log("Starting travel plans view");
+            $travelPlans = $this->travelPlanModel->getAllTravelPlans();
+            
+            if  (!$travelPlans || count($travelPlans) === 0) {
+                error_log("No travel plans found");
+                $this->session->setFlash('error', 'No travel plans available');
+            }
+            
+            $data = [
+                'travel plans' => $travelPlans,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success'),
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('/travelplan/travel-plans', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in travel plans: " . $e->getMessage());
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('error/404'));
+            exit();
+        }
     }
 
     public function displayAddToPlanModal()
@@ -140,7 +166,7 @@ class TravelPlanController extends BaseController
         } catch (\Exception $e) {
             error_log("Error in editDestination: " . $e->getMessage());
             $this->session->setFlash('error', 'Error updating travel plan: ' . $e->getMessage());
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('error/404'));
             exit();
         }
     }
@@ -171,7 +197,7 @@ class TravelPlanController extends BaseController
         } catch (\Exception $e) {
             error_log("Error in deleteDestination: " . $e->getMessage());
             $this->session->setFlash('error', 'Error deleting travel plan: ' . $e->getMessage());
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('error/404'));
                 throw new \Exception('Failed to delete travel plan');
             }
 

@@ -1,5 +1,5 @@
 <!-- Modal Structure -->
-<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/add-destination.css">
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/travelmodal.css">
 
 <div id="addToPlanModal" class="add-modal-container">
     <div class="addModal">
@@ -9,10 +9,10 @@
         </div>
 
         <div class="modal-form">
-            <form id="addToPlanForm" action="<?php echo URLROOT; ?>/TravelPlan/addDestination" method="post">
+            <form id="addToPlanForm" action="<?php echo ROOT_PATH; ?>/travelplan/add-destination" method="post">
                 <div class="body">
                     <div class="left">
-                        <span class="destination-name" id ="modalDestinationName"><b><?= htmlspecialchars($destination->destination_name) ?></b></span><br>
+                        <span class="destination-name" id ="modalDestinationName"><b><?= htmlspecialchars($destination['destination_name']) ?></b></span><br>
                         
                         <!-- Check-In (Start Date) -->
                         <label for="check_in">Check-In</label>
@@ -24,13 +24,14 @@
                     </div>
 
                     <div class="right">
-                        <div class="destination-image" id ="modalDestinationImage">
-                            <img src="<?= URLROOT . '/' .  htmlspecialchars($destination->image_path) ?>" alt="<?= htmlspecialchars($destination->destination_name) ?>">
+                        <div class="destination-image">
+                            <img src="<?= ROOT_PATH . '/' . htmlspecialchars($destination['image_path'] ?? 'default.jpg') ?>" 
+                                alt="<?= htmlspecialchars($destination['destination_name'] ?? 'Unknown') ?>">
                         </div>
                     </div>
                 </div>
 
-                <input type="hidden" id="modalDestinationID" name="destination_id" value="<?= htmlspecialchars($destination->destination_id)?>">
+                <input type="hidden" id="modalDestinationID" name="destination_id" value="<?= htmlspecialchars($destination['destination_id'])?>">
 
                 <div class="submit-btn">
                     <button type="submit" name="submit">Add to Plan</button>
