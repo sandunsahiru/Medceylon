@@ -37,7 +37,7 @@ h2 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    flex: 1 1 calc(25% - 20px); /* 3 columns with gap */
+    flex: 1 1 calc(25% - 20px); /* 4 columns with gap */
     max-width: calc(25% - 20px); /* Prevent overlap issues */
     box-sizing: border-box; /* Include padding and border in width */
 }

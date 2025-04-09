@@ -1,5 +1,5 @@
 <!-- Modal Structure -->
-<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/travelmodal.css">
+<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/edit-destination.css">
 
 <div id="addToPlanModal" class="add-modal-container">
     <div class="addModal">
@@ -25,7 +25,7 @@
 
                     <div class="right">
                         <div class="destination-image">
-                            <img src="<?= ROOT_PATH . '/' . htmlspecialchars($destination['image_path'] ?? 'default.jpg') ?>" 
+                            <img src="<?= 'http://localhost/Medceylon/public/assets/' . htmlspecialchars($destination['image_path'] ?? 'default.jpg') ?>" 
                                 alt="<?= htmlspecialchars($destination['destination_name'] ?? 'Unknown') ?>">
                         </div>
                     </div>
@@ -33,9 +33,9 @@
 
                 <input type="hidden" id="modalDestinationID" name="destination_id" value="<?= htmlspecialchars($destination['destination_id'])?>">
 
-                <div class="submit-btn">
+                
                     <button type="submit" name="submit">Add to Plan</button>
-                </div>
+                
             </form>
         </div>
     </div>

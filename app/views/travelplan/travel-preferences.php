@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="<?php echo ROOT_PATH; ?>/public/assets/css/travelmodal.css">
+<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/edit-destination.css">
 
 <!-- Modal -->
 <div id="travelModal" class="modal">

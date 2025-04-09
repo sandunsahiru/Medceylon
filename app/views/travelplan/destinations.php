@@ -14,7 +14,7 @@
         <?php foreach ($destinations as $destination): ?>
     <div class="destination">
         <div class="destination-image">
-            <img src="<?= ROOT_PATH . '/' . htmlspecialchars($destination['image_path'] ?? 'default.jpg') ?>" 
+            <img src="<?= 'http://localhost/Medceylon/public/assets/' . htmlspecialchars($destination['image_path'] ?? 'default.jpg') ?>" 
                  alt="<?= htmlspecialchars($destination['destination_name'] ?? 'Unknown') ?>">
         </div>
         <div class="destination-info">
