@@ -5,7 +5,7 @@
     <br>
     <h2>Make Customized Travel Plan</h2>
     <!-- Trigger Button -->
-    <button id="openModal">Do It for Me</button><br><br>
+    <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button><br><br>
 
     <?php error_log("Destinations data: " . print_r($destinations, true)); ?>
    
@@ -46,8 +46,7 @@
     <!-- footer -->
     <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>
     
-    <?php include('add-destination.php'); ?>
-    <?php include('travel-preferences.php'); ?>   
+    <?php include('add-destination.php'); ?>  
 
     <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
     </body>

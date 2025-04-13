@@ -199,15 +199,41 @@ class TravelPlanController extends BaseController
             $this->session->setFlash('error', 'Error deleting travel plan: ' . $e->getMessage());
             header('Location: ' . $this->url('error/404'));
                 throw new \Exception('Failed to delete travel plan');
-            }
+            
 
             header('Location: ' . $this->url('travelplan/dashboard'));
             exit();
         } 
     }
 
+    public function travelPreferences()
+    {
+        try {
+            
+            if (!$this->session->isLoggedIn()) {
+                header("Location: " . $this->basePath . "/");
+                exit();
+            }
 
-    /*public function handleAddToPlanForm()
+            $userId = $this->session->getUserId();
+            
+            $data = [
+                
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success'),
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('travelplan/travel-preferences', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in Travel Preferences From: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+
+   public function handleAddToPlanForm()
     {
         try {
             if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
@@ -234,5 +260,6 @@ class TravelPlanController extends BaseController
             header('Location: ' . $this->url('destination/destinations'));
             exit();
         }
-    }*/
-?>
+    }
+
+}

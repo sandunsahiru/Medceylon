@@ -1,173 +1,140 @@
-/* General Modal Container */
-.modal-container {
+/* Modal Containers (Add & Edit) */
+.add-modal-container,
+.edit-modal-container {
+    display: none;
     position: fixed;
-    width: 100%;
-    height: 100%;
     top: 0;
     left: 0;
-    display: flex;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 9999;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    opacity: 0;
+    z-index: 1000;
 }
 
-.modal-container.active {
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-}
-
-/* Common Modal Box */
-.modal-box {
-    background: #f9f9f9;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    position: relative;
-    max-width: 90%;
-}
-
-/* Specific Modal Widths */
-.addModal, .editModal {
-    width: 60%;
-    max-width: 700px;
-}
-
+/* Modal Boxes (Add & Edit) */
+.addModal,
 .editModal {
-    width: 70%;
-    max-width: 800px;
+    background: #ffffff;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    padding: 30px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: fadeIn 0.3s ease;
 }
 
-.confirmModal .modal-box {
-    width: 25%;
-    max-width: 700px;
-    transform: translate(-170%, -150%);
-}
-
-/* Modal Header */
-.modal-header {
+/* Modal Tops (Shared) */
+.addModal-top,
+.editModal-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #f1f1f1;
-    padding-bottom: 10px;
+    margin-bottom: 20px;
 }
 
-.modal-header h1 {
+.addModal-top h1,
+.editModal-top h1 {
     margin: 0;
-    color: #333;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
+    color: #2c3e50;
 }
 
-.close {
-    font-size: 30px;
-    color: #333;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: #ff4d4d;
-}
-
-/* Modal Body */
-.modal-body {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.left, .right {
-    width: 48%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Input Fields */
-label {
+.addModal-top .close,
+.editModal-top .close {
+    font-size: 28px;
     font-weight: bold;
-    margin-bottom: 8px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.addModal-top .close:hover,
+.editModal-top .close:hover {
     color: #333;
 }
 
-input, select, textarea {
+/* Shared Modal Form Styles */
+.modal-form .body {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.add-modal-container.active {
+    display: flex;
+}
+
+.body .left,
+.body .right {
+    flex: 1 1 250px;
+}
+
+.destination-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.modal-form label {
+    font-size: 14px;
+    color: #555;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.modal-form input[type="date"] {
     width: 100%;
     padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
     box-sizing: border-box;
 }
 
-textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-/* Buttons */
-.submit-btn, .delete-btn, .cancel-btn {
-    padding: 12px 24px;
-    font-size: 1rem;
-    border: none;
+.destination-image img {
+    width: 100%;
+    height: auto;
     border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s ease;
+    object-fit: cover;
+}
+
+.modal-form button[type="submit"] {
+    background-color: #299d97;
     color: white;
-}
-
-.submit-btn {
-    background: #299d97;
-}
-
-.submit-btn:hover {
-    background: #1f7571;
-}
-
-.delete-btn {
-    background-color: rgb(228, 15, 15);
-    border-radius: 20px;
-}
-
-.delete-btn:hover {
-    background-color: #931a1a;
-}
-
-.cancel-btn {
-    background-color: #9bc4c1;
-    border-radius: 20px;
-}
-
-.blur {
-    filter: blur(5px);
-    transition: filter 0.3s ease;
-}
-
-/* Image Styling */
-#uploadImageContainer, #editImageContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-#uploadImageIcon, #editImageIcon {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
 }
 
-#imageCount {
-    margin-top: 0.5rem;
-    color: #777;
+.modal-form button[type="submit"]:hover {
+    background-color: #1f7571;
 }
 
-/* Modal Responsiveness */
-@media (max-width: 768px) {
-    .modal-body {
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .addModal-top h1,
+    .editModal-top h1 {
+        font-size: 1.4rem;
+    }
+
+    .body {
         flex-direction: column;
     }
 
-    .left, .right {
-        width: 100%;
+    .body .left,
+    .body .right {
+        flex: 1 1 100%;
     }
 }

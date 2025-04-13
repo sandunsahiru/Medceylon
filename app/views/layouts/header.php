@@ -22,7 +22,7 @@
         <nav class="nav-links">
             <a href="<?php echo $basePath . ($this->session->isLoggedIn() ? '/home' : '/'); ?>">Home</a>
             <a href="<?php echo $basePath; ?>/about-us">About Us</a>
-            <a href="<?php echo $basePath; ?>/partner-hospitals">Our Hospitals</a>
+            <a href="<?php echo $basePath; ?>hospital/partner-hospitals">Our Hospitals</a>
             <?php if ($this->session->isLoggedIn()): ?>
                 <a href="<?php echo $basePath; ?>/patient/book-appointment">Book Appointments</a>
             <?php else: ?>

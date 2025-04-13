@@ -20,7 +20,7 @@ h2 {
     color: #2c3e50; /* Text color */
     text-align: center;
     margin: 0;
-    width: 80%; /* responsive design */
+    width: 80%; /* Optional: Adjust width for responsive design */
 }
 
 /* Modal Container */

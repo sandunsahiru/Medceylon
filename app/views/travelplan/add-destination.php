@@ -1,5 +1,5 @@
 <!-- Modal Structure -->
-<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/edit-destination.css">
+<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/travelmodal.css">
 
 <div id="addToPlanModal" class="add-modal-container">
     <div class="addModal">

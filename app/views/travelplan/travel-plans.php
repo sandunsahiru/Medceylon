@@ -1,6 +1,6 @@
 <?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
 
-<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/travel-plans.css">
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/destinations.css">
 
 <br>
 <h2>Your Travel Plans</h2>

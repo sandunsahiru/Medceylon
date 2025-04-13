@@ -32,6 +32,17 @@ class Hospital
         }
     }
 
+    public function getAllHospitals(){
+        try{
+            $query = "SELECT * 
+                    FROM hospitals";
+            return $this->db->query($query);
+        }catch (\Exception $e) {
+            error_log("Error in getAllHospitals: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     // Department Methoda
     public function getAllDepartments()
     {

@@ -49,59 +49,90 @@ class TravelPlan {
         }
     }
 
-    public function addTravelPlan($destination_id, $startDate, $endDate){
-        $sql = "INSERT INTO travel_plans (destination_id, check_in, check_out, stay_duration)
-        VALUES (?, ?, ?, DATEDIFF(?, ?))";
 
-        $this->pdo->query($sql);
+    public function addTravelPlan($destination_id, $startDate, $endDate)
+    {
+        try {
+            $sql = "INSERT INTO travel_plans (destination_id, check_in, check_out, stay_duration)
+                    VALUES (?, ?, ?, DATEDIFF(?, ?))";
 
-        $this->pdo->bind(1, $destination_id);
-        $this->pdo->bind(2, $startDate);
-        $this->pdo->bind(3, $endDate);
-        $this->pdo->bind(4, $endDate);            
-        $this->pdo->bind(5, $startDate);
-        
-        $this->pdo->execute();
+            $stmt = $this->db->prepare($sql);
 
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+
+            $stmt->bind_param("issss", $destination_id, $startDate, $endDate, $endDate, $startDate);
+
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+
+            $stmt->close();
+
+        } catch (\Exception $e) {
+            error_log("Error in addTravelPlan: " . $e->getMessage());
+            throw new \Exception("Failed to add travel plan");
+        }
     }
+
 
     public function deleteTravelPlan($travel_plan_id) {
-        $sql = "DELETE FROM travel_plans WHERE travel_plan_id = :travel_plan_id";
+        try {
+            $sql = "DELETE FROM travel_plans WHERE travel_plan_id = ?";
+            $stmt = $this->db->prepare($sql);
     
-        $this->pdo->query($sql);
-        $this->pdo->bind(':travel_plan_id', $travel_plan_id, PDO::PARAM_INT);
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
     
-        if ($this->pdo->execute()) {
+            $stmt->bind_param("i", $travel_plan_id);
+    
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+    
+            $stmt->close();
             return true;
-        } else {
-            // Log any errors for debugging
-            error_log("Database error: " . json_encode($this->pdo->stmt->errorInfo()));
+    
+        } catch (\Exception $e) {
+            error_log("Error in deleteTravelPlan: " . $e->getMessage());
             return false;
         }
     }
+    
     
     
 
-    public function editTravelPlan($travel_plan_id, $startDate, $endDate){
-        $sql = "UPDATE travel_plans 
-                SET check_in = ?, 
-                    check_out = ?, 
-                    stay_duration = DATEDIFF(?, ?) 
-                WHERE travel_plan_id = ?";
+    public function editTravelPlan($travel_plan_id, $startDate, $endDate) {
+        try {
+            $sql = "UPDATE travel_plans 
+                    SET check_in = ?, 
+                        check_out = ?, 
+                        stay_duration = DATEDIFF(?, ?) 
+                    WHERE travel_plan_id = ?";
     
-        $this->pdo->query($sql);
-        $this->pdo->bind(1, $startDate);
-        $this->pdo->bind(2, $endDate);
-        $this->pdo->bind(3, $endDate);
-        $this->pdo->bind(4, $startDate);
-        $this->pdo->bind(5, $travel_plan_id);
+            $stmt = $this->db->prepare($sql);
     
-        if (!$this->pdo->execute()) {
-            error_log("Database error: " . json_encode($this->pdo->errorInfo()));
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+    
+            $stmt->bind_param("sss si", $startDate, $endDate, $endDate, $startDate, $travel_plan_id);
+    
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+    
+            $stmt->close();
+            return true;
+    
+        } catch (\Exception $e) {
+            error_log("Error in editTravelPlan: " . $e->getMessage());
             return false;
         }
-        return true;
     }
+    
     
 
 }
