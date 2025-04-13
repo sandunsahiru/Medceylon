@@ -17,7 +17,7 @@
     </a>
 </div>
 
-            <nav class="nav-menu">
+<nav class="nav-menu">
                 <a href="<?php echo $basePath; ?>/patient/dashboard" class="nav-item">
                     <i class="ri-dashboard-line"></i>
                     <span>Dashboard</span>
@@ -25,6 +25,10 @@
                 <a href="<?php echo $basePath; ?>/patient/book-appointment" class="nav-item">
                     <i class="ri-calendar-line"></i>
                     <span>Book Appointment</span>
+                </a>
+                <a href="<?php echo $basePath; ?>/patient/chat" class="nav-item">
+                    <i class="ri-message-3-line"></i>
+                    <span>Chat</span>
                 </a>
                 <a href="<?php echo $basePath; ?>/patient/medical-history" class="nav-item">
                     <i class="ri-file-list-line"></i>
