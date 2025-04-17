@@ -118,6 +118,31 @@
     background-color: #1f7571;
 }
 
+.opening-time, .closing-time, .entry-fee{
+    color: #6f6f6f;
+    margin-top: 100px;
+    margin-left: 10PX;
+}
+
+.destination-info2 p {
+    font-size: 14px;
+    margin-right: 6px;
+    margin-left: 30px;
+}
+
+.destination-info2 span {
+    display: inline;
+    color: #6f6f6f;
+    margin-right: 15px;
+}
+
+.destination-info2 br {
+    margin-bottom: 6px;
+}
+
+
+
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }

@@ -70,24 +70,29 @@ class TravelPlanController extends BaseController
 
     public function addDestination()
     {
+        echo "Got your POST request!";
+        exit;
         try {
             if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
                 throw new \Exception("Invalid CSRF token");
             }
             
-            $travelPlanData = [
-                'user_id' => $this->session->getUserId(),
-                'destination_id' => filter_var($_POST['destination_id'], FILTER_SANITIZE_NUMBER_INT),
-                'start_date' => filter_var($_POST['check_in'], FILTER_SANITIZE_STRING),
-                'end_date' => filter_var($_POST['check_out'], FILTER_SANITIZE_STRING)
-            ];
+            $destination_id = filter_var($_POST['destination_id'], FILTER_SANITIZE_NUMBER_INT);
+            $start_date = filter_var($_POST['check_in'], FILTER_SANITIZE_STRING);
+            $end_date = filter_var($_POST['check_out'], FILTER_SANITIZE_STRING);
             
-            $this->travelPlanModel->addTravelPlan($travelPlanData);
+            
+            $this->travelPlanModel->addTravelPlan(
+                $this->session->getUserId(),
+                $destination_id,
+                $start_date,
+                $end_date);
+
             $this->session->setFlash('success', 'Destination added to travel plan successfully!');
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('travelplan/destinations'));
             exit();
         } catch (\Exception $e) {
-            $this->session->setFlash('error', 'Error adding destination: ' . $e->getMessage());
+            $this->session->setFlash('error', 'Error adding destination to Travel Plan: ' . $e->getMessage());
             header('Location: ' . $this->url('error/404'));
             exit();
         }

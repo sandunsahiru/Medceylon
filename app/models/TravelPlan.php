@@ -13,7 +13,7 @@ class TravelPlan {
     public function getAllDestinations()
     {
         try {
-            $sql = "SELECT destination_id,destination_name, province, description, image_path FROM traveldestinations";
+            $sql = "SELECT destination_id,destination_name, province, description, image_path,opening_time, closing_time, entry_fee FROM traveldestinations";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -50,11 +50,11 @@ class TravelPlan {
     }
 
 
-    public function addTravelPlan($destination_id, $startDate, $endDate)
+    public function addTravelPlan($user_id, $destination_id, $startDate, $endDate)
     {
         try {
-            $sql = "INSERT INTO travel_plans (destination_id, check_in, check_out, stay_duration)
-                    VALUES (?, ?, ?, DATEDIFF(?, ?))";
+            $sql = "INSERT INTO travel_plans (user_id, destination_id, check_in, check_out, stay_duration)
+            VALUES (?, ?, ?, ?, DATEDIFF(?, ?))";
 
             $stmt = $this->db->prepare($sql);
 
@@ -62,7 +62,7 @@ class TravelPlan {
                 throw new \Exception("Prepare failed: " . $this->db->error);
             }
 
-            $stmt->bind_param("issss", $destination_id, $startDate, $endDate, $endDate, $startDate);
+            $stmt->bind_param("iissss", $user_id, $destination_id, $startDate, $endDate, $endDate, $startDate);
 
             if (!$stmt->execute()) {
                 throw new \Exception("Execute failed: " . $stmt->error);

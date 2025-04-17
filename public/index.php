@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 
 define('ROOT_PATH', dirname(__DIR__));
 
+
 // Require dependencies
 require_once ROOT_PATH . '/vendor/autoload.php';
 
