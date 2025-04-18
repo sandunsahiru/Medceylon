@@ -1,6 +1,7 @@
-/* Modal Containers (Add & Edit) */
+/* Modal Containers */
 .add-modal-container,
-.edit-modal-container {
+.edit-modal-container,
+.confirm-modal-container {
     display: none;
     position: fixed;
     top: 0;
@@ -13,7 +14,6 @@
     z-index: 1000;
 }
 
-/* Modal Boxes (Add & Edit) */
 .addModal,
 .editModal {
     background: #ffffff;
@@ -26,7 +26,17 @@
     animation: fadeIn 0.3s ease;
 }
 
-/* Modal Tops (Shared) */
+.confirmModal {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 100%;
+    width: 300px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.3s ease;
+}
+
 .addModal-top,
 .editModal-top {
     display: flex;
@@ -67,6 +77,14 @@
     display: flex;
 }
 
+.edit-modal-container.active {
+    display: flex;
+}
+
+.confirm-modal-container.active {
+    display: flex;
+}
+
 .body .left,
 .body .right {
     flex: 1 1 250px;
@@ -96,7 +114,7 @@
     box-sizing: border-box;
 }
 
-.destination-image img {
+.destination-image-modal img {
     width: 100%;
     height: auto;
     border-radius: 8px;
@@ -138,6 +156,52 @@
 
 .destination-info2 br {
     margin-bottom: 6px;
+}
+
+.confirmModal .modalContent img {
+    width: 150px;
+    height: auto;
+}
+
+.confirmModal .modalContent p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.confirmModal .bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.confirmModal .cancel-btn,
+.confirmModal .delete-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.confirmModal .cancel-btn {
+    background-color: #467977;
+    color: #333;
+}
+
+.confirmModal .cancel-btn:hover {
+    background-color: #39605f;
+}
+
+.confirmModal .delete-btn {
+    background-color: #b75f55;
+    color: #fff;
+}
+
+.confirmModal .delete-btn:hover {
+    background-color: #753c35;
 }
 
 

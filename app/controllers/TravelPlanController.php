@@ -44,15 +44,15 @@ class TravelPlanController extends BaseController
     {
         try {
             error_log("Starting destinations view");
-            $travelPlans = $this->travelPlanModel->getAllDestinations();
+            $destinations = $this->travelPlanModel->getAllDestinations();
             
-            if  (!$travelPlans || count($travelPlans) === 0) {
+            if  (!$destinations || count($destinations) === 0) {
                 error_log("No destinations found");
                 $this->session->setFlash('error', 'No destinations available');
             }
             
             $data = [
-                'destinations' => $travelPlans,
+                'destinations' => $destinations,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
                 'basePath' => $this->basePath
@@ -70,8 +70,7 @@ class TravelPlanController extends BaseController
 
     public function addDestination()
     {
-        echo "Got your POST request!";
-        exit;
+    
         try {
             if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
                 throw new \Exception("Invalid CSRF token");
@@ -81,7 +80,16 @@ class TravelPlanController extends BaseController
             $start_date = filter_var($_POST['check_in'], FILTER_SANITIZE_STRING);
             $end_date = filter_var($_POST['check_out'], FILTER_SANITIZE_STRING);
             
-            
+            if ($this->travelPlanModel->hasOverlappingPlan(
+                $this->session->getUserId(),
+                $start_date,
+                $end_date
+            )) {
+                $this->session->setFlash('error', 'You already have a travel plan during these dates!');
+                header('Location: ' . $this->url('travelplan/destinations'));
+                exit();
+            }
+
             $this->travelPlanModel->addTravelPlan(
                 $this->session->getUserId(),
                 $destination_id,
@@ -101,11 +109,9 @@ class TravelPlanController extends BaseController
     public function TravelPlans() {
 
         $userId = $this->session->getUserId();
-        $travelPlans = $this->travelPlanModel->getAllTravelPlans($userId);
-        $this->view('travelplan/travel-plans',['travelPlans' => $travelPlans]);
         try {
-            error_log("Starting travel plans view");
-            $travelPlans = $this->travelPlanModel->getAllTravelPlans();
+            error_log("Starting travel plans view for user: $userId");
+            $travelPlans = $this->travelPlanModel->getAllTravelPlans($userId);
             
             if  (!$travelPlans || count($travelPlans) === 0) {
                 error_log("No travel plans found");
@@ -113,7 +119,7 @@ class TravelPlanController extends BaseController
             }
             
             $data = [
-                'travel plans' => $travelPlans,
+                'travelPlans' => $travelPlans,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
                 'basePath' => $this->basePath
@@ -156,16 +162,25 @@ class TravelPlanController extends BaseController
             $startDate = filter_var($_POST['check_in'], FILTER_SANITIZE_STRING);
             $endDate = filter_var($_POST['check_out'], FILTER_SANITIZE_STRING);
 
+            if ($this->travelPlanModel->hasOverlappingPlan(
+                $this->session->getUserId(),
+                $start_date,
+                $end_date
+            )) {
+                $this->session->setFlash('error', 'You already have a travel plan during these dates!');
+                header('Location: ' . $this->url('travelplan/travel-plans'));
+                exit();
+            }
+
             error_log("Editing travel plan - ID: $travel_id, Start: $startDate, End: $endDate");
 
             if ($this->travelPlanModel->editTravelPlan($travel_id, $startDate, $endDate)) {
-                $this->session->setFlash('success', 'Travel plan updated successfully!');
                 $this->session->setFlash('success', 'Travel plan updated successfully!');
             } else {
                 throw new \Exception('Failed to update travel plan');
             }
 
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('travelplan/travel-plans'));
             exit();
 
         } catch (\Exception $e) {
@@ -197,7 +212,7 @@ class TravelPlanController extends BaseController
                 throw new \Exception('Failed to delete travel plan');
             }
 
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('travelplan/travel-plans'));
             exit();
         } catch (\Exception $e) {
             error_log("Error in deleteDestination: " . $e->getMessage());
@@ -206,7 +221,7 @@ class TravelPlanController extends BaseController
                 throw new \Exception('Failed to delete travel plan');
             
 
-            header('Location: ' . $this->url('travelplan/dashboard'));
+            header('Location: ' . $this->url('travelplan/travel-plans'));
             exit();
         } 
     }

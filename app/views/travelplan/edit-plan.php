@@ -6,10 +6,11 @@
         <div class="editModal-top">
             <h1>Edit Destination in Travel Plan</h1>
             <span class="close" id="closeEditModal">&times;</span>
-        </div>```````````````````````````````````````````````````````````````````````````````````````````````````````````````````
+        </div>
 
         <div class="modal-form">
-            <form id="editDestinationForm" action="<?php echo URLROOT; ?>/TravelPlan/editDestination" method="post">
+            <form id="editDestinationForm" action= "http://localhost/Medceylon/TravelPlan/edit-plan" method="post">
+                <input type="hidden" name="csrf_token" value="<?= $this->session->getCSRFToken(); ?>">
                 <div class="body">
                     <div class="left">
                         <span class="destination-name" id="modalEditDestinationName"></span><br>
@@ -25,13 +26,13 @@
 
                     <div class="right">
                         <div class="destination-image">
-                            <img id="modalEditDestinationImage" src="http://localhost/Hansika/public/images/Kandy.jpg"  alt="Destination Image">
+                            <img id="modalEditDestinationImage" src="" alt=""><br>
                         </div>
                     </div>
                 </div>
 
-                <input type="hidden" id="destination_id" name="destination_id" value="<?= htmlspecialchars($travelPlan->destination_id) ?>">
-                <input type="hidden" id="travel_id" name="travel_id" value="<?= htmlspecialchars($travelPlan->travel_plan_id) ?>">
+                <input type="hidden" id="destination_id" name="destination_id" value="<?= htmlspecialchars($travelPlan['destination_id']) ?>">
+                <input type="hidden" id="travel_id" name="travel_id" value="<?= htmlspecialchars($travelPlan['travel_plan_id']) ?>">
 
                 <div class="submit-btn">
                     <button type="submit" name="submit">Update Plan</button>

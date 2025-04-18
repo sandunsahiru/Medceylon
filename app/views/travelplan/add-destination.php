@@ -9,7 +9,7 @@
         </div>
 
         <div class="modal-form">
-            <form id="addToPlanForm" action="http://localhost/Medceylon/public/travelplan/add-destination" method="post">
+            <form id="addToPlanForm" action="http://localhost/Medceylon/travelplan/add-destination" method="post">
                 <input type="hidden" name="csrf_token" value="<?= $this->session->getCSRFToken(); ?>">
 
 
@@ -27,7 +27,7 @@
                     </div>
 
                     <div class="right">
-                        <div class="destination-image">
+                        <div class="destination-image-modal">
                             <img id="modalDestinationImage" src="" alt=""><br>
                         </div>
                         <div class="destination-info2">

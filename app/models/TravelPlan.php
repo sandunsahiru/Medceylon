@@ -29,6 +29,7 @@ class TravelPlan {
     }
 
     public function getAllTravelPlans($userId) {
+        
         try {
             $sql = "SELECT d.destination_name, d.province, d.image_path, 
                            t.stay_duration, t.check_in, t.check_out, 
@@ -43,6 +44,8 @@ class TravelPlan {
             $result = $stmt->get_result();
             
             return $result->fetch_all(MYSQLI_ASSOC);
+            error_log("Rows fetched: " . $result->num_rows);
+            
         } catch (\Exception $e) {
             error_log("Error in getAllTravelPlans: " . $e->getMessage());
             throw new \Exception("Failed to retrieve travel plans");
@@ -75,6 +78,41 @@ class TravelPlan {
             throw new \Exception("Failed to add travel plan");
         }
     }
+
+    public function hasOverlappingPlan($user_id, $start_date, $end_date)
+    {
+        $sql = "SELECT COUNT(*) as overlap_count FROM travel_plans 
+                WHERE user_id = ?
+                AND (
+                    (check_in <= ? AND check_out >= ?) OR
+                    (check_in <= ? AND check_out >= ?) OR
+                    (check_in >= ? AND check_out <= ?)
+                )";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new \Exception("Prepare failed: " . $this->db->error);
+        }
+
+        $stmt->bind_param("issssss",
+            $user_id,
+            $start_date, $start_date,
+            $end_date, $end_date,
+            $start_date, $end_date
+        );
+
+        if (!$stmt->execute()) {
+            throw new \Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+
+        $stmt->close();
+
+        return $data['overlap_count'] > 0;
+    }
+
 
 
     public function deleteTravelPlan($travel_plan_id) {
@@ -118,7 +156,7 @@ class TravelPlan {
                 throw new \Exception("Prepare failed: " . $this->db->error);
             }
     
-            $stmt->bind_param("sss si", $startDate, $endDate, $endDate, $startDate, $travel_plan_id);
+            $stmt->bind_param("ssssi", $startDate, $endDate, $endDate, $startDate, $travel_plan_id);
     
             if (!$stmt->execute()) {
                 throw new \Exception("Execute failed: " . $stmt->error);

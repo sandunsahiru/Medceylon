@@ -1,8 +1,19 @@
 <?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
 
-<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/destinations.css">
+<link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/travel-plan.css">
 
-    <br>
+    <?php if ($this->session->hasFlash('error')): ?>
+        <div class="flash-message error">
+            <?= $this->session->getFlash('error') ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($this->session->hasFlash('success')): ?>
+        <div class="flash-message success">
+            <?= $this->session->getFlash('success') ?>
+        </div>
+    <?php endif; ?>
+
     <h2>Make Customized Travel Plan</h2>
     <!-- Trigger Button -->
     <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button>
@@ -81,11 +92,9 @@
     <br>
     <br>
     <br>
-
-    <!-- footer -->
-    <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>
     
     <?php include('add-destination.php'); ?>  
 
     <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
-    </body>
+      <!-- footer -->
+    <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>
