@@ -23,9 +23,54 @@ class TravelPlan {
         } catch (\Exception $e) {
             error_log("Error in getAlldestinations: " . $e->getMessage());
             throw new \Exception("Failed to retrieve destinations");
-        }
+        }  
+    }
 
-        
+    public function getAllProvinces()
+    {
+        try{
+            $sql = "SELECT * FROM provinces";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getAllProvinces: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve Provinces");
+        }
+    }
+
+    public function getDistricts($provinceId)
+    {
+        try{
+            $sql = "SELECT * FROM districts WHERE province_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $provinceId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getDistricts: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve districts");
+        }
+    }
+
+    public function getTowns($districtId)
+    {
+        try{
+            $sql = "SELECT * FROM towns WHERE district_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $districtId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getTowns: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve Towns");
+        }
     }
 
     public function getAllTravelPlans($userId) {

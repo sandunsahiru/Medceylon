@@ -43,7 +43,7 @@
             </a>
         </div>
         <div class="service">
-            <a href="<?php echo $basePath; ?>/hospital-requests">
+            <a href="<?php echo $basePath; ?>/hospital/partner-hospitals">
                 <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle251573.jpg" alt="Get personalized hospital support">
                 <h3>Get personalized hospital support</h3>
             </a>

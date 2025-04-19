@@ -32,11 +32,16 @@ class Hospital
         }
     }
 
-    public function getAllHospitals(){
+    public function getAllHospitals()
+    {
         try{
-            $query = "SELECT * 
+            $sql = "SELECT * 
                     FROM hospitals";
-            return $this->db->query($query);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
         }catch (\Exception $e) {
             error_log("Error in getAllHospitals: " . $e->getMessage());
             throw $e;

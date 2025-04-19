@@ -8,8 +8,6 @@ use App\Models\TravelPlan;
 class TravelPlanController extends BaseController
 {
     private $travelPlanModel;
-    //private $destinationModel;
-    //private $database;
 
     public function __construct()
     {
@@ -43,21 +41,31 @@ class TravelPlanController extends BaseController
     public function destinations()
     {
         try {
-            error_log("Starting destinations view");
+            error_log("Executing action: destinations");
+
+            // Get all provinces
+            $provinces = $this->travelPlanModel->getAllProvinces();
+            error_log("Provinces: " . print_r($provinces, true));
+
             $destinations = $this->travelPlanModel->getAllDestinations();
-            
-            if  (!$destinations || count($destinations) === 0) {
-                error_log("No destinations found");
-                $this->session->setFlash('error', 'No destinations available');
-            }
-            
+            error_log("Destinations: " . print_r($destinations, true));
+
+            $province_id = filter_var($_GET['province_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+            $districts = $province_id ? $this->travelPlanModel->getDistricts($province_id) : [];
+
+            $district_id = filter_var($_GET['district_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+            $towns = $district_id ? $this->travelPlanModel->getTowns($district_id) : [];
+
             $data = [
+                'districts' => $districts,
+                'towns' => $towns,
+                'provinces' => $provinces,
                 'destinations' => $destinations,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
                 'basePath' => $this->basePath
             ];
-            
+
             echo $this->view('/travelplan/destinations', $data);
             exit();
         } catch (\Exception $e) {
@@ -67,6 +75,77 @@ class TravelPlanController extends BaseController
             exit();
         }
     }
+
+
+
+    public function provinces()
+    {
+        try {
+            error_log("Provinces method invoked");
+            $provinces = $this->travelPlanModel->getAllProvinces();
+
+            if  (!$provinces || count($provinces) === 0) {
+                error_log("No provinces found");
+                $this->session->setFlash('error', 'No provinces available');
+            }
+            
+            $data = [
+                'provinces' => $provinces,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success'),
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('/travelplan/destinations', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in provinces: " . $e->getMessage());
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('error/404'));
+            exit();
+        }
+    }
+
+    public function districts()
+    {
+        try {
+            if (!isset($_POST['province_id'])) {
+                throw new \Exception("Province ID is required");
+            }
+
+            $province_id = filter_var($_POST['province_id'], FILTER_SANITIZE_NUMBER_INT);
+            $districts = $this->travelPlanModel->getDistricts($province_id);
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'districts' => $districts]);
+            exit;
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit;
+        }
+    }
+
+        public function towns()
+    {
+        try {
+            if (!isset($_POST['district_id'])) {
+                throw new \Exception("District ID is required");
+            }
+
+            $district_id = filter_var($_POST['district_id'], FILTER_SANITIZE_NUMBER_INT);
+            $towns = $this->travelPlanModel->getTowns($district_id);
+
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'towns' => $towns]);
+            exit;
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit;
+        }
+    }
+
 
     public function addDestination()
     {

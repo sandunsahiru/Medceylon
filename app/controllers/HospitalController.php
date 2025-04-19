@@ -12,7 +12,15 @@ class HospitalController extends BaseController
     {
         parent::__construct();
         $this->hospitalModel = new Hospital();
-        $this->validateAccess();
+
+        $publicMethods = ['hospitals'];
+
+        $currentMethod = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+
+        if (!in_array($currentMethod, $publicMethods)) {
+            $this->validateAccess();
+        }
+        
     }
 
     private function validateAccess()
@@ -59,21 +67,29 @@ class HospitalController extends BaseController
     public function hospitals()
     {
         try {
+            error_log("Starting hospitals view");
             $hospitals = $this->hospitalModel->getAllHospitals();
+
+            if  (!$hospitals || count($hospitals) === 0) {
+                error_log("No hospitals found");
+                $this->session->setFlash('error', 'No hospitals available');
+            }
 
             $data = [
                 'pageTitle' => 'Hospitals',
                 'currentPage' => 'partner-hospitals',
-                'departments' => $hospitals,
+                'hospitals' => $hospitals,
                 'basePath' => $this->basePath,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success')
             ];
-            echo $this->view('hospital/pertner-hospitals', $data);
+            echo $this->view('hospital/partner-hospitals', $data);
+            exit();
         } catch (\Exception $e) {
             error_log("Error in hospitals: " . $e->getMessage());
-            $this->session->setFlash('error', 'An error occurred while loading hospitals');
-            throw $e;
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('error/404'));
+            exit();
         }
         
     }

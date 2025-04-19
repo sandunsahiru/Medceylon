@@ -154,4 +154,69 @@ document.addEventListener('DOMContentLoaded', () => {
             form.submit();
         });
     
+        
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    const townSelect = document.getElementById('town');
+
+    provinceSelect.addEventListener('change', function () {
+        const provinceId = this.value;
+        console.log("Province changed: ", provinceId);
+
+        // Clear the district and town dropdowns
+        districtSelect.innerHTML = '<option value="">Select District</option>';
+        townSelect.innerHTML = '<option value="">Select Town</option>';
+
+        if (provinceId) {
+            fetch('/TravelPlan/districts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `province_id=${provinceId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    data.districts.forEach(d => {
+                        const option = document.createElement('option');
+                        option.value = d.district_id;
+                        option.textContent = d.district_name;
+                        districtSelect.appendChild(option);
+                    });
+                } else {
+                    alert(data.error || 'Failed to load districts');
+                }
+            });
+        }
+    });
+
+    districtSelect.addEventListener('change', function () {
+        const districtId = this.value;
+
+        townSelect.innerHTML = '<option value="">Select Town</option>';
+
+        if (districtId) {
+            fetch('/TravelPlan/towns', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `district_id=${districtId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    data.towns.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t.town_id;
+                        option.textContent = t.town_name;
+                        townSelect.appendChild(option);
+                    });
+                } else {
+                    alert(data.error || 'Failed to load towns');
+                }
+            });
+        }
+    });
 });
