@@ -43,23 +43,39 @@ class TravelPlanController extends BaseController
         try {
             error_log("Executing action: destinations");
 
-            // Get all provinces
+            // Get provinces and destination types
             $provinces = $this->travelPlanModel->getAllProvinces();
-            error_log("Provinces: " . print_r($provinces, true));
+            $destinationTypes = $this->travelPlanModel->getDestinationTypes();
 
-            $destinations = $this->travelPlanModel->getAllDestinations();
-            error_log("Destinations: " . print_r($destinations, true));
+            $province_id = filter_input(INPUT_GET, 'province_id', FILTER_SANITIZE_NUMBER_INT);
+            $district_id = filter_input(INPUT_GET, 'district_id', FILTER_SANITIZE_NUMBER_INT);
 
-            $province_id = filter_var($_GET['province_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
-            $districts = $province_id ? $this->travelPlanModel->getDistricts($province_id) : [];
+            // Get filters from query params
+            $filters = [
+                'province_id' => $province_id,
+                'district_id' => $district_id,
+                'town_id' => filter_input(INPUT_GET, 'town_id', FILTER_SANITIZE_NUMBER_INT),
+                'distance' => filter_input(INPUT_GET, 'distance', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
+                'wheelchair' => isset($_GET['wheelchair']) && $_GET['wheelchair'] !== '' ? $_GET['wheelchair'] : null,
+                'type_id' => filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT),
+                'budget' => filter_input(INPUT_GET, 'budget', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)
+            ];
 
-            $district_id = filter_var($_GET['district_id'] ?? null, FILTER_SANITIZE_NUMBER_INT);
-            $towns = $district_id ? $this->travelPlanModel->getTowns($district_id) : [];
+            error_log("Filters applied: " . print_r($filters, true));
 
+            // Get dependent dropdown data
+            $districts = $filters['province_id'] ? $this->travelPlanModel->getDistricts($filters['province_id']) : [];
+            $towns = $filters['district_id'] ? $this->travelPlanModel->getTowns($filters['district_id']) : [];
+
+            // Get destinations with filters
+            $destinations = $this->travelPlanModel->getFilteredDestinations($filters);
+
+            // Prepare view data
             $data = [
+                'provinces' => $provinces,
+                'destinationTypes' => $destinationTypes,
                 'districts' => $districts,
                 'towns' => $towns,
-                'provinces' => $provinces,
                 'destinations' => $destinations,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
@@ -68,13 +84,15 @@ class TravelPlanController extends BaseController
 
             echo $this->view('/travelplan/destinations', $data);
             exit();
+
         } catch (\Exception $e) {
-            error_log("Error in destinations: " . $e->getMessage());
-            $this->session->setFlash('error', $e->getMessage());
+            error_log("Error in destinations(): " . $e->getMessage());
+            $this->session->setFlash('error', "Something went wrong. Please try again.");
             header('Location: ' . $this->url('error/404'));
             exit();
         }
     }
+
 
 
 
@@ -214,22 +232,6 @@ class TravelPlanController extends BaseController
         }
     }
 
-    public function displayAddToPlanModal()
-    {
-        try {
-            $destinationId = $_GET['id'] ?? 0;
-            $details = $this->destinationModel->getDestinationDetails($destinationId);
-            header('Content-Type: application/json');
-            echo json_encode($details);
-            exit();
-        } catch (\Exception $e) {
-            error_log("Error in displayAddToPlanModal: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-            exit();
-        }
-    }
-
     public function editDestination()
     {
         try {
@@ -243,8 +245,8 @@ class TravelPlanController extends BaseController
 
             if ($this->travelPlanModel->hasOverlappingPlan(
                 $this->session->getUserId(),
-                $start_date,
-                $end_date
+                $startdate,
+                $enddate
             )) {
                 $this->session->setFlash('error', 'You already have a travel plan during these dates!');
                 header('Location: ' . $this->url('travelplan/travel-plans'));
@@ -298,10 +300,6 @@ class TravelPlanController extends BaseController
             $this->session->setFlash('error', 'Error deleting travel plan: ' . $e->getMessage());
             header('Location: ' . $this->url('error/404'));
                 throw new \Exception('Failed to delete travel plan');
-            
-
-            header('Location: ' . $this->url('travelplan/travel-plans'));
-            exit();
         } 
     }
 

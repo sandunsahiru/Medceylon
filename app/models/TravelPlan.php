@@ -13,7 +13,7 @@ class TravelPlan {
     public function getAllDestinations()
     {
         try {
-            $sql = "SELECT destination_id,destination_name, province, description, image_path,opening_time, closing_time, entry_fee FROM traveldestinations";
+            $sql = "SELECT * FROM traveldestinations";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -24,6 +24,143 @@ class TravelPlan {
             error_log("Error in getAlldestinations: " . $e->getMessage());
             throw new \Exception("Failed to retrieve destinations");
         }  
+    }
+
+    public function getFilteredDestinations($filters)
+{
+    try {
+        $query = "SELECT 
+                    d.*, 
+                    p.province_name, 
+                    di.district_name, 
+                    t.town_name
+                FROM traveldestinations d
+                JOIN towns t ON d.town_id = t.town_id
+                JOIN districts di ON t.district_id = di.district_id
+                JOIN provinces p ON di.province_id = p.province_id
+                WHERE 1=1";
+
+        $params = [];
+
+        if (!empty($filters['province_id'])) {
+            $query .= " AND p.province_id = ?";
+            $params[] = $filters['province_id'];
+        }
+
+        if (!empty($filters['district_id'])) {
+            $query .= " AND di.district_id = ?";
+            $params[] = $filters['district_id'];
+        }
+
+        if (!empty($filters['town_id'])) {
+            $query .= " AND t.town_id = ?";
+            $params[] = $filters['town_id'];
+        }
+
+        if (!empty($filters['distance'])) {
+            $query .= " AND d.distance <= ?";
+            $params[] = $filters['distance'];
+        }
+
+        if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
+            $query .= " AND d.wheelchair_accessibility = ?";
+            $params[] = $filters['wheelchair'];
+        }
+
+        if (!empty($filters['type_id'])) {
+            $query .= " AND d.type_id = ?";
+            $params[] = $filters['type_id'];
+        }
+
+        if (!empty($filters['budget'])) {
+            $query .= " AND d.entry_fee <= ?";
+            $params[] = $filters['budget'];
+        }
+
+        error_log("Query: " . $query); // Log the query for debugging
+        error_log("With params: " . print_r($params, true)); // Log the parameters for debugging
+
+        $stmt = $this->db->prepare($query);
+
+        if (!$stmt) {
+            throw new \Exception("Prepare failed: " . $this->db->error);
+        }
+
+        // Bind parameters dynamically
+        if (!empty($params)) {
+            $types = str_repeat('s', count($params)); // Assuming all parameters are strings
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            throw new \Exception("Execute failed: " . $stmt->error);
+        }
+
+        $destinations = $result->fetch_all(MYSQLI_ASSOC);
+
+        $stmt->close();
+
+        return $destinations;
+    } catch (\Exception $e) {
+        error_log("Error in getFilteredDestinations: " . $e->getMessage());
+        throw new \Exception("Failed to filter destinations");
+    }
+}
+
+
+
+    public function sortByType($typeId){
+        try{
+            $sql = "SELECT t.* FROM traveldestinations t
+            JOIN destination_type_mapping d
+            ON t.type_id = d.type_id
+            WHERE type_id = ? ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $typeId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }catch (\Exception $e) {
+            error_log("Error in sortByType: " . $e->getMessage());
+            throw new \Exception("Failed to Sort destinations by Type");
+        }
+    }
+
+    public function sortByWheelchairAccess($access)
+    {
+        try{
+            $sql = "SELECT * FROM traveldestinations WHERE wheelchair_accessibility = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("s", $access);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }catch (\Exception $e) {
+            error_log("Error in sortByWheelchairAccess: " . $e->getMessage());
+            throw new \Exception("Failed to Sort destinations by Wheelchair Accessibility");
+        } 
+    }
+
+    public function getDestinationTypes()
+    {
+        try{
+            $sql = "SELECT * FROM destination_types";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getDestinationTypes: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve Destination Types");
+        }
+
     }
 
     public function getAllProvinces()
@@ -89,7 +226,6 @@ class TravelPlan {
             $result = $stmt->get_result();
             
             return $result->fetch_all(MYSQLI_ASSOC);
-            error_log("Rows fetched: " . $result->num_rows);
             
         } catch (\Exception $e) {
             error_log("Error in getAllTravelPlans: " . $e->getMessage());
@@ -147,6 +283,7 @@ class TravelPlan {
         );
 
         if (!$stmt->execute()) {
+            error_log("Execute failed in hasOverlappingPlan: " . $stmt->error);
             throw new \Exception("Execute failed: " . $stmt->error);
         }
 

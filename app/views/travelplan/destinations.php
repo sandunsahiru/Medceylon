@@ -19,7 +19,7 @@
     <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button>
 
     <div class="filter-bar">
-        <form method="get" action="">
+        <form method="get" action="http://localhost/Medceylon/travelplan/destinations">
         <div class="filter-item">
             <label for="province">Select Your Current Location</label>
             <select id="province" name="province_id">
@@ -53,25 +53,29 @@
                 <label for="wheelchair">Wheelchair Accessiblity:</label>
                 <select name="wheelchair" id="wheelchair">
                     <option value="">Any</option>
-                    <option value="1">Yes</option>
-                    <option value="0">No</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
                 </select>
             </div>
 
             <div class="filter-item">
-                <label for="type">Type:</label>
-                <select name="type" id="type">
+                <label for="destinationType">Destinastion Type</label>
+                <select id="destinationType" name="type_id">
+                    <option value="">Select Type</option>
+                    <?php foreach ($destinationTypes as $destinationType): ?>
+                        <option value="<?= $destinationType['type_id'] ?>"><?= htmlspecialchars($destinationType['type_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label for="cost_category">Cost Category:</label>
+                <select name="cost_category" id="cost_category">
                     <option value="">Any</option>
-                    <option value="adventure">Adventure</option>
-                    <option value="nature">Nature</option>
-                    <option value="historical">Historical</option>
-                    <option value="cultural">Cultural</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
                 </select>
-            </div>
-
-            <div class="filter-item">
-                <label for="budget">Max Budget (LKR):</label>
-                <input type="number" name="budget" id="budget" min="0" step="500">
             </div>
 
             <div class="filter-item">
@@ -90,7 +94,7 @@
                 </div>
                 <div class="destination-info">
                     <span class="destination-name"><?= htmlspecialchars($destination['destination_name'] ?? 'Unknown') ?></span><br>
-                    <span class="destination-region"><?= htmlspecialchars($destination['province'] ?? 'Unknown') ?></span>
+                    <span class="destination-region"><?= htmlspecialchars($destination['province_name'] ?? 'Unknown') ?></span>
                     <p class="destination-description"><?= htmlspecialchars($destination['description'] ?? 'No description available.') ?></p>
                     <button class="add-destination-button" 
                         data-id="<?= htmlspecialchars($destination['destination_id'] ?? '') ?>" 

@@ -107,7 +107,7 @@ try {
     $router->post('/vpdoctor/update-specializations', 'VPDoctorController', 'updateSpecializations', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/vpdoctor/profile', 'VPDoctorController', 'profile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
-    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals', \App\Core\Middleware\AuthMiddleware::class);
 
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -166,6 +166,8 @@ try {
 
     $router->post('/travelplan/districts', 'TravelPlanController', 'districts', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/towns', 'TravelPlanController', 'towns', \App\Core\Middleware\AuthMiddleware::class);
+
+    $router->get('/accommodation/accommodation-providers','AccommodationController', 'accommodations', \App\Core\Middleware\AuthMiddleware::class);
 
 
 
