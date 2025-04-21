@@ -119,25 +119,6 @@ class PatientController extends BaseController
         }
     }
 
-    public function medicalHistory()
-    {
-        try {
-            $patientId = $this->session->getUserId();
-            $records = $this->healthRecordModel->getPatientRecords($patientId);
-            
-            $data = [
-                'records' => $records,
-                'basePath' => $this->basePath
-            ];
-            
-            echo $this->view('patient/medical-history', $data);
-            exit();
-        } catch (\Exception $e) {
-            error_log("Error in medicalHistory: " . $e->getMessage());
-            throw $e;
-        }
-    }
-
     public function profile()
     {
         try {
@@ -212,4 +193,131 @@ class PatientController extends BaseController
             exit();
         }
     }
+
+    public function medicalHistory()
+{
+    try {
+        $patientId = $this->session->getUserId();
+        $records = $this->healthRecordModel->getPatientRecords($patientId);
+        $reports = $this->patientModel->getMedicalReports($patientId);
+        
+        $data = [
+            'records' => $records,
+            'reports' => $reports,
+            'basePath' => $this->basePath
+        ];
+        
+        echo $this->view('patient/medical-history', $data);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in medicalHistory: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+public function uploadMedicalReport()
+{
+    try {
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+
+        $patientId = $this->session->getUserId();
+        $reportName = $_POST['report_name'];
+        $reportType = $_POST['report_type'];
+        $description = $_POST['description'] ?? '';
+
+        // Validate file upload
+        if (!isset($_FILES['report_file']) || $_FILES['report_file']['error'] !== UPLOAD_ERR_OK) {
+            throw new \Exception("Error uploading file");
+        }
+
+        $file = $_FILES['report_file'];
+        $allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($file['type'], $allowedTypes)) {
+            throw new \Exception("Invalid file type");
+        }
+
+        if ($file['size'] > $maxSize) {
+            throw new \Exception("File size exceeds limit");
+        }
+
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = uniqid() . '_' . time() . '.' . $extension;
+        $uploadPath = ROOT_PATH . '/public/uploads/medical-reports/' . $filename;
+
+        // Create directory if it doesn't exist
+        if (!is_dir(dirname($uploadPath))) {
+            mkdir(dirname($uploadPath), 0777, true);
+        }
+
+        // Move uploaded file
+        if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            throw new \Exception("Failed to save file");
+        }
+
+        // Save to database
+        $reportData = [
+            'patient_id' => $patientId,
+            'report_name' => $reportName,
+            'report_type' => $reportType,
+            'description' => $description,
+            'file_path' => $filename
+        ];
+
+        $this->patientModel->saveMedicalReport($reportData);
+        
+        $this->session->setFlash('success', 'Medical report uploaded successfully!');
+        header('Location: ' . $this->url('patient/medical-history'));
+        exit();
+
+    } catch (\Exception $e) {
+        error_log("Error uploading medical report: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error uploading report: ' . $e->getMessage());
+        header('Location: ' . $this->url('patient/medical-history'));
+        exit();
+    }
+}
+
+public function deleteMedicalReport()
+{
+    try {
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+
+        $reportId = $_POST['report_id'] ?? 0;
+        $patientId = $this->session->getUserId();
+
+        // Get report details to delete file
+        $report = $this->patientModel->getMedicalReport($reportId);
+        
+        if (!$report || $report['patient_id'] != $patientId) {
+            throw new \Exception("Invalid report");
+        }
+
+        // Delete file
+        $filePath = ROOT_PATH . '/public/uploads/medical-reports/' . $report['file_path'];
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        // Delete from database
+        $this->patientModel->deleteMedicalReport($reportId, $patientId);
+
+        echo json_encode(['success' => true]);
+        exit();
+
+    } catch (\Exception $e) {
+        error_log("Error deleting medical report: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        exit();
+    }
+}
+
+
+
 }

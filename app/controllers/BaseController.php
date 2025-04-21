@@ -19,27 +19,35 @@ class BaseController
     }
 
     public function view($view, $data = [])
-    {
-        // Extract data to make variables available in view
-        extract($data);
-
-        // Set the base path for the view
-        $basePath = $this->basePath;
-
-        // Debug information
-        error_log("Loading view: " . $view);
-        error_log("View file path: " . ROOT_PATH . '/app/views/' . $view . '.php');
-
-        // Include the view file
-        $viewFile = ROOT_PATH . '/app/views/' . $view . '.php';
-        if (file_exists($viewFile)) {
-            ob_start();
-            require $viewFile;
-            return ob_get_clean();
-        }
-
-        throw new \Exception("View {$view} not found");
+{
+    error_log("Attempting to load view: " . $view);
+    
+    // Extract data to make variables available in view
+    extract($data);
+    
+    // Set the base path for the view
+    $basePath = $this->basePath;
+    
+    // Include the view file
+    $viewFile = ROOT_PATH . '/app/views/' . $view . '.php';
+    error_log("Full view path: " . $viewFile);
+    error_log("View file exists: " . (file_exists($viewFile) ? 'Yes' : 'No'));
+    
+    if (!file_exists($viewFile)) {
+        error_log("View file not found: " . $viewFile);
+        throw new \Exception("View {$view} not found at {$viewFile}");
     }
+    
+    ob_start();
+    require $viewFile;
+    $content = ob_get_clean();
+    
+    if (empty($content)) {
+        error_log("View rendered empty content");
+    }
+    
+    return $content;
+}
 
     protected function asset($path)
     {

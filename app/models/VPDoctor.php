@@ -95,30 +95,77 @@ class VPDoctor
     }
 
     // Get appointments by status
+    // In VPDoctor.php - Updated getAppointmentsByStatus method
+
     public function getAppointmentsByStatus($doctorId, $status)
     {
         try {
+            // First verify the doctor exists
+            $checkDoctor = "SELECT doctor_id FROM doctors WHERE doctor_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($checkDoctor);
+            $stmt->bind_param("i", $doctorId);
+            $stmt->execute();
+            $doctorExists = $stmt->get_result()->fetch_assoc();
+
+            if (!$doctorExists) {
+                error_log("No active doctor found with ID: " . $doctorId);
+                throw new \Exception("Invalid doctor ID");
+            }
+
             $query = "SELECT 
-               a.appointment_id,
-               a.appointment_date,
-               a.appointment_time,
-               a.appointment_status,
-               a.consultation_type,
-               a.reason_for_visit,
-               u.first_name,
-               u.last_name
-               FROM appointments a
-               JOIN users u ON a.patient_id = u.user_id
-               WHERE a.doctor_id = ? AND a.appointment_status = ?
-               ORDER BY a.appointment_date, a.appointment_time";
+                a.appointment_id,
+                a.appointment_date,
+                a.appointment_time,
+                a.appointment_status,
+                a.consultation_type,
+                a.reason_for_visit,
+                u.first_name,
+                u.last_name,
+                u.phone_number,
+                u.email
+                FROM appointments a
+                JOIN users u ON a.patient_id = u.user_id
+                WHERE a.doctor_id = ? 
+                AND a.appointment_status = ?
+                AND a.appointment_date >= CURRENT_DATE
+                ORDER BY a.appointment_date ASC, a.appointment_time ASC";
+
+            error_log("Executing appointment query for doctor_id: " . $doctorId . " and status: " . $status);
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("is", $doctorId, $status);
             $stmt->execute();
-            return $stmt->get_result();
+
+            $result = $stmt->get_result();
+            error_log("Found " . $result->num_rows . " appointments");
+
+            return $result;
         } catch (\Exception $e) {
             error_log("Error in getAppointmentsByStatus: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    // Add debugging function
+    public function debugAppointments($doctorId)
+    {
+        try {
+            $query = "SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN appointment_status = 'Asked' THEN 1 ELSE 0 END) as asked,
+            SUM(CASE WHEN appointment_status = 'Scheduled' THEN 1 ELSE 0 END) as scheduled,
+            SUM(CASE WHEN appointment_status = 'Rescheduled' THEN 1 ELSE 0 END) as rescheduled
+            FROM appointments 
+            WHERE doctor_id = ?
+            AND appointment_date >= CURRENT_DATE";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $doctorId);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in debugAppointments: " . $e->getMessage());
+            return null;
         }
     }
 
@@ -186,7 +233,7 @@ class VPDoctor
             throw $e;
         }
     }
-    
+
     // Get patient statistics
     public function getPatientStats($doctorId)
     {
@@ -304,7 +351,7 @@ class VPDoctor
                           FROM doctors d
                           JOIN users u ON d.user_id = u.user_id
                           WHERE d.user_id = ? AND u.is_active = 1";
-            
+
             $stmt = $this->db->prepare($doctorQuery);
             if (!$stmt) {
                 error_log("Prepare failed in getDoctorProfile: " . $this->db->error);
@@ -395,149 +442,221 @@ class VPDoctor
         }
     }
 
-   // Update doctor's specializations
-   public function updateSpecializations($doctorId, $specializations)
-   {
-       try {
-           $this->db->begin_transaction();
+    // Update doctor's specializations
+    public function updateSpecializations($doctorId, $specializations)
+    {
+        try {
+            $this->db->begin_transaction();
 
-           // Delete existing specializations
-           $deleteQuery = "DELETE FROM doctorspecializations WHERE doctor_id = ?";
-           $stmt = $this->db->prepare($deleteQuery);
-           $stmt->bind_param("i", $doctorId);
-           $stmt->execute();
+            // Delete existing specializations
+            $deleteQuery = "DELETE FROM doctorspecializations WHERE doctor_id = ?";
+            $stmt = $this->db->prepare($deleteQuery);
+            $stmt->bind_param("i", $doctorId);
+            $stmt->execute();
 
-           // Add new specializations
-           if (!empty($specializations)) {
-               $insertQuery = "INSERT INTO doctorspecializations (doctor_id, specialization_id) VALUES (?, ?)";
-               $stmt = $this->db->prepare($insertQuery);
+            // Add new specializations
+            if (!empty($specializations)) {
+                $insertQuery = "INSERT INTO doctorspecializations (doctor_id, specialization_id) VALUES (?, ?)";
+                $stmt = $this->db->prepare($insertQuery);
 
-               foreach ($specializations as $specializationId) {
-                   $stmt->bind_param("ii", $doctorId, $specializationId);
-                   $stmt->execute();
-               }
-           }
+                foreach ($specializations as $specializationId) {
+                    $stmt->bind_param("ii", $doctorId, $specializationId);
+                    $stmt->execute();
+                }
+            }
 
-           $this->db->commit();
-           return true;
-       } catch (\Exception $e) {
-           $this->db->rollback();
-           error_log("Error in updateSpecializations: " . $e->getMessage());
-           throw $e;
-       }
-   }
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("Error in updateSpecializations: " . $e->getMessage());
+            throw $e;
+        }
+    }
 
-   // Update doctor profile with specializations
-   public function updateProfile($doctorId, $data)
-   {
-       try {
-           $this->db->begin_transaction();
-   
-           // Update doctors table
-           $query = "UPDATE doctors SET
+    // Update doctor profile with specializations
+    public function updateProfile($doctorId, $data)
+    {
+        try {
+            $this->db->begin_transaction();
+
+            // Update doctors table
+            $query = "UPDATE doctors SET
                       qualifications = ?,
                       years_of_experience = ?,
                       profile_description = ?,
                       hospital_id = ?
                    WHERE doctor_id = ?";
-   
-           $stmt = $this->db->prepare($query);
-           if (!$stmt) {
-               throw new \Exception("Failed to prepare update statement");
-           }
-   
-           $stmt->bind_param(
-               "sisii",
-               $data['qualifications'],
-               $data['experience'],
-               $data['description'],
-               $data['hospital_id'],
-               $doctorId
-           );
-   
-           if (!$stmt->execute()) {
-               throw new \Exception("Failed to update doctor profile");
-           }
-   
-           // Handle specializations update
-           if (isset($data['specializations'])) {
-               // Delete existing specializations
-               $deleteQuery = "DELETE FROM doctorspecializations WHERE doctor_id = ?";
-               $stmt = $this->db->prepare($deleteQuery);
-               $stmt->bind_param("i", $doctorId);
-               $stmt->execute();
-   
-               // Add new specializations
-               if (!empty($data['specializations'])) {
-                   $insertQuery = "INSERT INTO doctorspecializations (doctor_id, specialization_id) VALUES (?, ?)";
-                   $stmt = $this->db->prepare($insertQuery);
-   
-                   foreach ($data['specializations'] as $specializationId) {
-                       $stmt->bind_param("ii", $doctorId, $specializationId);
-                       $stmt->execute();
-                   }
-               }
-           }
-   
-           $this->db->commit();
-           return true;
-       } catch (\Exception $e) {
-           $this->db->rollback();
-           error_log("Error in updateProfile: " . $e->getMessage());
-           throw $e;
-       }
-   }
 
-   // Get hospitals list
-   public function getHospitals()
-   {
-       try {
-           $query = "SELECT hospital_id, name 
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                throw new \Exception("Failed to prepare update statement");
+            }
+
+            $stmt->bind_param(
+                "sisii",
+                $data['qualifications'],
+                $data['experience'],
+                $data['description'],
+                $data['hospital_id'],
+                $doctorId
+            );
+
+            if (!$stmt->execute()) {
+                throw new \Exception("Failed to update doctor profile");
+            }
+
+            // Handle specializations update
+            if (isset($data['specializations'])) {
+                // Delete existing specializations
+                $deleteQuery = "DELETE FROM doctorspecializations WHERE doctor_id = ?";
+                $stmt = $this->db->prepare($deleteQuery);
+                $stmt->bind_param("i", $doctorId);
+                $stmt->execute();
+
+                // Add new specializations
+                if (!empty($data['specializations'])) {
+                    $insertQuery = "INSERT INTO doctorspecializations (doctor_id, specialization_id) VALUES (?, ?)";
+                    $stmt = $this->db->prepare($insertQuery);
+
+                    foreach ($data['specializations'] as $specializationId) {
+                        $stmt->bind_param("ii", $doctorId, $specializationId);
+                        $stmt->execute();
+                    }
+                }
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("Error in updateProfile: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Get hospitals list
+    public function getHospitals()
+    {
+        try {
+            $query = "SELECT hospital_id, name 
                     FROM hospitals 
                     WHERE is_active = 1 
                     ORDER BY name";
 
-           $result = $this->db->query($query);
-           if (!$result) {
-               throw new \Exception("Failed to fetch hospitals");
-           }
-           return $result->fetch_all(MYSQLI_ASSOC);
-       } catch (\Exception $e) {
-           error_log("Error in getHospitals: " . $e->getMessage());
-           throw $e;
-       }
-   }
+            $result = $this->db->query($query);
+            if (!$result) {
+                throw new \Exception("Failed to fetch hospitals");
+            }
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getHospitals: " . $e->getMessage());
+            throw $e;
+        }
+    }
 
-   // Update appointment status
-   public function updateAppointmentStatus($appointmentId, $status, $newDate = null, $newTime = null)
-   {
-       try {
-           $this->db->begin_transaction();
+    // Update appointment status
+    public function updateAppointmentStatus($appointmentId, $status, $newDate = null, $newTime = null)
+    {
+        try {
+            $this->db->begin_transaction();
 
-           if ($status === 'Rescheduled' && $newDate && $newTime) {
-               $query = "UPDATE appointments 
+            if ($status === 'Rescheduled' && $newDate && $newTime) {
+                $query = "UPDATE appointments 
                         SET appointment_status = ?, 
                             appointment_date = ?,
                             appointment_time = ?
                         WHERE appointment_id = ?";
-               $stmt = $this->db->prepare($query);
-               $stmt->bind_param("sssi", $status, $newDate, $newTime, $appointmentId);
-           } else {
-               $query = "UPDATE appointments 
+                $stmt = $this->db->prepare($query);
+                $stmt->bind_param("sssi", $status, $newDate, $newTime, $appointmentId);
+            } else {
+                $query = "UPDATE appointments 
                         SET appointment_status = ? 
                         WHERE appointment_id = ?";
-               $stmt = $this->db->prepare($query);
-               $stmt->bind_param("si", $status, $appointmentId);
-           }
+                $stmt = $this->db->prepare($query);
+                $stmt->bind_param("si", $status, $appointmentId);
+            }
 
-           $result = $stmt->execute();
-           $this->db->commit();
-           return $result;
-       } catch (\Exception $e) {
-           $this->db->rollback();
-           error_log("Error in updateAppointmentStatus: " . $e->getMessage());
-           throw $e;
-       }
-   }
+            $result = $stmt->execute();
+            $this->db->commit();
+            return $result;
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("Error in updateAppointmentStatus: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    public function getDoctorIdFromUserId($userId)
+    {
+        try {
+            $query = "SELECT doctor_id 
+                 FROM doctors 
+                 WHERE user_id = ? 
+                 AND is_active = 1";
+
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                error_log("Prepare failed in getDoctorIdFromUserId: " . $this->db->error);
+                throw new \Exception("Database error occurred");
+            }
+
+            $stmt->bind_param("i", $userId);
+            if (!$stmt->execute()) {
+                error_log("Execute failed in getDoctorIdFromUserId: " . $stmt->error);
+                throw new \Exception("Database error occurred");
+            }
+
+            $result = $stmt->get_result();
+            if (!$result) {
+                error_log("Result failed in getDoctorIdFromUserId: " . $stmt->error);
+                throw new \Exception("Database error occurred");
+            }
+
+            return $result->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in getDoctorIdFromUserId: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function getPatientMedicalReports($patientId, $doctorId)
+    {
+        try {
+            // First verify if this patient has appointments with this doctor
+            $checkAccessQuery = "SELECT 1 FROM appointments 
+                           WHERE patient_id = ? AND doctor_id = ? 
+                           LIMIT 1";
+
+            $stmt = $this->db->prepare($checkAccessQuery);
+            $stmt->bind_param("ii", $patientId, $doctorId);
+            $stmt->execute();
+            $hasAccess = $stmt->get_result()->num_rows > 0;
+
+            if (!$hasAccess) {
+                throw new \Exception("Access denied");
+            }
+
+            // Get medical reports
+            $query = "SELECT 
+            report_id,
+            report_name,
+            report_type,
+            file_path,
+            upload_date,
+            description
+            FROM medical_reports 
+            WHERE patient_id = ?
+            ORDER BY upload_date DESC";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $patientId);
+            $stmt->execute();
+
+            $result = $stmt->get_result();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getPatientMedicalReports: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
-?>

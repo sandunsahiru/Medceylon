@@ -73,7 +73,7 @@ class User {
     }
 
     public function authenticate($email, $password, $userType) {
-        // Special handling for admin and travel partner
+        // Special handling for admin and hospital admin
         if ($userType === 'admin' && $email === 'admin@example.com' && $password === 'admin123') {
             return [
                 'success' => true,
@@ -81,6 +81,17 @@ class User {
                     'user_id' => 3,
                     'name' => 'Admin User',
                     'role_id' => 4
+                ]
+            ];
+        }
+        
+        if ($userType === 'hospital' && $email === 'hospital@example.com' && $password === 'hospital123') {
+            return [
+                'success' => true,
+                'user' => [
+                    'user_id' => 4,
+                    'name' => 'Hospital Admin',
+                    'role_id' => 6
                 ]
             ];
         }
@@ -108,7 +119,6 @@ class User {
         return ['success' => false, 'error' => 'Invalid credentials'];
     }
 
-    
     private function getRoleIdFromUserType($userType) {
         return match ($userType) {
             'patient' => 1,
@@ -116,8 +126,8 @@ class User {
             'special_doctor' => 3,
             'caretaker' => 5,
             'admin' => 4,
-            'travel_partner' => 6,
-            default => 1,
+            'hospital' => 6,
+            default => 1
         };
     }
     

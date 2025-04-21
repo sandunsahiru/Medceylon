@@ -39,8 +39,12 @@ class SessionHelper {
         return $this->isLoggedIn() && $this->getUserRole() === 1;
     }
 
-    // New method for admin role check
     public function isAdmin() {
+        return $this->isLoggedIn() && $this->getUserRole() === 5; // Changed to 5 for admin
+    }
+    
+    // Add new method for specialist doctors
+    public function isSpecialistDoctor() {
         return $this->isLoggedIn() && $this->getUserRole() === 3;
     }
 

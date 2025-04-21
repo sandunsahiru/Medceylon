@@ -51,82 +51,62 @@
 </html>
 
 <script>
-    // Update appointment status function
-    function updateAppointmentStatus(appointmentId) {
-        // Show a modal or prompt to update the status
-        const newStatus = prompt('Enter new status for the appointment:');
-        if (newStatus) {
-            // Send request to update the status (AJAX or form submission)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="action" value="update_appointment_status">
-                <input type="hidden" name="appointment_id" value="${appointmentId}">
-                <input type="hidden" name="new_status" value="${newStatus}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
+        const monthYear = document.getElementById("monthYear");
+        const daysContainer = document.getElementById("days");
+        const appointmentsContainer = document.getElementById("appointments");
+        let date = new Date();
+        
+        const appointments = {
+            "2025-02-18": [
+                { doctor: "Dr. Smith", patient: "John Doe", time: "10:00 AM" },
+                { doctor: "Dr. Brown", patient: "Jane Doe", time: "2:00 PM" }
+            ],
+            "2025-02-22": [
+                { doctor: "Dr. Adams", patient: "Alice Green", time: "1:00 PM" }
+            ],
+            "2025-02-25": [
+                { doctor: "Dr. White", patient: "Bob Black", time: "3:30 PM" }
+            ]
+        };
+
+        function renderCalendar() {
+            daysContainer.innerHTML = "";
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            const lastDate = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            monthYear.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            for (let i = 0; i < firstDay; i++) {
+                daysContainer.innerHTML += "<div></div>";
+            }
+            for (let i = 1; i <= lastDate; i++) {
+                const dayDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                let appointmentDot = appointments[dayDate] ? "<div class='dot'></div>" : "";
+                daysContainer.innerHTML += `<div class='day' onclick='showAppointments("${dayDate}")'>${i}${appointmentDot}</div>`;
+            }
         }
-    }
 
-    // Cancel appointment function
-    function cancelAppointment(appointmentId) {
-        if (confirm('Are you sure you want to cancel this appointment?')) {
-            // Send a request to cancel the appointment (AJAX or form submission)
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="action" value="cancel_appointment">
-                <input type="hidden" name="appointment_id" value="${appointmentId}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
+        function prevMonth() {
+            date.setMonth(date.getMonth() - 1);
+            renderCalendar();
         }
-    }
-
-    const monthYear = document.getElementById("monthYear");
-    const daysContainer = document.getElementById("days");
-    const appointmentsContainer = document.getElementById("appointments");
-    let date = new Date();
-
-    const appointments = {
-        "2025-02-18": ["Meeting with client", "Doctor appointment"],
-        "2025-02-22": ["Project deadline"],
-        "2025-02-25": ["Team outing", "Birthday party"]
-    };
-
-    function renderCalendar() {
-        daysContainer.innerHTML = "";
-        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-        const lastDate = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        monthYear.textContent = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-        for (let i = 0; i < firstDay; i++) {
-            daysContainer.innerHTML += "<div></div>";
+        function nextMonth() {
+            date.setMonth(date.getMonth() + 1);
+            renderCalendar();
         }
-        for (let i = 1; i <= lastDate; i++) {
-            const dayDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-            let appointmentDot = appointments[dayDate] ? "<div class='dot'></div>" : "";
-            daysContainer.innerHTML += `<div class='day' onclick='showAppointments("${dayDate}")'>${i}${appointmentDot}</div>`;
+        function showAppointments(day) {
+            if (appointments[day]) {
+                appointmentsContainer.innerHTML = `<h3>Appointments for ${day}</h3>` +
+                    appointments[day].map(appt => `
+                        <div class='appointment-card'>
+                            <strong>Doctor:</strong> ${appt.doctor}<br>
+                            <strong>Patient:</strong> ${appt.patient}<br>
+                            <strong>Time:</strong> ${appt.time}
+                        </div>
+                    `).join('');
+                appointmentsContainer.style.display = "block";
+            } else {
+                appointmentsContainer.innerHTML = "<p>No appointments for this day.</p>";
+                appointmentsContainer.style.display = "block";
+            }
         }
-    }
-
-    function prevMonth() {
-        date.setMonth(date.getMonth() - 1);
         renderCalendar();
-    }
-    function nextMonth() {
-        date.setMonth(date.getMonth() + 1);
-        renderCalendar();
-    }
-    function showAppointments(day) {
-        if (appointments[day]) {
-            appointmentsContainer.innerHTML = `<h3>Appointments for ${day}</h3><ul>${appointments[day].map(appt => `<li>${appt}</li>`).join('')}</ul>`;
-            appointmentsContainer.style.display = "block";
-        } else {
-            appointmentsContainer.innerHTML = "<p>No appointments for this day.</p>";
-            appointmentsContainer.style.display = "block";
-        }
-    }
-    renderCalendar();
-
-</script>
+    </script>

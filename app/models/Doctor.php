@@ -12,83 +12,89 @@ class Doctor
         $this->db = $db;
     }
 
-    // Existing methods
     public function getAvailableDoctors()
-    {
-        try {
-            error_log("Getting available doctors");
-            $query = "SELECT d.doctor_id, u.first_name, u.last_name, h.name as hospital_name 
-                    FROM doctors d 
-                    JOIN users u ON d.user_id = u.user_id 
-                    JOIN hospitals h ON d.hospital_id = h.hospital_id
-                    JOIN userroles ur ON u.username = ur.username
-                    WHERE ur.role_id = 2 AND d.is_active = 1";
+{
+    try {
+        error_log("Getting available doctors");
+        $query = "SELECT d.doctor_id, u.first_name, u.last_name, h.name as hospital_name 
+                FROM doctors d 
+                JOIN users u ON d.user_id = u.user_id 
+                LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                WHERE u.role_id = 2 
+                AND d.is_active = 1 
+                AND u.is_active = 1
+                AND d.is_verified = 1
+                ORDER BY u.first_name, u.last_name";
 
-            $result = $this->db->query($query);
-            if (!$result) {
-                error_log("Query error: " . $this->db->error);
-                throw new \Exception("Failed to fetch doctors");
+        $result = $this->db->query($query);
+        if (!$result) {
+            error_log("Query error: " . $this->db->error);
+            throw new \Exception("Failed to fetch doctors");
+        }
+        error_log("Found " . $result->num_rows . " doctors");
+        return $result;
+    } catch (\Exception $e) {
+        error_log("Error in getAvailableDoctors: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+public function getAvailableTimeSlots($doctorId, $date)
+{
+    $dayOfWeek = date('l', strtotime($date));
+
+    $availQuery = "SELECT start_time, end_time, time_slot_duration 
+                 FROM doctor_availability 
+                 WHERE doctor_id = ? 
+                 AND day_of_week = ? 
+                 AND is_active = 1";
+
+    $availStmt = $this->db->prepare($availQuery);
+    $availStmt->bind_param("is", $doctorId, $dayOfWeek);
+    $availStmt->execute();
+    $availabilityResult = $availStmt->get_result();
+
+    if ($availabilityResult->num_rows === 0) {
+        return [];
+    }
+
+    $bookedQuery = "SELECT appointment_time 
+                  FROM appointments 
+                  WHERE doctor_id = ? 
+                  AND appointment_date = ? 
+                  AND appointment_status NOT IN ('Canceled', 'Rejected')";
+
+    $bookedStmt = $this->db->prepare($bookedQuery);
+    $bookedStmt->bind_param("is", $doctorId, $date);
+    $bookedStmt->execute();
+    $bookedResult = $bookedStmt->get_result();
+
+    $bookedSlots = [];
+    while ($row = $bookedResult->fetch_assoc()) {
+        $startTime = strtotime($row['appointment_time']);
+        $bookedSlots[] = date('H:i:s', $startTime);
+    }
+
+    $availableSlots = [];
+    while ($availability = $availabilityResult->fetch_assoc()) {
+        $start = strtotime($availability['start_time']);
+        $end = strtotime($availability['end_time']);
+        $slotDuration = 30 * 60; // 30 minutes
+
+        for ($time = $start; $time < $end; $time += $slotDuration) {
+            $currentSlot = date('H:i:s', $time);
+            if (!in_array($currentSlot, $bookedSlots)) {
+                // Add both display format and database format
+                $availableSlots[] = [
+                    'display' => date('g:i A', $time),
+                    'value' => date('H:i:s', $time)
+                ];
             }
-            error_log("Found " . $result->num_rows . " doctors");
-            return $result;
-        } catch (\Exception $e) {
-            error_log("Error in getAvailableDoctors: " . $e->getMessage());
-            throw $e;
         }
     }
 
-    public function getAvailableTimeSlots($doctorId, $date)
-    {
-        $dayOfWeek = date('l', strtotime($date));
-
-        $availQuery = "SELECT start_time, end_time, time_slot_duration 
-                     FROM doctor_availability 
-                     WHERE doctor_id = ? 
-                     AND day_of_week = ? 
-                     AND is_active = 1";
-
-        $availStmt = $this->db->prepare($availQuery);
-        $availStmt->bind_param("is", $doctorId, $dayOfWeek);
-        $availStmt->execute();
-        $availabilityResult = $availStmt->get_result();
-
-        if ($availabilityResult->num_rows === 0) {
-            return [];
-        }
-
-        $bookedQuery = "SELECT appointment_time 
-                      FROM appointments 
-                      WHERE doctor_id = ? 
-                      AND appointment_date = ? 
-                      AND appointment_status NOT IN ('Canceled', 'Rejected')";
-
-        $bookedStmt = $this->db->prepare($bookedQuery);
-        $bookedStmt->bind_param("is", $doctorId, $date);
-        $bookedStmt->execute();
-        $bookedResult = $bookedStmt->get_result();
-
-        $bookedSlots = [];
-        while ($row = $bookedResult->fetch_assoc()) {
-            $startTime = strtotime($row['appointment_time']);
-            $bookedSlots[] = date('H:i:s', $startTime);
-        }
-
-        $availableSlots = [];
-        while ($availability = $availabilityResult->fetch_assoc()) {
-            $start = strtotime($availability['start_time']);
-            $end = strtotime($availability['end_time']);
-            $slotDuration = 30 * 60; // 30 minutes
-
-            for ($time = $start; $time < $end; $time += $slotDuration) {
-                $currentSlot = date('H:i:s', $time);
-                if (!in_array($currentSlot, $bookedSlots)) {
-                    $availableSlots[] = date('g:i A', $time);
-                }
-            }
-        }
-
-        return $availableSlots;
-    }
+    return $availableSlots;
+}
 
     // Enhanced Dashboard Methods
     public function getDoctorDashboardStats($doctorId)
@@ -385,26 +391,48 @@ class Doctor
 
     // Get doctor's patients for booking form
     public function getDoctorPatients($doctorId)
-    {
-        try {
-            $query = "SELECT DISTINCT 
-                u.user_id, 
-                u.first_name, 
-                u.last_name 
-                FROM users u 
-                JOIN appointments a ON u.user_id = a.patient_id 
-                WHERE a.doctor_id = ?
-                ORDER BY u.first_name, u.last_name";
+{
+    try {
+        error_log("Getting patients for doctor ID: " . $doctorId); // Debug log
+        
+        // Get all patients who have had appointments with this doctor
+        $query = "SELECT DISTINCT 
+            u.user_id, 
+            u.first_name, 
+            u.last_name,
+            u.email,
+            u.phone_number,
+            MAX(a.appointment_date) as last_visit,
+            COUNT(DISTINCT a.appointment_id) as total_visits
+            FROM appointments a
+            INNER JOIN users u ON a.patient_id = u.user_id 
+            WHERE a.doctor_id = ?
+            AND u.is_active = 1
+            AND a.appointment_status IN ('Completed', 'Scheduled', 'Asked')
+            GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number
+            ORDER BY last_visit DESC";
 
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $doctorId);
-            $stmt->execute();
-            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        } catch (\Exception $e) {
-            error_log("Error getting doctor's patients: " . $e->getMessage());
-            throw $e;
+        $stmt = $this->db->prepare($query);
+        if (!$stmt) {
+            throw new \Exception("Database error: " . $this->db->error);
         }
+
+        $stmt->bind_param("i", $doctorId);
+        $stmt->execute();
+        
+        $result = $stmt->get_result();
+        $patients = $result->fetch_all(MYSQLI_ASSOC);
+        
+        error_log("Found " . count($patients) . " patients for doctor ID: " . $doctorId);
+        return $patients;
+    } catch (\Exception $e) {
+        error_log("Error getting doctor's patients: " . $e->getMessage());
+        throw $e;
     }
+
+}
+
+
     public function getHospitals()
     {
         try {

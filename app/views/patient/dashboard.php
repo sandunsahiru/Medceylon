@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<!-- Header remains the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
 
 <body>
     <div class="container">
+        <!-- Sidebar remains the same -->
         <aside class="sidebar">
             <div class="logo">
                 <a href="<?php echo $basePath; ?>" style="text-decoration: none; color: var(--primary-color);">
@@ -26,6 +27,10 @@
                 <a href="<?php echo $basePath; ?>/patient/book-appointment" class="nav-item">
                     <i class="ri-calendar-line"></i>
                     <span>Book Appointment</span>
+                </a>
+                <a href="<?php echo $basePath; ?>/patient/chat" class="nav-item">
+                    <i class="ri-message-3-line"></i>
+                    <span>Chat</span>
                 </a>
                 <a href="<?php echo $basePath; ?>/patient/medical-history" class="nav-item">
                     <i class="ri-file-list-line"></i>
@@ -44,8 +49,9 @@
         </aside>
 
         <main class="main-content">
+            <!-- Header remains the same -->
             <header class="top-bar">
-                <h1>My Appointments</h1>
+                <h1>Dashboard</h1>
                 <div class="header-right">
                     <div class="search-box">
                         <i class="ri-search-line"></i>
@@ -62,27 +68,27 @@
                 <div class="appointments-list">
                     <?php if ($appointments && $appointments->num_rows > 0): ?>
                         <?php while ($appointment = $appointments->fetch_assoc()): ?>
-                            <div class="appointment-card" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                            <div class="appointment-card" data-appointment-id="<?php echo htmlspecialchars($appointment['appointment_id']); ?>">
                                 <div class="appointment-time">
                                     <?php
                                     $time = $appointment['appointment_time'];
                                     if ($time) {
-                                        echo date('H:i', strtotime($time));
+                                        echo htmlspecialchars(date('H:i', strtotime($time)));
                                     } else {
-                                        echo date('H:i');
+                                        echo htmlspecialchars(date('H:i'));
                                     }
                                     ?>
                                 </div>
                                 <div class="appointment-info">
-                                    <h3>Dr. <?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?></h3>
-                                    <p><?php echo htmlspecialchars($appointment['specialization']); ?></p>
+                                    <h3>Dr. <?php echo htmlspecialchars($appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name']); ?></h3>
+                                    <p><?php echo isset($appointment['specialization']) ? htmlspecialchars($appointment['specialization']) : 'General Medicine'; ?></p>
                                     <p><?php
                                         $date = $appointment['appointment_date'];
-                                        echo $date ? date('d/m/Y', strtotime($date)) : date('d/m/Y');
+                                        echo htmlspecialchars($date ? date('d/m/Y', strtotime($date)) : date('d/m/Y'));
                                         ?></p>
-                                    <p><?php echo htmlspecialchars($appointment['hospital_name']); ?></p>
+                                    <p><?php echo htmlspecialchars($appointment['hospital_name'] ?? 'Hospital not specified'); ?></p>
                                 </div>
-                                <div class="status-badge <?php echo strtolower($appointment['appointment_status']); ?>">
+                                <div class="status-badge <?php echo strtolower(htmlspecialchars($appointment['appointment_status'])); ?>">
                                     <?php echo htmlspecialchars($appointment['appointment_status']); ?>
                                  </div>
                                 <div class="appointment-actions">
@@ -102,6 +108,7 @@
         </main>
     </div>
 
+    <!-- Modal remains the same -->
     <div id="appointmentModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -158,5 +165,4 @@
         });
     </script>
 </body>
-
 </html>

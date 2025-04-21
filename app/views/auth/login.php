@@ -29,7 +29,7 @@
                     <option value="special_doctor">Special Doctor</option>
                     <option value="caretaker">Caretaker</option>
                     <option value="admin">Admin</option>
-                    <option value="travel_partner">Travel Partner</option>
+                    <option value="hospital">Hospital Admin</option>
                 </select>
             </div>
 
@@ -51,7 +51,7 @@
         </form>
     </div>
 
-    <script>
+    <!-- <script>
         document.getElementById('user_type').addEventListener('change', function() {
             const email = document.getElementById('email');
             const password = document.getElementById('password');
@@ -61,9 +61,9 @@
                 password.value = 'admin123';
                 email.readOnly = true;
                 password.readOnly = true;
-            } else if (this.value === 'travel_partner') {
-                email.value = 'partner@example.com';
-                password.value = 'partner123';
+            } else if (this.value === 'hospital') {
+                email.value = 'hospital@example.com';
+                password.value = 'hospital123';
                 email.readOnly = true;
                 password.readOnly = true;
             } else {
@@ -73,6 +73,6 @@
                 password.readOnly = false;
             }
         });
-    </script>
+    </script> -->
 </body>
 </html>
