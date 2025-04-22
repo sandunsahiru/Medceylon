@@ -80,6 +80,18 @@
                                         <i class="ri-check-line"></i>
                                         Approve
                                     </button>
+                                    <button class="action-btn reject-btn" data-id="<?php echo $request['request_id']; ?>"
+                                            title="Reject Request">
+                                            <i class="ri-close-line"></i>
+                                        Reject
+                                    </button>
+                                <?php endif; ?>
+                                <?php if ($request['request_status'] === 'Approved'): ?>
+                                    <button class="action-btn complete-btn" data-id="<?php echo $request['request_id']; ?>"
+                                            title="Approve Request">
+                                            <i class="ri-star-line"></i>
+                                        Complete
+                                    </button>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -128,7 +140,7 @@
     </div>
 
     <script>
-        const basePath = '<?php echo $basePath; ?>';
+        const basePath = "http://localhost/MedCeylon";
         document.addEventListener('DOMContentLoaded', function() {
             // Search Functionality
             const searchInput = document.getElementById('searchInput');
@@ -184,6 +196,52 @@
                     if (confirm('Are you sure you want to approve this request?')) {
                         try {
                             const response = await fetch(`${basePath}/hospital/approve-request`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `request_id=${requestId}`
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                location.reload();
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.action-btn.reject-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const requestId = this.dataset.id;
+                    if (confirm('Are you sure you want to reject this request?')) {
+                        try {
+                            const response = await fetch(`${basePath}/hospital/reject-request`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `request_id=${requestId}`
+                            });
+                            const data = await response.json();
+                            if (data.success) {
+                                location.reload();
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.action-btn.complete-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const requestId = this.dataset.id;
+                    if (confirm('Are you sure you want to mark this request as completed?')) {
+                        try {
+                            const response = await fetch(`${basePath}/hospital/complete-request`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',

@@ -27,88 +27,92 @@ class TravelPlan {
     }
 
     public function getFilteredDestinations($filters)
-{
-    try {
-        $query = "SELECT 
-                    d.*, 
-                    p.province_name, 
-                    di.district_name, 
-                    t.town_name
-                FROM traveldestinations d
-                JOIN towns t ON d.town_id = t.town_id
-                JOIN districts di ON t.district_id = di.district_id
-                JOIN provinces p ON di.province_id = p.province_id
-                WHERE 1=1";
+    {
+        try {
+            $query = "SELECT 
+                        d.*, 
+                        p.province_name, 
+                        di.district_name, 
+                        t.town_name
+                    FROM traveldestinations d
+                    JOIN towns t ON d.town_id = t.town_id
+                    JOIN districts di ON t.district_id = di.district_id
+                    JOIN provinces p ON di.province_id = p.province_id
+                    WHERE 1=1";
 
-        $params = [];
+            $params = [];
+            $types = '';
 
-        if (!empty($filters['province_id'])) {
-            $query .= " AND p.province_id = ?";
-            $params[] = $filters['province_id'];
+            if (!empty($filters['province_id'])) {
+                $query .= " AND p.province_id = ?";
+                $params[] = $filters['province_id'];
+                $types .= 'i';
+            }
+
+            if (!empty($filters['district_id'])) {
+                $query .= " AND di.district_id = ?";
+                $params[] = $filters['district_id'];
+                $types .= 'i';
+            }
+
+            if (!empty($filters['town_id'])) {
+                $query .= " AND t.town_id = ?";
+                $params[] = $filters['town_id'];
+                $types .= 'i';
+            }
+
+            if (!empty($filters['distance'])) {
+                $query .= " AND d.distance <= ?";
+                $params[] = $filters['distance'];
+                $types .= 'd'; // double (float)
+            }
+
+            if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
+                $query .= " AND d.wheelchair_accessibility = ?";
+                $params[] = $filters['wheelchair'];
+                $types .= 'i';
+            }
+
+            if (!empty($filters['type_id'])) {
+                $query .= " AND d.type_id = ?";
+                $params[] = $filters['type_id'];
+                $types .= 'i';
+            }
+
+            if (!empty($filters['budget'])) {
+                $query .= " AND d.entry_fee <= ?";
+                $params[] = $filters['budget'];
+                $types .= 'd';
+            }
+
+            $stmt = $this->db->prepare($query);
+
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
+            }
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if (!$result) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+
+            $destinations = $result->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+
+            return $destinations;
+
+        } catch (\Exception $e) {
+            error_log("Error in getFilteredDestinations: " . $e->getMessage());
+            throw new \Exception("Failed to filter destinations");
         }
-
-        if (!empty($filters['district_id'])) {
-            $query .= " AND di.district_id = ?";
-            $params[] = $filters['district_id'];
-        }
-
-        if (!empty($filters['town_id'])) {
-            $query .= " AND t.town_id = ?";
-            $params[] = $filters['town_id'];
-        }
-
-        if (!empty($filters['distance'])) {
-            $query .= " AND d.distance <= ?";
-            $params[] = $filters['distance'];
-        }
-
-        if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
-            $query .= " AND d.wheelchair_accessibility = ?";
-            $params[] = $filters['wheelchair'];
-        }
-
-        if (!empty($filters['type_id'])) {
-            $query .= " AND d.type_id = ?";
-            $params[] = $filters['type_id'];
-        }
-
-        if (!empty($filters['budget'])) {
-            $query .= " AND d.entry_fee <= ?";
-            $params[] = $filters['budget'];
-        }
-
-        error_log("Query: " . $query); // Log the query for debugging
-        error_log("With params: " . print_r($params, true)); // Log the parameters for debugging
-
-        $stmt = $this->db->prepare($query);
-
-        if (!$stmt) {
-            throw new \Exception("Prepare failed: " . $this->db->error);
-        }
-
-        // Bind parameters dynamically
-        if (!empty($params)) {
-            $types = str_repeat('s', count($params)); // Assuming all parameters are strings
-            $stmt->bind_param($types, ...$params);
-        }
-
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if (!$result) {
-            throw new \Exception("Execute failed: " . $stmt->error);
-        }
-
-        $destinations = $result->fetch_all(MYSQLI_ASSOC);
-
-        $stmt->close();
-
-        return $destinations;
-    } catch (\Exception $e) {
-        error_log("Error in getFilteredDestinations: " . $e->getMessage());
-        throw new \Exception("Failed to filter destinations");
     }
-}
+
 
 
 
@@ -211,27 +215,33 @@ class TravelPlan {
     }
 
     public function getAllTravelPlans($userId) {
-        
         try {
-            $sql = "SELECT d.destination_name, d.province, d.image_path, 
+            $sql = "SELECT d.destination_name, d.province_id, d.image_path, 
                            t.stay_duration, t.check_in, t.check_out, 
-                           t.travel_plan_id, t.destination_id 
+                           t.travel_plan_id, t.destination_id, p.province_name,
+                           CASE
+                               WHEN CURDATE() < t.check_in THEN 'Pending'
+                               WHEN CURDATE() BETWEEN t.check_in AND t.check_out THEN 'Ongoing'
+                               WHEN CURDATE() > t.check_out THEN 'Completed'
+                           END AS status
                     FROM traveldestinations d 
                     JOIN travel_plans t ON d.destination_id = t.destination_id
+                    JOIN provinces p ON d.province_id = p.province_id
                     WHERE t.user_id = ?";
-
+    
             $stmt = $this->db->prepare($sql);
             $stmt->bind_param("i", $userId);
             $stmt->execute();
             $result = $stmt->get_result();
-            
+    
             return $result->fetch_all(MYSQLI_ASSOC);
-            
+    
         } catch (\Exception $e) {
             error_log("Error in getAllTravelPlans: " . $e->getMessage());
             throw new \Exception("Failed to retrieve travel plans");
         }
     }
+    
 
 
     public function addTravelPlan($user_id, $destination_id, $startDate, $endDate)

@@ -70,8 +70,7 @@
                     <h3 class="accommodation-name"><?= htmlspecialchars($acc['name']) ?></h3>
                     <p class="accommodation-address">
                         <?= htmlspecialchars($acc['address_line1']) ?><br>
-                        <?= htmlspecialchars($acc['address_line2']) ?><br>
-                        <?= htmlspecialchars($acc['city_name']) ?> 
+                        <?= htmlspecialchars($acc['address_line2']) ?>
                     </p>
                     <p class="accommodation-contact"><strong>Contact:</strong> <?= htmlspecialchars($acc['contact_info']) ?></p>
                     <p class="accommodation-services"><strong>Services:</strong> <?= htmlspecialchars($acc['services_offered']) ?></p>
@@ -79,7 +78,7 @@
                             data-id="<?= htmlspecialchars($acc['provider_id']) ?>" 
                             data-name="<?= htmlspecialchars($acc['name']) ?>" 
                             data-image="<?= htmlspecialchars($acc['image_path']) ?>" 
-                            name="select-button">Select</button>
+                            name="select-button">Book</button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -87,7 +86,18 @@
         <p>No accommodations found. Try changing the filters.</p>
     <?php endif; ?>
 </div>
-
 <br>
+
+<button onclick = "location.href ='<?php echo $basePath; ?>/accommodation/get-booking-details';">View Bookings</button>
+<br>
+<br>
+
+<?php include('process-booking.php'); ?> 
+
+<script>
+    const basePath = '<?php echo $basePath; ?>';
+</script>
+
+<script src="<?php echo $basePath; ?>/public/assets/js/accommodation.js"></script>
 
 <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>

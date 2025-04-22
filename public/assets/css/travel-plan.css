@@ -310,6 +310,12 @@ textarea {
     border-radius: 8px;
 }
 
+.status{
+    font-size: 14px;
+    color: #299d97;
+    margin-top: 10px;
+}
+
 /* Right Info (Details and Buttons) */
 .right-info {
     flex: 1;

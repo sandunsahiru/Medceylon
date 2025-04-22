@@ -10,10 +10,6 @@
                 <i class="ri-search-line"></i>
                 <input type="text" placeholder="Search requests, patients...">
             </div>
-            <div class="notifications">
-                <i class="ri-notification-3-line"></i>
-                <span class="notification-badge">3</span>
-            </div>
             <div class="date">
                 <i class="ri-calendar-line"></i>
                 <?php echo date('l, d.m.Y'); ?>
@@ -30,7 +26,7 @@
             </div>
             <div class="stats-details">
                 <div class="request-stat">
-                    <i class="ri-time-line"></i>
+                    <i class="ri-loader-4-line"></i>
                     <span>Pending: <?php echo $totalData['pending']; ?></span>
                 </div>
                 <div class="request-stat">
@@ -52,10 +48,10 @@
 
         <div class="stats-card">
             <div class="stats-content">
-                <i class="ri-check-double-line"></i>
+                <i class="ri-loader-4-line"></i>
                 <div class="stats-info">
-                    <h3>Completed</h3>
-                    <p><?php echo $totalData['completed']; ?></p>
+                    <h3>Pending</h3>
+                    <p><?php echo $totalData['pending']; ?></p>
                 </div>
             </div>
         </div>
@@ -67,8 +63,8 @@
             <h2>Recent Treatment Requests</h2>
             <a href="<?php echo $basePath; ?>/hospital/treatment-requests" class="view-all">View All</a>
         </div>
-        
-        <div class="requests-list">
+
+        <div class="requests-list-dashboard">
             <?php foreach ($requests as $request): ?>
                 <div class="request-card">
                     <div class="request-status <?php echo strtolower($request['request_status']); ?>">
@@ -129,19 +125,24 @@
             <h2>Respond to Treatment Request</h2>
         </div>
         <form id="responseForm">
+            <input type="hidden" name="csrf_token" value="<?php echo $this->session->getCSRFToken(); ?>">
             <input type="hidden" name="request_id" id="request_id">
+
             <div class="form-group">
                 <label for="estimated_cost">Estimated Cost ($)</label>
                 <input type="number" id="estimated_cost" name="estimated_cost" min="0" step="0.01" required>
             </div>
+
             <div class="form-group">
                 <label for="response_message">Response Message</label>
                 <textarea id="response_message" name="response_message" rows="4" required></textarea>
             </div>
+
             <div class="form-group">
                 <label for="additional_requirements">Additional Requirements</label>
                 <textarea id="additional_requirements" name="additional_requirements" rows="3"></textarea>
             </div>
+
             <div class="form-actions">
                 <button type="submit" class="submit-btn">
                     <i class="ri-send-plane-line"></i>
@@ -156,7 +157,35 @@
     </div>
 </div>
 
-</div><!-- Close container div from header -->
+<div id="viewDetailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h1>Request Details</h1>  
+        </div>
+        <div class="modal-body">
+            <div class="details-section">
+                <h3>Patient Information</h3>
+                <p><strong>Name:</strong> <span id="patientName"></span></p>
+                <p><strong>Email:</strong> <span id="patientEmail"></span></p>
+                <p><strong>Phone:</strong> <span id="patientPhone"></span></p>
+            </div>
+            <div class="details-section">
+                <h3>Treatment Information</h3>
+                <p><strong>Treatment Type:</strong> <span id="treatmentType"></span></p>
+                <p><strong>Doctor Preference:</strong> <span id="doctorPreference"></span></p>
+                <p><strong>Preferred Date:</strong> <span id="preferredDate"></span></p>
+            </div>
+            <div class="details-section">
+                <h3>Additional Information</h3>
+                <p><strong>Estimated Cost:</strong> $<span id="estimatedCost"></span></p>
+                <p><strong>Special Requirements:</strong> <span id="specialRequirements"></span></p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="close-btn" onclick="closeViewDetailsModal()">Close</button>
+        </div>
+</div> 
+
 <script src="<?php echo $basePath; ?>/public/assets/js/hospital.js"></script>
 </body>
 </html>

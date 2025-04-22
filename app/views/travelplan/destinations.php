@@ -52,9 +52,9 @@
             <div class="filter-item">
                 <label for="wheelchair">Wheelchair Accessiblity:</label>
                 <select name="wheelchair" id="wheelchair">
-                    <option value="">Any</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
+                    <option value="" <?= empty($_GET['wheelchair']) ? 'selected' : '' ?>>Any</option>
+                    <option value="Yes" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                    <option value="No" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'No' ? 'selected' : '' ?>>No</option>
                 </select>
             </div>
 

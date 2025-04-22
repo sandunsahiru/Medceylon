@@ -11,7 +11,7 @@
             <div class="left-info">
 
                 <h2 class="destination-name"><?= htmlspecialchars($travelPlan['destination_name']) ?></h2>
-                <p class="province"><?= htmlspecialchars($travelPlan['province']) ?></p>
+                <p class="province"><?= htmlspecialchars($travelPlan['province_name']) ?></p>
             </div>
             <img src="<?= 'http://localhost/Medceylon/public/assets/' . htmlspecialchars($travelPlan['image_path'] ?? 'default.jpg') ?>" 
                  alt="<?= htmlspecialchars($travelPlan['destination_name'] ?? 'Unknown') ?>" 
@@ -20,6 +20,7 @@
                 <p><strong>Stay Duration:</strong> <?= htmlspecialchars($travelPlan['stay_duration']) ?> days</p>
                 <p><strong>Check-In:</strong> <?= htmlspecialchars($travelPlan['check_in']) ?></p>
                 <p><strong>Check-Out:</strong> <?= htmlspecialchars($travelPlan['check_out']) ?></p>
+                <p class = "status"><?= htmlspecialchars($travelPlan['status']) ?></p>
                 <div class="action-buttons">
                     <button 
                         type="button" 

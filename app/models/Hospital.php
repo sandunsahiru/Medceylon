@@ -93,7 +93,7 @@ class Hospital
             $this->db->begin_transaction();
 
             $query = "INSERT INTO hospital_departments 
-                      (department_name, description, head_doctor_id, created_by) 
+                      (department_name, description, head_doctor_id, doctor_count) 
                       VALUES (?, ?, ?, ?)";
 
             $stmt = $this->db->prepare($query);
@@ -102,7 +102,7 @@ class Hospital
                 $data['department_name'],
                 $data['description'],
                 $data['head_doctor'],
-                $data['updated_by']
+                $data['doctor_count']
             );
 
             if (!$stmt->execute()) {
@@ -485,13 +485,14 @@ class Hospital
             $query = "SELECT h.*, 
                       CONCAT(d.first_name, ' ', d.last_name) as doctor_name,
                       tr.treatment_type,
-                      tr.request_status
-                      FROM health_recorda h
-                      JOIN treatment_requests tr ON h.request_id = tr.request_id
+                      tr.request_status, a.appointment_date
+                      FROM healthrecords h
+                      JOIN treatment_requests tr ON h.record_id = tr.request_id
                       LEFT JOIN doctors doc ON h.doctor_id = doc.doctor_id
                       LEFT JOIN users d ON doc.user_id = d.user_id
+                      LEFT JOIN appointments a ON h.appointment_id = a.appointment_id
                       WHERE tr.patient_id = ?
-                      ORDER BY h.appointment_date DESC";
+                      ORDER BY h.date_created DESC";
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("i", $patientId);
@@ -531,7 +532,7 @@ class Hospital
         }
     }
 
-    public function getLatestRequests($limit = 5)
+    public function getLatestRequests($limit)
     {
         try {
             $query = "SELECT 
@@ -565,41 +566,70 @@ class Hospital
     {
         try {
             $this->db->begin_transaction();
-
+    
+            // Fetch old status
+            $statusQuery = "SELECT request_status FROM treatment_requests WHERE request_id = ?";
+            $statusStmt = $this->db->prepare($statusQuery);
+            $statusStmt->bind_param("i", $requestId);
+            $statusStmt->execute();
+            $statusResult = $statusStmt->get_result();
+            $row = $statusResult->fetch_assoc();
+            $oldStatus = $row['request_status'];
+    
+            // Update treatment_requests
             $query = "UPDATE treatment_requests SET 
-                      estimated_cost = ?,
-                      response_message = ?,
-                      additional_requirements = ?,
-                      updated_by = ?,
-                      updated_at = NOW()
+                      estimated_cost = ?, 
+                      response_message = ?, 
+                      additional_requirements = ?, 
+                      request_status = ?, 
+                      last_updated = NOW()
                       WHERE request_id = ?";
-
+    
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
-                "dasii",
+                "dsssi",
                 $data['estimated_cost'],
                 $data['response_message'],
                 $data['additional_requirements'],
-                $data['updated_by'],
+                $data['new_status'], // NEW field you must pass in controller
                 $requestId
             );
-
+    
             if (!$stmt->execute()) {
                 throw new \Exception($stmt->error);
             }
-
+    
+            // Insert into treatment_request_history
+            $historyQuery = "INSERT INTO treatment_request_history 
+                             (request_id, old_status, new_status, changed_by, changed_at, notes) 
+                             VALUES (?, ?, ?, ?, NOW(), ?)";
+    
+            $histStmt = $this->db->prepare($historyQuery);
+            $histStmt->bind_param(
+                "issis",
+                $requestId,
+                $oldStatus,
+                $data['new_status'],
+                $data['updated_by'],
+                $data['response_message'] // optional note
+            );
+    
+            if (!$histStmt->execute()) {
+                throw new \Exception($histStmt->error);
+            }
+    
             // Add notification
             $notificationQuery = "INSERT INTO notifications 
-                                (user_id, type, message, related_id) 
-                                SELECT patient_id, 'request_update', 
-                                'Your treatment request has been updated', request_id 
-                                FROM treatment_requests 
-                                WHERE request_id = ?";
-
+                                  (user_id, type, message, related_id) 
+                                  SELECT patient_id, 'request_update', 
+                                  'Your treatment request has been updated', request_id 
+                                  FROM treatment_requests 
+                                  WHERE request_id = ?";
+    
             $notifStmt = $this->db->prepare($notificationQuery);
             $notifStmt->bind_param("i", $requestId);
             $notifStmt->execute();
-
+    
             $this->db->commit();
             return true;
         } catch (\Exception $e) {
@@ -608,6 +638,7 @@ class Hospital
             throw $e;
         }
     }
+    
 
     public function updateRequestStatus($requestId, $status, $updatedBy)
     {
@@ -670,10 +701,17 @@ class Hospital
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("i", $requestId);
             $stmt->execute();
-            return $stmt->get_result()->fetch_assoc();
+            $result = $stmt->get_result()->fetch_assoc();
+
+            if (!$result) {
+                throw new \Exception('Treatment request not found');
+            }
+
+            return $result;
         } catch (\Exception $e) {
             error_log("Error in getRequestDetails: " . $e->getMessage());
             throw $e;
         }
     }
+
 }
