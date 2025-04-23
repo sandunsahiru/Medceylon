@@ -182,15 +182,15 @@
                         <?php foreach ($pendingRequests as $index => $req): ?>
                             <tr>
                                 <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($req['patient_name']) ?></td>
-                                <td><?= htmlspecialchars($req['email']) ?></td>
-                                <td><?= htmlspecialchars($req['phone_number']) ?></td>
-                                <td><?= htmlspecialchars($req['pickup_location']) ?></td>
-                                <td><?= htmlspecialchars($req['dropoff_location']) ?></td>
-                                <td><?= htmlspecialchars($req['date']) ?></td>
-                                <td><?= htmlspecialchars($req['time']) ?></td>
-                                <td><?= htmlspecialchars($req['transport_type']) ?></td>
-                                <td><a href="/Medceylon/agent/transport/view/<?= $req['transport_request_id'] ?>" class="btn">Respond</a></td>
+                                <td><?= htmlspecialchars($req['patient_name'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['email'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['phone_number'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['pickup_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['dropoff_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['date'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['time'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['transport_type'] ?? '') ?></td>
+                                <td><a href="/Medceylon/agent/transport/view/<?= $req['transport_request_id'] ?? '' ?>" class="btn">Respond</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -215,14 +215,14 @@
                         <?php foreach ($acceptedRequests as $index => $req): ?>
                             <tr>
                                 <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($req['patient_name']) ?></td>
-                                <td><?= htmlspecialchars($req['email']) ?></td>
-                                <td><?= htmlspecialchars($req['phone_number']) ?></td>
-                                <td><?= htmlspecialchars($req['pickup_location']) ?></td>
-                                <td><?= htmlspecialchars($req['dropoff_location']) ?></td>
-                                <td><?= htmlspecialchars($req['date']) ?></td>
-                                <td><?= htmlspecialchars($req['time']) ?></td>
-                                <td><?= htmlspecialchars($req['transport_type']) ?></td>
+                                <td><?= htmlspecialchars($req['patient_name'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['email'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['phone_number'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['pickup_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['dropoff_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['date'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['time'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['transport_type'] ?? '') ?></td>
                                 <td class="status-accepted">Accepted</td>
                             </tr>
                         <?php endforeach; ?>
@@ -248,14 +248,14 @@
                         <?php foreach ($rejectedRequests as $index => $req): ?>
                             <tr>
                                 <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($req['patient_name']) ?></td>
-                                <td><?= htmlspecialchars($req['email']) ?></td>
-                                <td><?= htmlspecialchars($req['phone_number']) ?></td>
-                                <td><?= htmlspecialchars($req['pickup_location']) ?></td>
-                                <td><?= htmlspecialchars($req['dropoff_location']) ?></td>
-                                <td><?= htmlspecialchars($req['date']) ?></td>
-                                <td><?= htmlspecialchars($req['time']) ?></td>
-                                <td><?= htmlspecialchars($req['transport_type']) ?></td>
+                                <td><?= htmlspecialchars($req['patient_name'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['email'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['phone_number'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['pickup_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['dropoff_location'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['date'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['time'] ?? '') ?></td>
+                                <td><?= htmlspecialchars($req['transport_type'] ?? '') ?></td>
                                 <td class="status-rejected">Rejected</td>
                             </tr>
                         <?php endforeach; ?>

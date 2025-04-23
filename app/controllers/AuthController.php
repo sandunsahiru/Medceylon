@@ -84,7 +84,7 @@ class AuthController extends BaseController
             $password = $_POST['password'] ?? '';
             $userType = $_POST['user_type'] ?? '';
 
-            // ✅ Hardcoded Travel Agent credentials
+            // Hardcoded Travel Agent credentials
             if ($userType === 'travel_agent') {
                 if ($email === 'travelagent@example.com' && $password === 'agent123') {
                     $this->session->setUserSession(999, 'Travel Agent', 4);
@@ -187,7 +187,7 @@ class AuthController extends BaseController
     private function redirectBasedOnRole($roleId)
     {
         $redirects = [
-            1 => $this->basePath . '/patient/dashboard',
+            1 => $this->basePath . '/home',
             2 => $this->basePath . '/doctor/dashboard',
             3 => $this->basePath . '/vpdoctor/dashboard',
             4 => $this->basePath . '/agent/transport-requests',

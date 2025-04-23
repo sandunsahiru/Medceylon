@@ -33,7 +33,7 @@
         <div class="header-buttons">
             <?php if ($this->session->isLoggedIn()): ?>
                 <div class="dropdown">
-                    <button class="btn profile">Profile</button>
+                    <button href="<?php echo $basePath; ?>/about-us" class="btn profile">Profile</button>
                     <div class="dropdown-menu">
                         <a href="<?php echo $basePath; ?>/patient/book-appointment">My Appointments</a>
                         <a href="<?php echo $basePath; ?>/patient/profile">My Account</a>
