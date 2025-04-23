@@ -121,69 +121,98 @@
    <script>
    const basePath = '<?php echo $basePath; ?>';
    
-   document.addEventListener('DOMContentLoaded', function() {
-       const doctorSelect = document.getElementById('doctor');
-       const dateInput = document.getElementById('appointment_date');
-       const timeSlotSelect = document.getElementById('time_slot');
+   // Replace the existing script section in book-appointment.php with this updated version
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorSelect = document.getElementById('doctor');
+    const dateInput = document.getElementById('appointment_date');
+    const timeSlotSelect = document.getElementById('time_slot');
 
-       async function loadTimeSlots() {
-           if (!doctorSelect.value || !dateInput.value) return;
+    async function loadTimeSlots() {
+        if (!doctorSelect.value || !dateInput.value) return;
 
-           const response = await fetch(`${basePath}/patient/get-time-slots`, {
-               method: 'POST',
-               headers: {
-                   'Content-Type': 'application/x-www-form-urlencoded',
-               },
-               body: `doctor_id=${doctorSelect.value}&date=${dateInput.value}`
-           });
+        timeSlotSelect.innerHTML = '<option value="">Loading...</option>';
+        timeSlotSelect.disabled = true;
 
-           const slots = await response.json();
-           timeSlotSelect.innerHTML = '';
-           timeSlotSelect.disabled = false;
+        try {
+            const response = await fetch(`${basePath}/patient/get-time-slots`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `doctor_id=${doctorSelect.value}&date=${dateInput.value}`
+            });
 
-           if (slots.length === 0) {
-               timeSlotSelect.innerHTML = '<option value="">No available slots</option>';
-               return;
-           }
+            const slots = await response.json();
+            timeSlotSelect.innerHTML = '';
+            timeSlotSelect.disabled = false;
 
-           slots.forEach(slot => {
-               const option = document.createElement('option');
-               option.value = slot;
-               option.textContent = slot;
-               timeSlotSelect.appendChild(option);
-           });
-       }
+            if (!Array.isArray(slots) || slots.length === 0) {
+                timeSlotSelect.innerHTML = '<option value="">No available slots</option>';
+                return;
+            }
 
-       doctorSelect.addEventListener('change', loadTimeSlots);
-       dateInput.addEventListener('change', loadTimeSlots);
+            // First option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = "";
+            defaultOption.textContent = "Select a time slot";
+            timeSlotSelect.appendChild(defaultOption);
 
-       // Form validation
-       document.getElementById('appointmentForm').addEventListener('submit', function(e) {
-           const doctorSelect = document.getElementById('doctor');
-           const dateInput = document.getElementById('appointment_date');
-           const timeSlotSelect = document.getElementById('time_slot');
-           const reasonInput = document.getElementById('reason');
+            // Add all available time slots
+            slots.forEach(slot => {
+                const option = document.createElement('option');
+                
+                // Check if slot is a string or an object
+                if (typeof slot === 'string') {
+                    option.value = slot;
+                    option.textContent = slot;
+                } else if (typeof slot === 'object' && slot !== null) {
+                    // If it's an object, try to get a suitable property
+                    // Adjust based on your actual data structure
+                    const value = slot.time || slot.value || JSON.stringify(slot);
+                    const display = slot.display || slot.label || value;
+                    
+                    option.value = value;
+                    option.textContent = display;
+                }
+                
+                timeSlotSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error("Error loading time slots:", error);
+            timeSlotSelect.innerHTML = '<option value="">Error loading slots</option>';
+        }
+    }
 
-           if (!doctorSelect.value || !dateInput.value || !timeSlotSelect.value || !reasonInput.value) {
-               e.preventDefault();
-               alert('Please fill all required fields');
-           }
-       });
+    doctorSelect.addEventListener('change', loadTimeSlots);
+    dateInput.addEventListener('change', loadTimeSlots);
 
-       // Document file size validation
-       document.getElementById('documents').addEventListener('change', function(e) {
-           const maxSize = 5 * 1024 * 1024; // 5MB
-           let files = e.target.files;
-           
-           for(let file of files) {
-               if(file.size > maxSize) {
-                   alert('File ' + file.name + ' is too large. Maximum size is 5MB');
-                   e.target.value = '';
-                   return;
-               }
-           }
-       });
-   });
+    // Form validation
+    document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+        const doctorSelect = document.getElementById('doctor');
+        const dateInput = document.getElementById('appointment_date');
+        const timeSlotSelect = document.getElementById('time_slot');
+        const reasonInput = document.getElementById('reason');
+
+        if (!doctorSelect.value || !dateInput.value || !timeSlotSelect.value || !reasonInput.value) {
+            e.preventDefault();
+            alert('Please fill all required fields');
+        }
+    });
+
+    // Document file size validation
+    document.getElementById('documents').addEventListener('change', function(e) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        let files = e.target.files;
+        
+        for(let file of files) {
+            if(file.size > maxSize) {
+                alert('File ' + file.name + ' is too large. Maximum size is 5MB');
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+});
    </script>
 </body>
 </html>

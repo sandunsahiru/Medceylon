@@ -75,33 +75,33 @@ class PatientController extends BaseController
     }
 
     public function processAppointment() 
-    {
-        try {
-            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
-                throw new \Exception("Invalid CSRF token");
-            }
-            
-            $appointmentData = [
-                'patient_id' => $this->session->getUserId(),
-                'doctor_id' => $_POST['doctor_id'],
-                'date' => $_POST['appointment_date'],
-                'time' => date('H:i:s', strtotime($_POST['time_slot'])),
-                'consultation_type' => $_POST['consultation_type'],
-                'reason' => $_POST['reason'],
-                'medical_history' => $_POST['medical_history'] ?? null,
-                'documents' => $_FILES['documents'] ?? []
-            ];
-            
-            $this->appointmentModel->bookAppointment($appointmentData);
-            $this->session->setFlash('success', 'Appointment booked successfully!');
-            header('Location: ' . $this->url('patient/dashboard'));
-            exit();
-        } catch (\Exception $e) {
-            $this->session->setFlash('error', 'Error booking appointment: ' . $e->getMessage());
-            header('Location: ' . $this->url('patient/book-appointment'));
-            exit();
+{
+    try {
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
         }
+        
+        $appointmentData = [
+            'patient_id' => $this->session->getUserId(),
+            'doctor_id' => $_POST['doctor_id'],
+            'preferred_date' => $_POST['appointment_date'],  // Changed from date to preferred_date
+            'appointment_time' => $_POST['time_slot'],       // Changed from time to appointment_time
+            'consultation_type' => $_POST['consultation_type'],
+            'reason_for_visit' => $_POST['reason'],          // Changed from reason to reason_for_visit
+            'medical_history' => $_POST['medical_history'] ?? null,
+            'documents' => $_FILES['documents'] ?? []
+        ];
+        
+        $this->appointmentModel->bookAppointment($appointmentData);
+        $this->session->setFlash('success', 'Appointment booked successfully!');
+        header('Location: ' . $this->url('patient/dashboard'));
+        exit();
+    } catch (\Exception $e) {
+        $this->session->setFlash('error', 'Error booking appointment: ' . $e->getMessage());
+        header('Location: ' . $this->url('patient/book-appointment'));
+        exit();
     }
+}
 
     public function getAppointmentDetails()
     {
@@ -171,28 +171,48 @@ class PatientController extends BaseController
     }
 
     public function getTimeSlots()
-    {
-        try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                http_response_code(400);
-                exit();
-            }
-
-            $slots = $this->doctorModel->getAvailableTimeSlots(
-                $_POST['doctor_id'],
-                $_POST['date']
-            );
-
-            header('Content-Type: application/json');
-            echo json_encode($slots);
-            exit();
-        } catch (\Exception $e) {
-            error_log("Error in getTimeSlots: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+{
+    try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid request method']);
             exit();
         }
+
+        if (!isset($_POST['doctor_id']) || !isset($_POST['date'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required parameters']);
+            exit();
+        }
+
+        $doctorId = $_POST['doctor_id'];
+        $date = $_POST['date'];
+
+        // Input validation
+        if (!is_numeric($doctorId) || empty($date) || !strtotime($date)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid parameters']);
+            exit();
+        }
+
+        // Get available time slots from the model
+        $slots = $this->doctorModel->getAvailableTimeSlots($doctorId, $date);
+
+        // Ensure we have an array, even if empty
+        if (!is_array($slots)) {
+            $slots = [];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($slots);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in getTimeSlots: " . $e->getMessage());
+        http_response_code(500);
+        echo json_encode(['error' => 'Server error']);
+        exit();
     }
+}
 
     public function medicalHistory()
 {
