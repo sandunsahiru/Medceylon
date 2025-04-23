@@ -5,15 +5,18 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f7fc;
+/* Apply this ONLY for login page */
+body.login-page {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     padding: 20px;
+    background-color: #f4f7fc;
+    font-family: Arial, sans-serif;
 }
+
+/* Don't touch .register-page layout in auth.css */
 
 .form-container {
     background-color: #ffffff;
@@ -119,4 +122,18 @@ button:hover {
     background-color: #e4ffe6;
     color: #28a745;
     border: 1px solid #d1ffd4;
+}
+
+.links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.links div {
+    margin-top: 6px;
+}
+
+/* ✅ Add this specific margin to ONLY the first link block */
+.links div:first-child {
+    margin-bottom: 10px;
 }
