@@ -42,7 +42,7 @@
                 </a>
             </nav>
 
-            <a href="<?php echo $basePath; ?>/logout" class="exit-button">
+            <a href="<?php echo $basePath; ?>/home  " class="exit-button">
                 <i class="ri-logout-box-line"></i>
                 <span>Exit</span>
             </a>
@@ -104,6 +104,7 @@
                         </div>
                     <?php endif; ?>
                 </div>
+                <a href="<?php echo $basePath; ?>/patient/dashboard/"><button class="submit-btn">Next Page</button></a>
             </section>
         </main>
     </div>

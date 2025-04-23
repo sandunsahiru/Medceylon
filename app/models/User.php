@@ -98,17 +98,9 @@ class User {
         $stmt = $this->db->prepare("REPLACE INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)");
         $stmt->bind_param("iss", $userId, $token, $expiry);
         return $stmt->execute();
-    private function getRoleIdFromUserType($userType) {
-        return match ($userType) {
-            'patient' => 1,
-            'general_doctor' => 2,
-            'special_doctor' => 3,
-            'caretaker' => 5,
-            'admin' => 4,
-            'hospital' => 6,
-            default => 1
-        };
     }
+
+    
     
 
     public function resetPasswordWithToken($token, $newPassword) {

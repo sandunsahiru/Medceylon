@@ -113,7 +113,10 @@
                    </div>
 
                    <button type="submit" class="submit-btn">Book Appointment</button>
+
+
                </form>
+               <a href="<?php echo $basePath; ?>/patient/dashboard/"><button class="submit-btn">Next Page</button></a>
            </section>
        </main>
    </div>
