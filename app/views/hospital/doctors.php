@@ -222,200 +222,137 @@
 
 <script>
     const basePath = '<?php echo $basePath; ?>';
-    document.addEventListener('DOMContentLoaded', function() {
-        // Search and Filter Functionality
-        const searchInput = document.getElementById('searchInput');
-        const departmentFilter = document.getElementById('departmentFilter');
-        const doctorCards = document.querySelectorAll('.doctor-card');
+    document.addEventListener('DOMContentLoaded', function () {
+    // Modal Elements
+    const departmentModal = document.getElementById('departmentModal');
+    const deleteModal = document.getElementById('deleteModal');
+    const doctorModal = document.getElementById('doctorModal');
+    const scheduleModal = document.getElementById('scheduleModal');
 
-        function filterDoctors() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departmentId = departmentFilter.value;
+    // Form Elements
+    const departmentForm = document.getElementById('departmentForm');
+    const doctorForm = document.getElementById('doctorForm');
+    const scheduleForm = document.getElementById('scheduleForm');
 
-            doctorCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                const cardDepartment = card.dataset.department;
-                const matchesSearch = text.includes(searchTerm);
-                const matchesDepartment = !departmentId || cardDepartment === departmentId;
+    let currentEntityId = null;
 
-                card.style.display = matchesSearch && matchesDepartment ? 'flex' : 'none';
-            });
-        }
+    // Add Department Button
+    document.getElementById('addDepartmentBtn')?.addEventListener('click', function () {
+        document.getElementById('modalTitle').textContent = 'Add Department';
+        departmentForm.reset();
+        document.getElementById('departmentId').value = '';
+        departmentModal.classList.add('show'); // Show the modal
+    });
 
-        searchInput.addEventListener('input', filterDoctors);
-        departmentFilter.addEventListener('change', filterDoctors);
-
-        // Modal Handling
-        const doctorModal = document.getElementById('doctorModal');
-        const scheduleModal = document.getElementById('scheduleModal');
-        const doctorForm = document.getElementById('doctorForm');
-        const scheduleForm = document.getElementById('scheduleForm');
-
-        // Add Doctor
-        document.getElementById('addDoctorBtn').addEventListener('click', function() {
-            document.getElementById('modalTitle').textContent = 'Add Doctor';
-            doctorForm.reset();
-            document.getElementById('doctorId').value = '';
-            doctorModal.style.display = 'flex';
-        });
-
-        // Edit Doctor
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                try {
-                    const response = await fetch(`${basePath}/hospital/get-doctor-details?id=${doctorId}`);
-                    const data = await response.json();
-
-                    document.getElementById('modalTitle').textContent = 'Edit Doctor';
-                    document.getElementById('doctorId').value = data.doctor_id;
-                    document.getElementById('firstName').value = data.first_name;
-                    document.getElementById('lastName').value = data.last_name;
-                    document.getElementById('email').value = data.email;
-                    document.getElementById('phone').value = data.phone_number || '';
-                    document.getElementById('specialization').value = data.specialization;
-                    document.getElementById('licenseNumber').value = data.license_number;
-                    document.getElementById('department').value = data.department_id;
-
-                    doctorModal.style.display = 'flex';
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            });
-        });
-
-        // Manage Schedule
-        document.querySelectorAll('.schedule-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                document.getElementById('scheduleDoctor').value = doctorId;
-
-                try {
-                    const response = await fetch(`${basePath}/hospital/get-doctor-schedule?id=${doctorId}`);
-                    const schedule = await response.json();
-
-                    // Populate schedule form
-                    Object.entries(schedule).forEach(([day, times]) => {
-                        const dayInputs = scheduleForm.querySelector(`[name="schedule[${day}][start]"]`);
-                        if (dayInputs) {
-                            dayInputs.value = times.start || '';
-                            scheduleForm.querySelector(`[name="schedule[${day}][end]"]`).value = times.end || '';
-                            scheduleForm.querySelector(`[name="schedule[${day}][available]"]`).checked = times.available;
-                        }
-                    });
-
-                    scheduleModal.style.display = 'flex';
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            });
-        });
-
-        // Toggle Status
-        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                const currentStatus = this.dataset.active === '1';
-
-                if (confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this doctor?`)) {
-                    try {
-                        const response = await fetch(`${basePath}/hospital/toggle-doctor-status`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `doctor_id=${doctorId}&csrf_token=${document.querySelector('[name="csrf_token"]').value}`
-                        });
-                        const data = await response.json();
-
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert(data.error || 'An error occurred');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                }
-            });
-        });
-
-        // Form Submissions
-        doctorForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
+    // Edit Department Buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const departmentId = this.dataset.id;
             try {
-                const response = await fetch(`${basePath}/hospital/save-doctor`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(`${basePath}/hospital/get-department-details?id=${departmentId}`);
                 const data = await response.json();
 
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.error || 'An error occurred while saving the doctor');
-                }
+                document.getElementById('modalTitle').textContent = 'Edit Department';
+                document.getElementById('departmentId').value = data.department_id;
+                document.getElementById('departmentName').value = data.department_name;
+                document.getElementById('description').value = data.description;
+                document.getElementById('headDoctor').value = data.head_doctor_id || '';
+
+                departmentModal.classList.add('show'); // Show the modal
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while saving the doctor');
+                alert('Failed to fetch department details');
             }
         });
+    });
 
-        scheduleForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
+    // Delete Department Buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            currentEntityId = this.dataset.id;
+            deleteModal.classList.add('show'); // Show the delete modal
+        });
+    });
 
+    // Add Doctor Button
+    document.getElementById('addDoctorBtn')?.addEventListener('click', function () {
+        document.getElementById('modalTitle').textContent = 'Add Doctor';
+        doctorForm.reset();
+        document.getElementById('doctorId').value = '';
+        doctorModal.classList.add('show'); // Show the modal
+    });
+
+    // Edit Doctor Buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const doctorId = this.dataset.id;
             try {
-                const response = await fetch(`${basePath}/hospital/save-doctor-schedule`, {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch(`${basePath}/hospital/get-doctor-details?id=${doctorId}`);
                 const data = await response.json();
 
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.error || 'An error occurred while saving the schedule');
-                }
+                document.getElementById('modalTitle').textContent = 'Edit Doctor';
+                document.getElementById('doctorId').value = data.doctor_id;
+                document.getElementById('firstName').value = data.first_name;
+                document.getElementById('lastName').value = data.last_name;
+                document.getElementById('email').value = data.email;
+                document.getElementById('phone').value = data.phone_number || '';
+                document.getElementById('specialization').value = data.specialization;
+                document.getElementById('licenseNumber').value = data.license_number;
+                document.getElementById('department').value = data.department_id;
+
+                doctorModal.classList.add('show'); // Show the modal
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred while saving the schedule');
+                alert('Failed to fetch doctor details');
             }
         });
+    });
 
-        // Close Modal Functions
-        function closeModal() {
-            doctorModal.style.display = 'none';
-            doctorForm.reset();
-        }
+    // Confirm Delete
+    document.getElementById('confirmDelete')?.addEventListener('click', async function () {
+        try {
+            const response = await fetch(`${basePath}/hospital/delete-department`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `department_id=${currentEntityId}&csrf_token=${document.querySelector('[name="csrf_token"]').value}`
+            });
+            const data = await response.json();
 
-        function closeScheduleModal() {
-            scheduleModal.style.display = 'none';
-            scheduleForm.reset();
-        }
-
-        // Close modals when clicking outside
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.onclick = function() {
-                const modal = this.closest('.modal');
-                if (modal === doctorModal) {
-                    closeModal();
-                } else if (modal === scheduleModal) {
-                    closeScheduleModal();
-                }
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'An error occurred');
             }
-        });
-
-        window.onclick = function(event) {
-            if (event.target === doctorModal) {
-                closeModal();
-            } else if (event.target === scheduleModal) {
-                closeScheduleModal();
-            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the department');
         }
     });
+
+    // Close Modals
+    function closeModal(modal) {
+        modal.classList.remove('show'); // Hide the modal
+        if (modal === departmentModal) departmentForm.reset();
+        if (modal === doctorModal) doctorForm.reset();
+        if (modal === scheduleModal) scheduleForm.reset();
+    }
+
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.onclick = function () {
+            const modal = this.closest('.modal');
+            closeModal(modal);
+        };
+    });
+
+    window.onclick = function (event) {
+        if (event.target === departmentModal) closeModal(departmentModal);
+        if (event.target === deleteModal) closeModal(deleteModal);
+        if (event.target === doctorModal) closeModal(doctorModal);
+        if (event.target === scheduleModal) closeModal(scheduleModal);
+    };
+});
 </script>
 </body>
 

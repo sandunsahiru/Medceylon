@@ -113,6 +113,7 @@ try {
 
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->get('hospital/partials/header', 'HospitalController', 'hospitalName', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/treatment-requests', 'HospitalController', 'treatmentRequests', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/doctors', 'HospitalController', 'doctors', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/departments', 'HospitalController', 'departments', \App\Core\Middleware\HospitalAuthMiddleware::class);

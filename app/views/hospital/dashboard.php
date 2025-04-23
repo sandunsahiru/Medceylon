@@ -106,11 +106,6 @@
                         <button class="action-btn respond-btn" data-id="<?php echo $request['request_id']; ?>" title="Respond">
                             <i class="ri-message-2-line"></i>
                         </button>
-                        <?php if ($request['request_status'] === 'Pending'): ?>
-                            <button class="action-btn approve-btn" data-id="<?php echo $request['request_id']; ?>" title="Approve Request">
-                                <i class="ri-check-line"></i>
-                            </button>
-                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>

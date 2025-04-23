@@ -48,6 +48,24 @@ class Hospital
         }
     }
 
+    public function getHospitalDetails($userId)
+    {
+        try {
+            $query = "SELECT h.* 
+                      FROM hospitals h 
+                      JOIN users u ON h.user_id = u.user_id  
+                      WHERE u.user_id = ?";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in getHospitalName: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     // Department Methoda
     public function getAllDepartments()
     {
@@ -581,7 +599,6 @@ class Hospital
                       estimated_cost = ?, 
                       response_message = ?, 
                       additional_requirements = ?, 
-                      request_status = ?, 
                       last_updated = NOW()
                       WHERE request_id = ?";
     
@@ -591,44 +608,12 @@ class Hospital
                 $data['estimated_cost'],
                 $data['response_message'],
                 $data['additional_requirements'],
-                $data['new_status'], // NEW field you must pass in controller
                 $requestId
             );
     
             if (!$stmt->execute()) {
                 throw new \Exception($stmt->error);
             }
-    
-            // Insert into treatment_request_history
-            $historyQuery = "INSERT INTO treatment_request_history 
-                             (request_id, old_status, new_status, changed_by, changed_at, notes) 
-                             VALUES (?, ?, ?, ?, NOW(), ?)";
-    
-            $histStmt = $this->db->prepare($historyQuery);
-            $histStmt->bind_param(
-                "issis",
-                $requestId,
-                $oldStatus,
-                $data['new_status'],
-                $data['updated_by'],
-                $data['response_message'] // optional note
-            );
-    
-            if (!$histStmt->execute()) {
-                throw new \Exception($histStmt->error);
-            }
-    
-            // Add notification
-            $notificationQuery = "INSERT INTO notifications 
-                                  (user_id, type, message, related_id) 
-                                  SELECT patient_id, 'request_update', 
-                                  'Your treatment request has been updated', request_id 
-                                  FROM treatment_requests 
-                                  WHERE request_id = ?";
-    
-            $notifStmt = $this->db->prepare($notificationQuery);
-            $notifStmt->bind_param("i", $requestId);
-            $notifStmt->execute();
     
             $this->db->commit();
             return true;
@@ -643,34 +628,25 @@ class Hospital
     public function updateRequestStatus($requestId, $status, $updatedBy)
     {
         try {
+            error_log("Starting updateRequestStatus: ID=$requestId, Status=$status, UpdatedBy=$updatedBy");
             $this->db->begin_transaction();
 
             $query = "UPDATE treatment_requests SET 
                       request_status = ?,
                       last_updated_by = ?,
-                      updated_at = NOW()
+                      last_updated = NOW()
                       WHERE request_id = ?";
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("sii", $status, $updatedBy, $requestId);
 
             if (!$stmt->execute()) {
+                error_log("SQL Error: " . $stmt->error);
                 throw new \Exception($stmt->error);
             }
 
-            // Add notification
-            $notificationQuery = "INSERT INTO notifications 
-                                (user_id, type, message, related_id) 
-                                SELECT patient_id, 'status_update', 
-                                CONCAT('Your request status has been updated to ', ?), 
-                                request_id 
-                                FROM treatment_requests 
-                                WHERE request_id = ?";
-
-            $notifStmt = $this->db->prepare($notificationQuery);
-            $notifStmt->bind_param("si", $status, $requestId);
-            $notifStmt->execute();
-
+            error_log("Query executed successfully. Affected rows: " . $stmt->affected_rows);
+        
             $this->db->commit();
             return true;
         } catch (\Exception $e) {

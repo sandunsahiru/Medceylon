@@ -45,10 +45,12 @@ class HospitalController extends BaseController
             
             $totalData = $this->hospitalModel->getRequestStatistics();
             $requests = $this->hospitalModel->getLatestRequests(5);
+            $hospitalDetails = $this->hospitalModel->getHospitalDetails($this->session->getUserId());
             
             $data = [
                 'pageTitle' => 'Hospital Dashboard',
                 'currentPage' => 'dashboard',
+                'hospitalDetails' => $hospitalDetails,
                 'totalData' => $totalData,
                 'requests' => $requests,
                 'basePath' => $this->basePath,
@@ -61,6 +63,31 @@ class HospitalController extends BaseController
             error_log("Error in hospital dashboard: " . $e->getMessage());
             $this->session->setFlash('error', 'An error occurred while loading the dashboard');
             throw $e;
+        }
+    }
+
+    public function hospitalDetails()
+    {
+        try {
+            $hospitalDetails = $this->hospitalModel->getHospitalDetails($this->session->getUserId());
+            if (!$hospitalDetails) {
+                error_log("No hospital details found for user ID: " . $this->session->getUserId());
+                $this->session->setFlash('error', 'No hospital details found');
+                header('Location: ' . $this->url('error/404'));
+                exit();
+            }
+            $data = [
+                'pageTitle' => 'Hospital Details',
+                'currentPage' => 'hospital-details',
+                'hospitalDetails' => $hospitalDetails,
+                'basePath' => $this->basePath,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success')
+            ];
+            echo $this->view('hospital/', $data);
+        } catch (\Exception $e) {
+            error_log("Error in hospitalName: " . $e->getMessage());
+            return null;
         }
     }
 
@@ -440,7 +467,7 @@ public function getMedicalHistory()
             throw new \Exception("Invalid CSRF token");
         }
 
-        if (!isset($_POST['estimated_cost'], $_POST['response_message'], $_POST['new_status'])) {
+        if (!isset($_POST['estimated_cost'], $_POST['response_message'], $_POST['additional_requirements'])) {
             throw new \Exception("Missing required form fields");
         }
 
@@ -449,7 +476,6 @@ public function getMedicalHistory()
             'estimated_cost' => $_POST['estimated_cost'],
             'response_message' => $_POST['response_message'],
             'additional_requirements' => $_POST['additional_requirements'],
-            'new_status' => $_POST['new_status'], // this should come from your form or default
             'updated_by' => $this->session->getUserId()
         ];
 
@@ -457,6 +483,8 @@ public function getMedicalHistory()
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true]);
+        exit;
+
     } catch (\Exception $e) {
         error_log("Error in processResponse: " . $e->getMessage());
         header('Content-Type: application/json');
@@ -510,7 +538,9 @@ public function getMedicalHistory()
             }
 
             $requestId = $_POST['request_id'];
-            $this->hospitalModel->updateRequestStatus($requestId, 'Approved', $this->session->getUserId());
+            error_log("Approving request ID: " . $requestId);
+            $result = $this->hospitalModel->updateRequestStatus($requestId, 'Approved', $this->session->getUserId());
+            error_log("Request approval result: " . ($result ? "success" : "failure"));
             
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
