@@ -98,53 +98,42 @@ class VPDoctor
     // In VPDoctor.php - Updated getAppointmentsByStatus method
 
     public function getAppointmentsByStatus($doctorId, $status)
-    {
-        try {
-            // First verify the doctor exists
-            $checkDoctor = "SELECT doctor_id FROM doctors WHERE doctor_id = ? AND is_active = 1";
-            $stmt = $this->db->prepare($checkDoctor);
-            $stmt->bind_param("i", $doctorId);
-            $stmt->execute();
-            $doctorExists = $stmt->get_result()->fetch_assoc();
+{
+    try {
+        // Remove doctor check that might be failing silently
+        // Log the doctor ID and status to debug
+        error_log("Fetching appointments for doctor_id: " . $doctorId . " with status: " . $status);
 
-            if (!$doctorExists) {
-                error_log("No active doctor found with ID: " . $doctorId);
-                throw new \Exception("Invalid doctor ID");
-            }
+        $query = "SELECT 
+            a.appointment_id,
+            a.appointment_date,
+            a.appointment_time,
+            a.appointment_status,
+            a.consultation_type,
+            a.reason_for_visit,
+            u.first_name,
+            u.last_name,
+            u.phone_number,
+            u.email
+            FROM appointments a
+            JOIN users u ON a.patient_id = u.user_id
+            WHERE a.doctor_id = ? 
+            AND a.appointment_status = ?
+            ORDER BY a.appointment_date ASC, a.appointment_time ASC";
 
-            $query = "SELECT 
-                a.appointment_id,
-                a.appointment_date,
-                a.appointment_time,
-                a.appointment_status,
-                a.consultation_type,
-                a.reason_for_visit,
-                u.first_name,
-                u.last_name,
-                u.phone_number,
-                u.email
-                FROM appointments a
-                JOIN users u ON a.patient_id = u.user_id
-                WHERE a.doctor_id = ? 
-                AND a.appointment_status = ?
-                AND a.appointment_date >= CURRENT_DATE
-                ORDER BY a.appointment_date ASC, a.appointment_time ASC";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("is", $doctorId, $status);
+        $stmt->execute();
 
-            error_log("Executing appointment query for doctor_id: " . $doctorId . " and status: " . $status);
+        $result = $stmt->get_result();
+        error_log("Found " . $result->num_rows . " appointments with status: " . $status);
 
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("is", $doctorId, $status);
-            $stmt->execute();
-
-            $result = $stmt->get_result();
-            error_log("Found " . $result->num_rows . " appointments");
-
-            return $result;
-        } catch (\Exception $e) {
-            error_log("Error in getAppointmentsByStatus: " . $e->getMessage());
-            throw $e;
-        }
+        return $result;
+    } catch (\Exception $e) {
+        error_log("Error in getAppointmentsByStatus: " . $e->getMessage());
+        throw $e;
     }
+}
 
     // Add debugging function
     public function debugAppointments($doctorId)

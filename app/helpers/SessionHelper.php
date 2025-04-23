@@ -142,4 +142,6 @@ class SessionHelper {
 
         return $userData;
     }
+
+    
 }

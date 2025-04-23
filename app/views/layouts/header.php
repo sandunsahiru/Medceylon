@@ -33,7 +33,7 @@
         <div class="header-buttons">
             <?php if ($this->session->isLoggedIn()): ?>
                 <div class="dropdown">
-                    <button class="btn profile">Profile</button>
+                    <button href="<?php echo $basePath; ?>/about-us" class="btn profile">Profile</button>
                     <div class="dropdown-menu">
                         <a href="<?php echo $basePath; ?>/patient/book-appointment">My Appointments</a>
                         <a href="<?php echo $basePath; ?>/patient/profile">My Account</a>
@@ -52,38 +52,31 @@
         const dropdownMenu = document.querySelector('.dropdown-menu');
         let isDropdownOpen = false;
 
-        if (profileButton && dropdownMenu) {
-            profileButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                isDropdownOpen = !isDropdownOpen;
-                if(isDropdownOpen) {
-                    dropdownMenu.classList.add('show');
-                } else {
-                    dropdownMenu.classList.remove('show');
-                }
-            });
+    if (profileButton && dropdownMenu) {
+        profileButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            isDropdownOpen = !isDropdownOpen;
+            dropdownMenu.classList.toggle('show', isDropdownOpen);
+        });
 
-            // Close when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!profileButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                    dropdownMenu.classList.remove('show');
-                    isDropdownOpen = false;
-                }
-            });
+        document.addEventListener('click', function (e) {
+            if (!profileButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+                isDropdownOpen = false;
+            }
+        });
 
-            // Close on ESC key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && isDropdownOpen) {
-                    dropdownMenu.classList.remove('show');
-                    isDropdownOpen = false;
-                }
-            });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                dropdownMenu.classList.remove('show');
+                isDropdownOpen = false;
+            }
+        });
 
-            // Prevent closing when clicking inside dropdown
-            dropdownMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-    });
-    </script>
+        dropdownMenu.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+    }
+});
+</script>

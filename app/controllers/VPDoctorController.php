@@ -69,6 +69,8 @@ class VPDoctorController extends BaseController
         }
     }
 
+    
+
     // In VPDoctorController.php
     // In VPDoctorController.php
     public function updateAppointmentStatus()

@@ -6,7 +6,7 @@
     <title>Login - MedCeylon</title>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/auth.css">
 </head>
-<body>
+<body class="login-page">
     <div class="form-container">
         <form action="<?php echo $basePath; ?>/login" method="POST">
             <h1>Login to MedCeylon</h1>
@@ -20,6 +20,7 @@
                 <?php unset($_SESSION['registration_success']); ?>
             <?php endif; ?>
 
+            <!-- User Type -->
             <div class="field">
                 <label for="user_type">User Type</label>
                 <select id="user_type" name="user_type" required>
@@ -30,14 +31,17 @@
                     <option value="caretaker">Caretaker</option>
                     <option value="admin">Admin</option>
                     <option value="hospital">Hospital Admin</option>
+                    <option value="travel_agent">Travel Agent</option> 
                 </select>
             </div>
 
+            <!-- Email -->
             <div class="field">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>
             </div>
 
+            <!-- Password -->
             <div class="field">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
@@ -46,24 +50,20 @@
             <button type="submit">Login</button>
 
             <div class="links">
-                <a href="<?php echo $basePath; ?>/register">Don't have an account? Register</a>
-            </div>
+    <div><a href="<?php echo $basePath; ?>/register">Don't have an account? Register</a></div>
+    <div><a href="<?php echo $basePath; ?>/forgot-password">Forgot Password?</a></div>
+</div>
         </form>
     </div>
 
-    <!-- <script>
-        document.getElementById('user_type').addEventListener('change', function() {
+    <script>
+        document.getElementById('user_type').addEventListener('change', function () {
             const email = document.getElementById('email');
             const password = document.getElementById('password');
-            
-            if (this.value === 'admin') {
-                email.value = 'admin@example.com';
-                password.value = 'admin123';
-                email.readOnly = true;
-                password.readOnly = true;
-            } else if (this.value === 'hospital') {
-                email.value = 'hospital@example.com';
-                password.value = 'hospital123';
+
+            if (this.value === 'travel_agent') {
+                email.value = 'travelagent@example.com';
+                password.value = 'agent123';
                 email.readOnly = true;
                 password.readOnly = true;
             } else {
@@ -73,6 +73,6 @@
                 password.readOnly = false;
             }
         });
-    </script> -->
+    </script>
 </body>
 </html>

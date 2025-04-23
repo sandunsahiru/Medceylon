@@ -68,7 +68,6 @@ class Router
 
         if ($this->match($url, $method)) {
             try {
-                // Debug information
                 error_log("Matched URL: " . $url);
                 error_log("Controller: " . $this->params['controller']);
                 error_log("Action: " . $this->params['action']);
@@ -86,7 +85,6 @@ class Router
                     throw new \Exception("Action {$action} not found in {$controller}");
                 }
 
-                // Check middleware first
                 if (isset($this->params['middleware'])) {
                     error_log("Executing middleware: " . $this->params['middleware']);
                     $middleware = new $this->params['middleware']();
@@ -96,8 +94,12 @@ class Router
                     }
                 }
 
+                // ✅ NEW — pass dynamic params like {id}
+                $params = $this->params;
+                unset($params['controller'], $params['action'], $params['middleware'], $params['route']);
+
                 error_log("Executing action: " . $action);
-                return $controllerObject->$action();
+                return call_user_func_array([$controllerObject, $action], $params);
             } catch (\Exception $e) {
                 error_log("Error in dispatch: " . $e->getMessage());
                 throw $e;
@@ -112,11 +114,7 @@ class Router
     private function cleanUrl($url)
     {
         $parsedUrl = parse_url($url, PHP_URL_PATH);
-
-        // Remove base path
         $parsedUrl = substr($parsedUrl, strlen($this->basePath));
-
-        // Clean slashes and return
         $parsedUrl = trim($parsedUrl, '/');
         return empty($parsedUrl) ? '/' : '/' . $parsedUrl;
     }
