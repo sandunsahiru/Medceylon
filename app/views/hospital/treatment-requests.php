@@ -54,12 +54,7 @@
                             </div>
 
                             <div class="request-details">
-                                <?php if ($request['estimated_cost']): ?>
-                                    <p class="cost">
-                                        <i class="ri-money-dollar-circle-line"></i>
-                                        Est. Cost: $<?php echo number_format($request['estimated_cost'], 2); ?>
-                                    </p>
-                                <?php endif; ?>
+                                
                                 <?php if ($request['special_requirements']): ?>
                                     <p class="requirements" title="<?php echo htmlspecialchars($request['special_requirements']); ?>">
                                         <i class="ri-file-list-3-line"></i>

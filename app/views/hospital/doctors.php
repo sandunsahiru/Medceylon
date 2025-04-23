@@ -43,10 +43,13 @@
                     data-status="<?php echo $doctor['is_active'] ? 'active' : 'inactive'; ?>">
                     <div class="doctor-info">
                         <h3>Dr. <?php echo htmlspecialchars($doctor['first_name'] . ' ' . $doctor['last_name']); ?></h3>
-                        <p class="specialty">
-                            <i class="ri-stethoscope-line"></i>
-                            <?php echo htmlspecialchars($doctor['specialization']); ?>
-                        </p>
+                        <?php if (!empty($doctor['specialization'])): ?>
+                            <p class="specialty">
+                                <i class="ri-stethoscope-line"></i>
+                                <?php echo htmlspecialchars($doctor['specialization']); ?>
+                            </p>
+                        <?php endif; ?>
+
                         <p class="department">
                             <i class="ri-hospital-line"></i>
                             <?php echo htmlspecialchars($doctor['department_name']); ?>

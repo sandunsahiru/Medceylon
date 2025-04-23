@@ -1,0 +1,140 @@
+/* Modal Containers (Add & Edit) */
+.add-modal-container,
+.edit-modal-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal Boxes (Add & Edit) */
+.addModal,
+.editModal {
+    background: #ffffff;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    padding: 30px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Modal Tops (Shared) */
+.addModal-top,
+.editModal-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.addModal-top h1,
+.editModal-top h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #2c3e50;
+}
+
+.addModal-top .close,
+.editModal-top .close {
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.addModal-top .close:hover,
+.editModal-top .close:hover {
+    color: #333;
+}
+
+/* Shared Modal Form Styles */
+.modal-form .body {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.add-modal-container.active {
+    display: flex;
+}
+
+.body .left,
+.body .right {
+    flex: 1 1 250px;
+}
+
+.destination-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.modal-form label {
+    font-size: 14px;
+    color: #555;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.modal-form input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.destination-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.modal-form button[type="submit"] {
+    background-color: #299d97;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+}
+
+.modal-form button[type="submit"]:hover {
+    background-color: #1f7571;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .addModal-top h1,
+    .editModal-top h1 {
+        font-size: 1.4rem;
+    }
+
+    .body {
+        flex-direction: column;
+    }
+
+    .body .left,
+    .body .right {
+        flex: 1 1 100%;
+    }
+}

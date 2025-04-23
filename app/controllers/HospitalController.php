@@ -56,6 +56,28 @@ class HospitalController extends BaseController
         }
     }
 
+    public function hospitals()
+    {
+        try {
+            $hospitals = $this->hospitalModel->getAllHospitals();
+
+            $data = [
+                'pageTitle' => 'Hospitals',
+                'currentPage' => 'partner-hospitals',
+                'departments' => $hospitals,
+                'basePath' => $this->basePath,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success')
+            ];
+            echo $this->view('hospital/pertner-hospitals', $data);
+        } catch (\Exception $e) {
+            error_log("Error in hospitals: " . $e->getMessage());
+            $this->session->setFlash('error', 'An error occurred while loading hospitals');
+            throw $e;
+        }
+        
+    }
+
     // Department Methods
     public function departments()
     {

@@ -192,7 +192,7 @@ body {
 }
 
 /* Treatment Requests Section */
-.requests-section {
+.requests-section, .patients-section, .departments-section, .doctors-section {
     background: var(--white);
     padding: 1.5rem;
     border-radius: var(--border-radius);
@@ -220,13 +220,13 @@ body {
     font-size: 0.95rem;
 }
 
-.requests-list {
+.requests-list, .patients-list, .departments-list, .doctors-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.request-card {
+.request-card, .patient-card, .department-card, .doctors-card {
     background: var(--bg-light);
     padding: 1.5rem;
     border-radius: 12px;
@@ -236,7 +236,7 @@ body {
     transition: transform 0.2s ease;
 }
 
-.request-card:hover {
+.request-card:hover , .patient-card:hover, .department-card:hover, .doctors-card:hover{
     transform: translateX(5px);
 }
 
@@ -253,7 +253,7 @@ body {
     color: #D97706;
 }
 
-.request-info {
+.request-info, .patient-info, .department-info, .doctor-info {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -273,7 +273,49 @@ body {
     font-size: 0.9rem;
 }
 
+.patient-info p {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;  
+}
+
+.department-info p {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
 .request-info p i {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.patient-info p i {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.department-info p i { 
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+
+.doctor-info p {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.doctor-info p i {
     font-size: 1.25rem;
     color: var(--primary-color);
     opacity: 0.8;
@@ -304,14 +346,14 @@ body {
     opacity: 0.8;
 }
 
-.request-actions {
+.request-actions, .patient-actions, .department-actions, .doctor-actions{
     align-self: flex-end;
     display: flex;
     gap: 0.75rem;
 }
 
 .action-btn {
-    width: 38px;
+    width: auto;
     height: 38px;
     display: flex;
     align-items: center;
@@ -322,6 +364,7 @@ body {
     color: var(--text-light);
     cursor: pointer;
     transition: all 0.2s ease;
+    padding: 5px;
 }
 
 .action-btn:hover {
@@ -471,3 +514,27 @@ body {
 .cancel-btn:hover {
     opacity: 0.9;
 }
+
+button {
+    color: white;
+    background-color: var(--primary-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.filter-select, .filter-options {
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.availability-status{
+    font-size: 1.25rem;
+    color: var(--primary-color);
+    opacity: 0.8;
+}
+

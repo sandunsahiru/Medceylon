@@ -19,28 +19,51 @@ class DoctorController extends BaseController
     }
 
     public function dashboard()
-    {
-        try {
-            $doctorId = $this->validateDoctorSession();
+{
+    try {
+        // Get user_id from session
+        $userId = $this->validateDoctorSession();
+        error_log("Loading dashboard for user ID: " . $userId);
 
-            // Get dashboard statistics
-            $stats = $this->doctorModel->getDoctorDashboardStats($doctorId);
-            $upcomingAppointments = $this->appointmentModel->getUpcomingAppointments($doctorId);
+        // Get doctor ID from the doctors table (IMPORTANT STEP)
+        $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $doctor = $result->fetch_assoc();
 
-            $data = [
-                'stats' => $stats,
-                'appointments' => $upcomingAppointments,
-                'basePath' => $this->basePath,
-                'page_title' => 'Doctor Dashboard',
-                'current_page' => 'dashboard'
-            ];
-
-            echo $this->view('doctor/dashboard', $data);
-            exit();
-        } catch (\Exception $e) {
-            $this->handleError($e);
+        if (!$doctor) {
+            error_log("No doctor record found for user ID: " . $userId);
+            throw new \Exception("Doctor not found");
         }
+
+        $doctorId = $doctor['doctor_id'];
+        error_log("Found doctor_id: " . $doctorId . " for user_id: " . $userId);
+
+        // Get dashboard statistics
+        $stats = $this->doctorModel->getDoctorDashboardStats($doctorId);
+        error_log("Dashboard stats: " . print_r($stats, true));
+
+        // Get recent appointments using the new method (includes all statuses and dates)
+        $appointments = $this->appointmentModel->getRecentAppointments($doctorId);
+        error_log("Found " . count($appointments) . " recent appointments for dashboard");
+
+        $data = [
+            'stats' => $stats,
+            'appointments' => $appointments,
+            'basePath' => $this->basePath,
+            'page_title' => 'Doctor Dashboard',
+            'current_page' => 'dashboard'
+        ];
+
+        echo $this->view('doctor/dashboard', $data);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Dashboard error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        $this->handleError($e);
     }
+}
 
     public function appointments()
     {
