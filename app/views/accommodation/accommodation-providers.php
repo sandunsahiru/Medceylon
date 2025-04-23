@@ -68,6 +68,7 @@
                 </div>
                 <div class="accommodation-info">
                     <h3 class="accommodation-name"><?= htmlspecialchars($acc['name']) ?></h3>
+                    <p class = "accommodation-cost"><?= htmlspecialchars($acc['cost_per_night']) ?> LKR</p>
                     <p class="accommodation-address">
                         <?= htmlspecialchars($acc['address_line1']) ?><br>
                         <?= htmlspecialchars($acc['address_line2']) ?>

@@ -137,6 +137,8 @@ try {
 
     // Treatment Request Management Routes
     $router->post('/hospital/approve-request', 'HospitalController', 'approveRequest', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->post('/hospital/reject-request', 'HospitalController', 'rejectRequest', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/hospital/complete-request', 'HospitalController', 'completeRequest', \App\Core\Middleware\AuthMiddleware::class);
 
     // Patient routes (existing)
     $router->get('/patient/dashboard', 'PatientController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);

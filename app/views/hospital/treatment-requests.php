@@ -190,6 +190,8 @@
                 });
             });
 
+            
+
             document.querySelectorAll('.action-btn.approve-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const requestId = this.dataset.id;
@@ -212,6 +214,7 @@
                     }
                 });
             });
+
 
             document.querySelectorAll('.action-btn.reject-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {

@@ -647,7 +647,7 @@ class Hospital
 
             $query = "UPDATE treatment_requests SET 
                       request_status = ?,
-                      updated_by = ?,
+                      last_updated_by = ?,
                       updated_at = NOW()
                       WHERE request_id = ?";
 

@@ -13,7 +13,7 @@ class Accommodation {
     public function getAllAccommodations()
     {
         try {
-            $sql = "SELECT a.provider_id, a.name, a.contact_info, a.address_line1, a.address_line2, a.city_id, a.services_offered, a.image_path, c.city_name
+            $sql = "SELECT a.provider_id, a.name, a.contact_info, a.address_line1, a.address_line2, a.city_id, a.services_offered, a.image_path, a.cost_per_night, c.city_name
             FROM accommodationproviders a JOIN cities c
             ON a.city_id = c.city_id";
             $stmt = $this->db->prepare($sql);
