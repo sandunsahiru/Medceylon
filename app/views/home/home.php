@@ -3,7 +3,7 @@
 <div class="hero">
     <h1>Your Health, Your Journey, Your Choice</h1>
     <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
-    <a href="<?php echo $basePath; ?>/patient/dashboard/book-appointment" class="cta-btn">Book Now!</a>
+    <a href="<?php echo $basePath; ?>/patient/book-appointment/" class="cta-btn">Start Your Medical Journey!</a>
 </div>
 
 <section class="services">
