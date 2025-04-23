@@ -39,34 +39,6 @@
 
         </div>
         <div class="mid-container">
-            <div class="patient-percentage">
-                <h2>Patient Percentage</h2>
-                <div class="tabs">
-                    <button class="active">Daily</button>
-                    <button>Weekly</button>
-                    <button>Monthly</button>
-                </div>
-
-                <div class="total-patient">
-                    <div class="icon"><i class="ri-heart-line" style="color: #2ecc71; font-size: 24px;"></i></div>
-                    <div class="count">
-                        <h3>Total Patient</h3>
-                        <p>5634</p>
-                    </div>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="patientChart"></canvas>
-                </div>
-
-                <div class="legend">
-                    <div><span style="background-color: #d4af37;"></span> 45% New Patient</div>
-                    <div><span style="background-color: #2ecc71;"></span> 35% Recovered</div>
-                    <div><span style="background-color: #34495e;"></span> 20% In Srilanka</div>
-                </div>
-            </div>
-
-
             <div class="upcoming-appointments">
                 <h2>Upcoming Appointments</h2>
                 <div class="info-card">

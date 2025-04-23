@@ -66,6 +66,7 @@ try {
     $router->get('/admin/user-management', 'AdminController', 'userManagement', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/appointments', 'AdminController', 'appointments', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/bookings', 'AdminController', 'bookings', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
 
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);

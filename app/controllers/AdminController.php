@@ -14,7 +14,7 @@ class AdminController extends BaseController
         parent::__construct();
         $this->adminModel = new Admin();
         $this->appointmentModel = new Appointment();
-        
+
     }
 
     public function dashboard()
@@ -43,16 +43,46 @@ class AdminController extends BaseController
         try {
             $doctors = $this->adminModel->getDoctors();
             $patients = $this->adminModel->getPatients();
+            $hospitals = $this->adminModel->getHospitals();
 
             $data = [
                 'admin' => $this->adminModel,
                 'doctors' => $doctors,
                 'patients' => $patients,
+                'hospitals' => $hospitals,
                 'basePath' => $this->basePath
             ];
 
 
             echo $this->view('admin/user-management', $data);
+        } catch (\Exception $e) {
+            error_log("Error in userManagement method: " . $e->getMessage());
+            echo $this->view('admin/error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+
+    }
+
+
+    public function editProfile($user_id=null, $page=null)
+    {
+        try {
+            if ($page === 'doctors') {
+                $doctor = $this->adminModel->getDoctorById($user_id);
+                $data = ['doctor' => $doctor];
+            } elseif ($page === 'patients') {
+                $patient = $this->adminModel->getPatientById($user_id);
+                $data = ['patient' => $patient];
+            } else {
+                $hospital = $this->adminModel->getHospitalById($user_id);
+                $data = ['hospital' => $hospital];
+            }            
+
+            echo $this->view('admin/editProfile', $data);
         } catch (\Exception $e) {
             error_log("Error in userManagement method: " . $e->getMessage());
             echo $this->view('admin/error', [
@@ -92,7 +122,12 @@ class AdminController extends BaseController
     public function appointments()
     {
         try {
-            echo $this->view('admin/appointments', ['basePath' => $this->basePath]);
+            $appointments = $this->adminModel->getUpcomingAppointments();
+            $data = [
+                'appointments' => $appointments,
+                'basePath' => $this->basePath
+            ];
+            echo $this->view('admin/appointments', $data);
         } catch (\Exception $e) {
             error_log("Error in userManagement method: " . $e->getMessage());
             echo $this->view('admin/error', [
@@ -102,9 +137,17 @@ class AdminController extends BaseController
                 'trace' => $e->getTraceAsString(),
             ]);
         }
-
     }
 
+    public function getAppointments(){
+        try {
+            $appointments = $this->adminModel->getUpcomingAppointments();
+            echo json_encode($appointments);
+        } catch (\Exception $e) {
+            error_log("Error in getAppointments method: " . $e->getMessage());
+            echo json_encode(['error' => 'Failed to fetch appointments.']);
+        }
+    }
 
     public function bookings()
     {
@@ -112,15 +155,15 @@ class AdminController extends BaseController
             error_log("Entering dashboard method");
             $patientId = $this->session->getUserId();
             $appointments = $this->appointmentModel->getPatientAppointments($patientId);
-            
+
             error_log("Patient ID: " . $patientId);
             error_log("Appointments: " . print_r($appointments, true));
-            
+
             $data = [
                 'appointments' => $appointments,
                 'basePath' => $this->basePath
             ];
-            
+
             echo $this->view('admin/bookings', $data);
             exit();
         } catch (\Exception $e) {

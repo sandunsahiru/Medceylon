@@ -71,20 +71,27 @@
                             <?php while ($row = $result->fetch_assoc()): ?>
                                 <tr>
                                     <td><input type="checkbox"></td>
-                                    <td>
-                                        <!-- img src="./img/user.jpg" alt="<?= $row['first_name'] ?>" class="profile-img"
+                                    <?php if ($page == 'hospitals'): ?>
+                                        <td><?= htmlspecialchars($row['name']) ?></td>
+                                        <td><?= htmlspecialchars($row['contact_number']) ?></td>
+                                        <td><?= htmlspecialchars($row['website']) ?></td>
+
+                                    <?php else: ?>
+                                        <td>
+                                            <!-- img src="./img/user.jpg" alt="<?= $row['first_name'] ?>" class="profile-img"
                                             style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;"-->
-                                        <?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?>
-                                    </td>
-                                    <td><?= htmlspecialchars($row['gender']) ?></td>
-                                    <td><?= htmlspecialchars($row['age']) ?> years</td>
-                                    <td>Patient</td>
-                                    <td>Mar 4, 2024</td> <!-- Placeholder, replace with actual data -->
-                                    <td>July 4, 2022</td> <!-- Placeholder, replace with actual data -->
-                                    <td>
-                                        <button class="view-profile" onclick="navigateprofile(<?= $row['user_id'] ?>)">View
-                                            Profile</button>
-                                    </td>
+                                            <?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($row['gender']) ?></td>
+                                        <td><?= htmlspecialchars($row['age']) ?> years</td>
+                                        <td>Patient</td>
+                                        <td>Mar 4, 2024</td>
+                                        <td>July 4, 2022</td>
+                                        <td>
+                                            <button class="view-profile"
+                                                onclick="navigateprofile(<?= $row['user_id'] ?>, '<?= $page ?>')">View Profile</button>
+                                        </td>
+                                    <?php endif; ?>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
@@ -95,11 +102,7 @@
                     </tbody>
                 </table>
 
-                <script>
-                    function navigateprofile(userId) {
-                        window.location.href = 'profile.php?id=' + userId;
-                    }
-                </script>
+
 
                 <!-- <div class="pagination">
                     <button class="page-btn">1</button>
@@ -129,10 +132,10 @@
             function navigate(page) {
                 window.location.href = `?page=${page}`;
             }
-
-            function navigateprofile(user_id) {
-                window.location.href = `edit_user.php?user_id=${user_id}`;
+            function navigateprofile(user_id, page) {
+                window.location.href = `editProfile?user_id=${user_id}&page=${page}`;
             }
+
 
             function navigateToAddUser() {
                 window.location.href = 'register.php';

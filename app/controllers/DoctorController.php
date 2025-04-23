@@ -259,7 +259,7 @@ class DoctorController extends BaseController
                 throw new \Exception('Doctor ID is required');
             }
 
-            $doctorId = (int)$_GET['doctor_id'];
+            $doctorId = (int) $_GET['doctor_id'];
             if ($doctorId <= 0) {
                 throw new \Exception('Invalid doctor ID');
             }
@@ -334,64 +334,64 @@ class DoctorController extends BaseController
     }
     // Method to process specialist booking
     public function processBooking()
-{
-    try {
-        // Get the referring doctor's ID (logged in general doctor)
-        $referringDoctorId = $this->validateDoctorSession();
-        
-        error_log("Request Method: " . $_SERVER['REQUEST_METHOD']);
-        
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            throw new \Exception('Invalid request method');
-        }
+    {
+        try {
+            // Get the referring doctor's ID (logged in general doctor)
+            $referringDoctorId = $this->validateDoctorSession();
 
-        error_log("POST Data: " . print_r($_POST, true));
+            error_log("Request Method: " . $_SERVER['REQUEST_METHOD']);
 
-        $required = ['specialist_id', 'patient_id', 'consultation_type', 'preferred_date', 'appointment_time'];
-        foreach ($required as $field) {
-            error_log("Checking field $field: " . (isset($_POST[$field]) ? $_POST[$field] : 'not set'));
-            if (!isset($_POST[$field]) || empty($_POST[$field])) {
-                throw new \Exception("Missing required field: {$field}");
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new \Exception('Invalid request method');
             }
+
+            error_log("POST Data: " . print_r($_POST, true));
+
+            $required = ['specialist_id', 'patient_id', 'consultation_type', 'preferred_date', 'appointment_time'];
+            foreach ($required as $field) {
+                error_log("Checking field $field: " . (isset($_POST[$field]) ? $_POST[$field] : 'not set'));
+                if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                    throw new \Exception("Missing required field: {$field}");
+                }
+            }
+
+            // Use specialist_id as doctor_id and referringDoctorId as the actual referring doctor
+            $bookingData = [
+                'doctor_id' => $_POST['specialist_id'],  // Specialist doctor who will handle the appointment
+                'patient_id' => $_POST['patient_id'],
+                'consultation_type' => $_POST['consultation_type'],
+                'preferred_date' => $_POST['preferred_date'],
+                'appointment_time' => $_POST['appointment_time'],
+                'reason_for_visit' => $_POST['medical_history'] ?? '',
+                'medical_history' => '',
+                'referring_doctor_id' => $referringDoctorId,  // General doctor who is making the referral
+                'notes' => "Referred by Doctor ID: " . $referringDoctorId,
+                'appointment_status' => 'Asked'
+            ];
+
+            error_log("Booking Data: " . print_r($bookingData, true));
+
+            $appointmentId = $this->appointmentModel->bookAppointment($bookingData);
+
+            header('Content-Type: application/json');
+            if ($appointmentId) {
+                error_log("Appointment booked successfully with ID: " . $appointmentId);
+                echo json_encode(['success' => true]);
+            } else {
+                throw new \Exception("Failed to book appointment");
+            }
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in processBooking: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit();
         }
-
-        // Use specialist_id as doctor_id and referringDoctorId as the actual referring doctor
-        $bookingData = [
-            'doctor_id' => $_POST['specialist_id'],  // Specialist doctor who will handle the appointment
-            'patient_id' => $_POST['patient_id'],
-            'consultation_type' => $_POST['consultation_type'],
-            'preferred_date' => $_POST['preferred_date'],
-            'appointment_time' => $_POST['appointment_time'],
-            'reason_for_visit' => $_POST['medical_history'] ?? '',
-            'medical_history' => '',
-            'referring_doctor_id' => $referringDoctorId,  // General doctor who is making the referral
-            'notes' => "Referred by Doctor ID: " . $referringDoctorId,
-            'appointment_status' => 'Asked'
-        ];
-
-        error_log("Booking Data: " . print_r($bookingData, true));
-
-        $appointmentId = $this->appointmentModel->bookAppointment($bookingData);
-
-        header('Content-Type: application/json');
-        if ($appointmentId) {
-            error_log("Appointment booked successfully with ID: " . $appointmentId);
-            echo json_encode(['success' => true]);
-        } else {
-            throw new \Exception("Failed to book appointment");
-        }
-        exit();
-    } catch (\Exception $e) {
-        error_log("Error in processBooking: " . $e->getMessage());
-        header('Content-Type: application/json');
-        http_response_code(500);
-        echo json_encode([
-            'success' => false,
-            'error' => $e->getMessage()
-        ]);
-        exit();
     }
-}
 
 
     public function patients()
@@ -791,7 +791,7 @@ class DoctorController extends BaseController
         try {
             // Get current doctor's ID from session
             $userId = $this->validateDoctorSession();
-            
+
             // Get doctor ID from the doctors table
             $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
             $stmt = $this->db->prepare($query);
