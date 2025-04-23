@@ -31,13 +31,13 @@
     <section id="appointmentsTab" class="appointments-wrapper">
         <?php if (!empty($appointments)): ?>
             <?php foreach ($appointments as $appointment): ?>
-                <div class="appointment-row" data-patient-name="<?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?>">
+                <div class="appointment-row" data-patient-name="<?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?>">
                     <div class="patient-info">
                         <div class="avatar">
                             <i class="ri-user-line"></i>
                         </div>
                         <div class="info-details">
-                            <h3><?php echo htmlspecialchars($appointment['first_name'] . ' ' . $appointment['last_name']); ?></h3>
+                            <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?></h3>
                             <span><?php echo htmlspecialchars($appointment['consultation_type']); ?></span>
                         </div>
                     </div>

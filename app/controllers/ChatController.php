@@ -68,7 +68,14 @@ class ChatController extends BaseController
                 'basePath' => $this->basePath
             ]);
 
-            $viewPath = $userRole == 1 ? 'patient/chat' : 'doctor/chat';
+            // Determine the view path based on the user role
+            if ($userRole == 1) {
+                $viewPath = 'patient/chat';
+            } elseif ($userRole == 3) {
+                $viewPath = 'vpdoctor/chat'; // Use the VPDoctor chat view
+            } else {
+                $viewPath = 'doctor/chat';
+            }
             error_log("Loading view: $viewPath");
 
             echo $this->view($viewPath, $viewData);
@@ -264,18 +271,13 @@ class ChatController extends BaseController
         try {
             $userId = $this->session->getUserId();
             $receiverId = intval($_GET['receiver_id']);
-            $lastTime = urldecode($_GET['last_time']);
-
-            // Convert display time format back to database format
-            if (!empty($lastTime)) {
-                $lastTime = date('Y-m-d H:i:s', strtotime($lastTime));
-            }
+            $lastId = isset($_GET['last_id']) ? intval($_GET['last_id']) : 0;
 
             // Get conversation
             $conversationId = $this->chatModel->getOrCreateConversation($userId, $receiverId);
 
             // Get new messages
-            $messages = $this->chatModel->getNewMessages($conversationId, $lastTime);
+            $messages = $this->chatModel->getNewMessages($conversationId, $lastId);
 
             // Mark messages as read
             $this->chatModel->markMessagesAsRead($conversationId, $userId);
