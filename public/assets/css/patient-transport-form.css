@@ -1,0 +1,271 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0fdf5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Logout Button */
+.logout-float-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background-color: #299D97;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 8px rgba(41, 157, 151, 0.2);
+    transition: background-color 0.3s ease;
+    z-index: 999;
+}
+
+.logout-float-btn:hover {
+    background-color: #247c78;
+}
+
+/* Form Container */
+.form-container {
+    max-width: 600px;
+    margin: 100px auto;
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(41, 157, 151, 0.1);
+}
+
+h2 {
+    text-align: center;
+    color: #299D97;
+    margin-bottom: 30px;
+}
+
+.request-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+input,
+select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+input:focus,
+select:focus {
+    border-color: #299D97;
+    outline: none;
+    box-shadow: 0 0 5px rgba(41, 157, 151, 0.3);
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.submit-btn {
+    background-color: #299D97;
+    color: white;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #247c78;
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+    }
+}
+
+/* Sticky Footer Compatible Layout */
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-container {
+    flex: 1;
+}
+
+/* Optional Footer Styling (if missing) */
+footer,
+.footer {
+    background-color: #299D97;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+    font-size: 14px;
+    border-top: 4px solid #1d6e6e;
+    margin-top: 40px;
+}
+
+.footer a {
+    color: white;
+    text-decoration: underline;
+    margin: 0 6px;
+}
+
+.footer a:hover {
+    text-decoration: none;
+}
+
+.footer-content p {
+    margin: 6px 0;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: #f0fdf5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+}
+
+.logout-float-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background-color: #299D97;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 8px rgba(41, 157, 151, 0.2);
+    transition: background-color 0.3s ease;
+    z-index: 999;
+}
+
+.logout-float-btn:hover {
+    background-color: #247c78;
+}
+
+.form-container {
+    max-width: 600px;
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(41, 157, 151, 0.1);
+    width: 100%;
+}
+
+h2 {
+    text-align: center;
+    color: #299D97;
+    margin-bottom: 30px;
+}
+
+.request-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+input, select {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+input:focus, select:focus {
+    border-color: #299D97;
+    outline: none;
+    box-shadow: 0 0 5px rgba(41, 157, 151, 0.3);
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.submit-btn {
+    background-color: #299D97;
+    color: white;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+    background-color: #247c78;
+}
+
+@media screen and (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+    }
+}
+
+/* Footer */
+footer, .footer {
+    background-color: #299D97;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+    font-size: 14px;
+    border-top: 4px solid #1d6e6e;
+    margin-top: 0;
+}

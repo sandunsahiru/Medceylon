@@ -1,0 +1,108 @@
+/* Base Page Layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0fdf5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container */
+.container {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 40px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(41, 157, 151, 0.1);
+}
+
+/* Heading */
+h2 {
+    text-align: center;
+    color: #299D97;
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+/* Form Styling */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+select {
+    padding: 10px 14px;
+    font-size: 15px;
+    border: 1px solid #bde7e3;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+    transition: border 0.3s ease;
+}
+
+input:focus,
+select:focus {
+    border-color: #299D97;
+    box-shadow: 0 0 3px rgba(41, 157, 151, 0.2);
+}
+
+/* Submit Button */
+.submit-btn {
+    background-color: #299D97;
+    color: white;
+    padding: 10px 18px;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    align-self: flex-start;
+}
+
+.submit-btn:hover {
+    background-color: #247c78;
+}
+
+/* Suggestions Box (for Nominatim) */
+.suggestions-box {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    background-color: white;
+    z-index: 1000;
+    width: 100%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.suggestions-box div {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.suggestions-box div:hover {
+    background-color: #f1fffd;
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    .submit-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

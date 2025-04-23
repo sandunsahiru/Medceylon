@@ -1,0 +1,155 @@
+/* caregiver.css - Unified Button Style, Professional Medical UI */
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f3fefe;
+    margin: 0;
+    padding: 40px;
+    color: #024e4f;
+}
+
+h2 {
+    color: #015e5f;
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+/* 🔘 All buttons & links unified */
+a, button, .btn.secondary {
+    display: inline-block;
+    background-color: #009688;
+    color: white;
+    padding: 10px 16px;
+    text-decoration: none;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+a:hover, button:hover, .btn.secondary:hover {
+    background-color: #00796b;
+}
+
+/* Textareas & inputs */
+textarea {
+    width: 100%;
+    height: 120px;
+    border-radius: 10px;
+    border: 1px solid #cceeee;
+    padding: 12px;
+    font-size: 15px;
+    background: #faffff;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
+    margin-bottom: 12px;
+}
+
+/* Chat Bubbles */
+.chat-bubble {
+    background-color: #e0f7f6;
+    padding: 14px 18px;
+    margin: 12px 0;
+    border-radius: 14px;
+    max-width: 70%;
+    box-shadow: 0 2px 6px rgba(0, 128, 128, 0.1);
+}
+
+.chat-bubble.you {
+    background-color: #c2f0f0;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.chat-bubble small {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-top: 6px;
+}
+
+/* 🧑‍⚕️ Caregiver Grid */
+.caregiver-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.caregiver-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 128, 128, 0.08);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.25s ease;
+}
+
+.caregiver-card:hover {
+    transform: translateY(-6px);
+}
+
+.caregiver-img {
+    width: 100px;
+    height: 100px;
+    background: #cceeee url('https://via.placeholder.com/100') center center / cover no-repeat;
+    border-radius: 50%;
+    margin-bottom: 16px;
+}
+
+.caregiver-details h3 {
+    margin: 0;
+    color: #014f4f;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.caregiver-details p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #444;
+}
+
+/* 🧪 Filters */
+.filter-form {
+    margin-bottom: 30px;
+    padding: 18px;
+    background: #e9fdfc;
+    border: 1px solid #cceeee;
+    border-radius: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-form label {
+    font-size: 14px;
+    color: #015e5f;
+}
+
+.filter-form input, .filter-form select {
+    padding: 6px 10px;
+    border: 1px solid #cceeee;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-left: 6px;
+}
+
+.caregiver-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}

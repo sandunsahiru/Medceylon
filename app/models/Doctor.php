@@ -39,61 +39,82 @@ class Doctor
     }
 }
 
-public function getAvailableTimeSlots($doctorId, $date)
-{
-    $dayOfWeek = date('l', strtotime($date));
+// Add this method to your Doctor model class if it doesn't exist,
+// or update it if it does to ensure time slots are returned as strings
 
-    $availQuery = "SELECT start_time, end_time, time_slot_duration 
+public function getAvailableTimeSlots($doctorId, $date) {
+    try {
+        // Convert numeric day of week to day name
+        $dayNumber = date('w', strtotime($date)); // Returns 0 (Sunday) to 6 (Saturday)
+        $dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        $dayName = $dayNames[$dayNumber];
+        
+        error_log("Checking time slots for doctor ID: $doctorId on $date ($dayName)");
+        
+        // Get the doctor's working hours for that day of week from doctor_availability
+        $query = "SELECT start_time, end_time 
                  FROM doctor_availability 
-                 WHERE doctor_id = ? 
-                 AND day_of_week = ? 
+                 WHERE doctor_id = ? AND day_of_week = ? 
                  AND is_active = 1";
-
-    $availStmt = $this->db->prepare($availQuery);
-    $availStmt->bind_param("is", $doctorId, $dayOfWeek);
-    $availStmt->execute();
-    $availabilityResult = $availStmt->get_result();
-
-    if ($availabilityResult->num_rows === 0) {
-        return [];
-    }
-
-    $bookedQuery = "SELECT appointment_time 
-                  FROM appointments 
-                  WHERE doctor_id = ? 
-                  AND appointment_date = ? 
-                  AND appointment_status NOT IN ('Canceled', 'Rejected')";
-
-    $bookedStmt = $this->db->prepare($bookedQuery);
-    $bookedStmt->bind_param("is", $doctorId, $date);
-    $bookedStmt->execute();
-    $bookedResult = $bookedStmt->get_result();
-
-    $bookedSlots = [];
-    while ($row = $bookedResult->fetch_assoc()) {
-        $startTime = strtotime($row['appointment_time']);
-        $bookedSlots[] = date('H:i:s', $startTime);
-    }
-
-    $availableSlots = [];
-    while ($availability = $availabilityResult->fetch_assoc()) {
-        $start = strtotime($availability['start_time']);
-        $end = strtotime($availability['end_time']);
-        $slotDuration = 30 * 60; // 30 minutes
-
-        for ($time = $start; $time < $end; $time += $slotDuration) {
-            $currentSlot = date('H:i:s', $time);
-            if (!in_array($currentSlot, $bookedSlots)) {
-                // Add both display format and database format
-                $availableSlots[] = [
-                    'display' => date('g:i A', $time),
-                    'value' => date('H:i:s', $time)
-                ];
-            }
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("is", $doctorId, $dayName);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            error_log("No schedule found for doctor $doctorId on $dayName");
+            return [];
         }
+        
+        $schedule = $result->fetch_assoc();
+        error_log("Found schedule: " . json_encode($schedule));
+        
+        // Get already booked appointments
+        $query = "SELECT appointment_time 
+                 FROM appointments 
+                 WHERE doctor_id = ? AND appointment_date = ? 
+                 AND appointment_status NOT IN ('Canceled', 'Rejected')";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("is", $doctorId, $date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $bookedSlots = [];
+        while ($row = $result->fetch_assoc()) {
+            $bookedSlots[] = $row['appointment_time'];
+        }
+        
+        error_log("Booked slots: " . json_encode($bookedSlots));
+        
+        // Generate time slots (30 minute intervals)
+        $startTime = strtotime($schedule['start_time']);
+        $endTime = strtotime($schedule['end_time']);
+        
+        $slots = [];
+        $slotDuration = 30 * 60; // 30 minutes in seconds
+        
+        for ($time = $startTime; $time < $endTime; $time += $slotDuration) {
+            // Format as HH:MM:SS for database comparison
+            $formattedTime = date('H:i:s', $time);
+            
+            // Skip if already booked
+            if (in_array($formattedTime, $bookedSlots)) {
+                continue;
+            }
+            
+            // Add to available slots (formatted for display)
+            $displayTime = date('g:i A', $time);
+            $slots[] = $displayTime;
+        }
+        
+        error_log("Available slots: " . json_encode($slots));
+        return $slots;
+    } catch (\Exception $e) {
+        error_log("Error getting available time slots: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        throw $e;
     }
-
-    return $availableSlots;
 }
 
     // Enhanced Dashboard Methods

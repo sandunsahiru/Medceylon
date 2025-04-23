@@ -1,0 +1,151 @@
+/* General Page Styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0fdf5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container */
+.container {
+    max-width: 1100px;
+    margin: 60px auto;
+    padding: 40px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(41, 157, 151, 0.1);
+}
+
+/* Headings */
+h2 {
+    text-align: center;
+    color: #299D97;
+    font-size: 28px;
+    margin-bottom: 30px;
+}
+
+/* Empty State */
+.empty {
+    text-align: center;
+    color: #999;
+    font-size: 16px;
+    font-style: italic;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+thead {
+    background-color: #e4f9f8;
+}
+
+th, td {
+    padding: 14px 16px;
+    text-align: center;
+    border-bottom: 1px solid #c6efec;
+}
+
+th {
+    color: #299D97;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+td {
+    font-size: 14px;
+}
+
+tr:hover {
+    background-color: #f1fffd;
+}
+
+/* Action Button */
+.btn {
+    background-color: #299D97;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #1e7f76;
+}
+
+/* Floating Logout Button */
+.logout-float-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background-color: #299D97;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 3px 8px rgba(41, 157, 151, 0.2);
+    transition: background-color 0.3s ease;
+    z-index: 999;
+}
+
+.logout-float-btn:hover {
+    background-color: #1e7f76;
+}
+
+/* Mobile Responsive */
+@media screen and (max-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+        display: block;
+    }
+
+    thead tr {
+        display: none;
+    }
+
+    tr {
+        margin-bottom: 20px;
+        border: 1px solid #d6eee2;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: #fbfffc;
+    }
+
+    td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 16px;
+        top: 14px;
+        font-weight: bold;
+        color: #299D97;
+        text-align: left;
+    }
+
+    .btn {
+        display: inline-block;
+        margin-top: 10px;
+    }
+}

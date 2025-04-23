@@ -181,6 +181,52 @@ class Appointment {
         }
     }
    
+    /**
+ * Get recent appointments for dashboard display (includes all statuses and dates)
+ * 
+ * @param int $doctorId The doctor ID
+ * @param int $limit Maximum number of appointments to return
+ * @return array Array of appointment data
+ */
+public function getRecentAppointments($doctorId, $limit = 10) {
+    try {
+        error_log("Getting recent appointments for doctor ID: " . $doctorId . " with limit: " . $limit);
+        
+        $query = "SELECT a.*, 
+                 p.first_name AS patient_first_name, 
+                 p.last_name AS patient_last_name,
+                 p.email, 
+                 p.phone_number
+                 FROM appointments a
+                 JOIN users p ON a.patient_id = p.user_id
+                 WHERE a.doctor_id = ?
+                 ORDER BY a.appointment_date DESC, a.appointment_time DESC
+                 LIMIT ?";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $doctorId, $limit);
+        if (!$stmt->execute()) {
+            error_log("Query execution failed: " . $stmt->error);
+            throw new \Exception("Failed to execute query: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        error_log("Found " . $result->num_rows . " recent appointments");
+        
+        // Convert to array for easier handling in the view
+        $appointments = [];
+        while ($row = $result->fetch_assoc()) {
+            $appointments[] = $row;
+        }
+        
+        return $appointments;
+    } catch (\Exception $e) {
+        error_log("Error getting recent appointments: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+
     public function bookAppointment($data) {
         $this->db->begin_transaction();
         try {
