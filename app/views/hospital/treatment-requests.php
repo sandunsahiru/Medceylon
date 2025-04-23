@@ -202,11 +202,13 @@
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
                                 },
-                                body: `request_id=${requestId}`
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
                             });
                             const data = await response.json();
                             if (data.success) {
                                 location.reload();
+                            }else {
+                                alert(data.error || 'An error occurred');
                             }
                         } catch (error) {
                             console.error('Error:', error);
@@ -226,7 +228,7 @@
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
                                 },
-                                body: `request_id=${requestId}`
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
                             });
                             const data = await response.json();
                             if (data.success) {
@@ -249,7 +251,7 @@
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
                                 },
-                                body: `request_id=${requestId}`
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
                             });
                             const data = await response.json();
                             if (data.success) {
