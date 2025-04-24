@@ -195,25 +195,36 @@ textarea {
 }
 
 .modal {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 100%; /* Make it full height */
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    display: none;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
 }
 
 .modal-content {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    width: 90%;
-    max-width: 500px;
+    width: 800px;
+    max-width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 10px;
     animation: modalFadeIn 0.3s;
+    align-items: center;
 }
 
 @keyframes modalFadeIn {
@@ -233,36 +244,94 @@ textarea {
     align-items: center;
     padding: 15px 20px;
     border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 5;
 }
 
 .modal-header h2 {
     margin: 0;
     font-size: 1.5rem;
-    color: #333;
+    color: var(--primary-color);
+    width: auto;
+    text-align: left;
 }
 
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #777;
-}
 
-.close-btn:hover {
-    color: #000;
-}
-
-.form-group {
-    margin-bottom: 15px;
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 20px 0;
     padding: 0 20px;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
+.modal-left {
+    flex: 1;
+}
+
+.modal-right {
+    flex: 1;
+}
+
+#detailsImage {
+    width: 50%;    
+    height: auto;
+    border-radius: 8px;
+}
+
+.close-btn {
+    background: #FEE2E2;
+    color: #DC2626;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #5a2929;
+}
+
+/* Improve form layout */
+.form-group {
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+/* Booking summary styling */
+.booking-summary {
+    background-color: var(--primary-light);
+    border-radius: var(--border-radius);
+    padding: 15px 20px;
+    margin: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+.summary-item.total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Footer actions - ensure they're always visible */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+    position: sticky;
+    bottom: 0;
 }
 
 .form-group input,
@@ -278,14 +347,6 @@ textarea {
 .form-group textarea {
     resize: vertical;
     min-height: 80px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 15px 20px;
-    border-top: 1px solid #eee;
 }
 
 .submit-btn,
@@ -595,5 +656,13 @@ button:hover, .button:hover {
         width: 100%;
         max-width: 400px;
         height: auto;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .submit-btn, .cancel-btn {
+        width: 100%;
     }
 }

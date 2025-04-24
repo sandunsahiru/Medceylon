@@ -210,6 +210,7 @@ $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond'
     $router->get('/accommodation/accommodation-providers','AccommodationController', 'accommodations', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
 
 
     // Set 404 handler
