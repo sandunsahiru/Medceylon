@@ -190,8 +190,8 @@ class AuthController extends BaseController
             1 => $this->basePath . '/home',
             2 => $this->basePath . '/doctor/dashboard',
             3 => $this->basePath . '/vpdoctor/dashboard',
-            4 => $this->basePath . '/agent/transport-requests',
-            5 => $this->basePath . '/admin/dashboard',
+            4 => $this->basePath . '/admin/dashboard',
+            5 => $this->basePath . '/agent/transport-requests',
             6 => $this->basePath . '/hospital/dashboard'
         ];
 

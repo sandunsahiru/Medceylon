@@ -23,11 +23,13 @@ class AdminController extends BaseController
             $patients_count = $this->adminModel->getPatientsCount();
             $doctors_count = $this->adminModel->getDoctorsCount();
             $hospitals_count = $this->adminModel->getHospitalsCount();
+            $appointments = $this->adminModel->getUpcomingAppointments();
 
             $data = [
                 'patients_count' => $patients_count,
                 'doctors_count' => $doctors_count,
                 'hospitals_count' => $hospitals_count,
+                'appointments' => $appointments,
                 'basePath' => $this->basePath
             ];
 
@@ -68,25 +70,61 @@ class AdminController extends BaseController
     }
 
 
-    public function editProfile($user_id=null, $page=null)
+    public function editProfile()
     {
         try {
-            if ($page === 'doctors') {
-                $doctor = $this->adminModel->getDoctorById($user_id);
-                $data = ['doctor' => $doctor];
-            } elseif ($page === 'patients') {
-                $patient = $this->adminModel->getPatientById($user_id);
-                $data = ['patient' => $patient];
-            } else {
-                $hospital = $this->adminModel->getHospitalById($user_id);
-                $data = ['hospital' => $hospital];
-            }            
+            $user_id = $_GET['user_id'] ?? null;
+            $user = $this->adminModel->getUserById($user_id);
+            $data = [
+                'user' => $user,
+                'basePath' => $this->basePath,
+            ];
 
             echo $this->view('admin/editProfile', $data);
         } catch (\Exception $e) {
             error_log("Error in userManagement method: " . $e->getMessage());
             echo $this->view('admin/error', [
                 'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+
+    }
+
+    public function updateProfile()
+    {
+        try {
+
+            if (isset($_POST['delete_user'])) {
+                $user_id = $_POST['user_id'] ?? null;
+                $this->adminModel->deleteUser($user_id);
+                header("Location: " . $this->basePath . "/admin/user-management?success=User deleted successfully.");
+                exit;
+            }
+            $user_id = $_POST['user_id'] ?? null;
+            $first_name = $_POST['first_name'] ?? null;
+            $last_name = $_POST['last_name'] ?? null;
+            $email = $_POST['email'] ?? null;
+            $phone_number = $_POST['phone_number'] ?? null;
+            $address = $_POST['address'] ?? null;
+            $city_id = isset($_POST['city']) ? (int) $_POST['city'] : null;
+
+            // Validate input data
+            if (empty($user_id) || empty($first_name) || empty($last_name) || empty($email)) {
+                throw new \Exception("Required fields are missing.");
+            }
+
+            // Update the user profile in the database
+            $this->adminModel->updateUserProfile($user_id, $first_name, $last_name, $email, $phone_number, $address, $city_id);
+                                                
+            // Redirect to the user management page or show a success message
+            header("Location: " . $this->basePath . "/admin/user-management?success=Profile updated successfully.");
+        } catch (\Exception $e) {
+            error_log("Error in updateProfile method: " . $e->getMessage());
+            echo $this->view('admin/error', [
+                'message' => 'Failed to update profile.',
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
@@ -139,7 +177,8 @@ class AdminController extends BaseController
         }
     }
 
-    public function getAppointments(){
+    public function getAppointments()
+    {
         try {
             $appointments = $this->adminModel->getUpcomingAppointments();
             echo json_encode($appointments);
@@ -169,6 +208,17 @@ class AdminController extends BaseController
         } catch (\Exception $e) {
             error_log("Error in dashboard: " . $e->getMessage());
             throw $e;
+        }
+
+    }
+
+    public function hotelBooking()
+    {
+        try {
+            echo $this->view('admin/hotelBookings', ['basePath' => $this->basePath]);
+        } catch (\Exception $e) {
+            error_log("Error in hotelBooking: " . $e->getMessage());
+            echo $this->view('admin/error', ['message' => 'An error occurred while loading the hotel booking page.']);
         }
 
     }

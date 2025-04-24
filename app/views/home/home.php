@@ -55,7 +55,7 @@
             </a>
         </div>
         <div class="service">
-            <a href="<?php echo $basePath; ?>/rate-doctor">
+            <a href="<?php echo $basePath; ?>/ratedoctor">
                 <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle271573.jpg" alt="Rate your doctor">
                 <h3>Rate your doctor</h3>
             </a>

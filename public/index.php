@@ -38,6 +38,7 @@ try {
 
     // Protected routes (require authentication)
     $router->get('/home', 'HomeController', 'home', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/ratedoctor', 'HomeController', 'rateDoctor');
 
     // Patient Chat Routes
     $router->get('/patient/chat', 'ChatController', 'index', \App\Core\Middleware\AuthMiddleware::class);
@@ -66,6 +67,8 @@ try {
     $router->get('/admin/appointments', 'AdminController', 'appointments', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/bookings', 'AdminController', 'bookings', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/updateProfile', 'AdminController', 'updateProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/hotelBookings', 'AdminController', 'hotelBooking', \App\Core\Middleware\AdminMiddleware::class);
 
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
