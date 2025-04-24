@@ -251,25 +251,38 @@
             }
 
             // Response form submission
-            document.getElementById('responseForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                
-                try {
-                    const response = await fetch(`${basePath}/hospital/process-response`, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.text())
-                    .then(text => {
-                    console.log('RAW response:', text);
-                    try {
-                        const json = JSON.parse(text);
-                        console.log('Parsed JSON:', json);
-                    } catch (err) {
-                        console.error('Failed to parse JSON:', err);
-                    }
-                    });
+    document.getElementById('responseForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            showLoadingSpinner();
+            const response = await fetch(`${basePath}/hospital/process-response`, {
+                method: 'POST',
+                body: formData
+            });
+            hideLoadingSpinner();
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                showToast("Server error: " + (errorData.error || "Unknown error"), 'error');
+                return;
+            }
+            
+            const data = await response.json();
+            if (data.success) {
+                showToast('Response sent successfully', 'success');
+                closeModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'An error occurred', 'error');
+            }
+        } catch (error) {
+            hideLoadingSpinner();
+            console.error('Error:', error);
+            showToast('Error sending response', 'error');
+        }
+    });
 
             // Handle approve, reject, and complete buttons
             document.querySelectorAll('.action-btn.approve-btn').forEach(btn => {

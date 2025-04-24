@@ -18,8 +18,8 @@
                 class="destination-image" />
             <div class="right-info">
                 <p><strong>Stay Duration:</strong> <?= htmlspecialchars($travelPlan['stay_duration']) ?> days</p>
-                <p><strong>Check-In:</strong> <?= htmlspecialchars($travelPlan['check_in']) ?></p>
-                <p><strong>Check-Out:</strong> <?= htmlspecialchars($travelPlan['check_out']) ?></p>
+                <p><strong>Start Date:</strong> <?= htmlspecialchars($travelPlan['check_in']) ?></p>
+                <p><strong>End Date:</strong> <?= htmlspecialchars($travelPlan['check_out']) ?></p>
                 <p class = "status"><?= htmlspecialchars($travelPlan['status']) ?></p>
                 <div class="action-buttons">
                     <button 
