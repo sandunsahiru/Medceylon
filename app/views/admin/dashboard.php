@@ -47,7 +47,8 @@
                 </div>
                 <div class="info-card">
                     <h2>Hotel Bookings - </h2>
-                    <h2>10</h2>
+                    <h2><?= htmlspecialchars((string)($booking_count ?? '')) ?></h2>
+
                 </div>
                 <div class="info-card">
                     <h2>New Doctors</h2>

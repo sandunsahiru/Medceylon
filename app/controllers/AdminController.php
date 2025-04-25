@@ -24,12 +24,14 @@ class AdminController extends BaseController
             $doctors_count = $this->adminModel->getDoctorsCount();
             $hospitals_count = $this->adminModel->getHospitalsCount();
             $appointments = $this->adminModel->getUpcomingAppointments();
+            $booking_count = $this->adminModel->getHotelBookingsCount();
 
             $data = [
                 'patients_count' => $patients_count,
                 'doctors_count' => $doctors_count,
                 'hospitals_count' => $hospitals_count,
                 'appointments' => $appointments,
+                'booking_count' => $booking_count,
                 'basePath' => $this->basePath
             ];
 
@@ -212,10 +214,15 @@ class AdminController extends BaseController
 
     }
 
-    public function hotelBooking()
+    public function hotelBookings()
     {
         try {
-            echo $this->view('admin/hotelBookings', ['basePath' => $this->basePath]);
+            $hotelBooking = $this->adminModel->getPendingHotelBookings();
+            $data = [
+                'hotelBooking' => $hotelBooking,
+                'basePath' => $this->basePath
+            ];
+            echo $this->view('admin/hotelBookings', $data);
         } catch (\Exception $e) {
             error_log("Error in hotelBooking: " . $e->getMessage());
             echo $this->view('admin/error', ['message' => 'An error occurred while loading the hotel booking page.']);

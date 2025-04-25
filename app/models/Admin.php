@@ -1,6 +1,8 @@
 <?php
 namespace App\Models;
 
+use Exception;
+
 class Admin
 {
     protected $db;
@@ -93,12 +95,13 @@ class Admin
         }
     }
 
-    public function updateUserProfile($user_id, $first_name, $last_name, $email, $phone_number, $address_line1, $city_id){
+    public function updateUserProfile($user_id, $first_name, $last_name, $email, $phone_number, $address_line1, $city_id)
+    {
         try {
             $query = "UPDATE users
                       SET first_name = ?, last_name = ?, email = ?, phone_number = ?, address_line1 = ?, city_id = ?
                       WHERE user_id = ?;";
-        
+
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("sssssii", $first_name, $last_name, $email, $phone_number, $address_line1, $city_id, $user_id);
             return $stmt->execute();
@@ -285,6 +288,44 @@ class Admin
 
         } catch (\Exception $e) {
             error_log("Error getting appointment details: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getHotelBookingsCount()
+    {
+        try{
+            $query = "SELECT COUNT(*) AS totalPendingBookings FROM room_bookings WHERE status = 'Pending'";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $pending_bookings = 0;
+            if ($result && $row = $result->fetch_assoc()) {
+                $pending_bookings = $row['totalPendingBookings'];
+            }
+            return $pending_bookings;
+        }catch(Exception $e) {
+            error_log("Error getting Hotel Booking Count". $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getPendingHotelBookings()
+    {
+        try {
+            $query = "SELECT * FROM room_bookings WHERE status = 'Pending'";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $Hotelbookings = [];
+            // Check if results exist
+            if ($result->num_rows > 0) {
+                return $result;
+            } else {
+                return [];  // Return empty array if no results found
+            }
+        } catch (\Exception $e) {
+            error_log("Error getting pending hotel bookings: " . $e->getMessage());
             throw $e;
         }
     }
