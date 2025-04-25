@@ -107,8 +107,8 @@
 <div id="doctorModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modalTitle">Add Doctor</h2>
             <button class="close-btn">&times;</button>
+            <h2 id="modalTitle">Add Doctor</h2>
         </div>
         <form id="doctorForm">
             <input type="hidden" name="csrf_token" value="<?php echo $this->session->getCSRFToken(); ?>">
@@ -221,201 +221,299 @@
 </div>
 
 <script>
-    const basePath = '<?php echo $basePath; ?>';
-    document.addEventListener('DOMContentLoaded', function() {
-        // Search and Filter Functionality
-        const searchInput = document.getElementById('searchInput');
-        const departmentFilter = document.getElementById('departmentFilter');
-        const doctorCards = document.querySelectorAll('.doctor-card');
+    const basePath = 'http://localhost/MedCeylon';
+    document.addEventListener('DOMContentLoaded', function () {
+    // Modal Elements
+    const doctorModal = document.getElementById('doctorModal');
+    const scheduleModal = document.getElementById('scheduleModal');
 
-        function filterDoctors() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const departmentId = departmentFilter.value;
+    // Form Elements
+    const doctorForm = document.getElementById('doctorForm');
+    const scheduleForm = document.getElementById('scheduleForm');
+    const searchInput = document.getElementById('searchInput');
+    const departmentFilter = document.getElementById('departmentFilter');
 
-            doctorCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                const cardDepartment = card.dataset.department;
-                const matchesSearch = text.includes(searchTerm);
-                const matchesDepartment = !departmentId || cardDepartment === departmentId;
+    // Global functions for modal handling
+    window.closeModal = function() {
+        doctorModal.classList.remove('show');
+        doctorForm.reset();
+    };
 
-                card.style.display = matchesSearch && matchesDepartment ? 'flex' : 'none';
-            });
-        }
+    window.closeScheduleModal = function() {
+        scheduleModal.classList.remove('show');
+        scheduleForm.reset();
+    };
 
-        searchInput.addEventListener('input', filterDoctors);
-        departmentFilter.addEventListener('change', filterDoctors);
+    // Add Doctor Button
+    document.getElementById('addDoctorBtn')?.addEventListener('click', function() {
+        document.getElementById('modalTitle').textContent = 'Add Doctor';
+        doctorForm.reset();
+        document.getElementById('doctorId').value = '';
+        doctorModal.classList.add('show');
+    });
 
-        // Modal Handling
-        const doctorModal = document.getElementById('doctorModal');
-        const scheduleModal = document.getElementById('scheduleModal');
-        const doctorForm = document.getElementById('doctorForm');
-        const scheduleForm = document.getElementById('scheduleForm');
-
-        // Add Doctor
-        document.getElementById('addDoctorBtn').addEventListener('click', function() {
-            document.getElementById('modalTitle').textContent = 'Add Doctor';
-            doctorForm.reset();
-            document.getElementById('doctorId').value = '';
-            doctorModal.style.display = 'flex';
-        });
-
-        // Edit Doctor
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                try {
-                    const response = await fetch(`${basePath}/hospital/get-doctor-details?id=${doctorId}`);
-                    const data = await response.json();
-
-                    document.getElementById('modalTitle').textContent = 'Edit Doctor';
-                    document.getElementById('doctorId').value = data.doctor_id;
-                    document.getElementById('firstName').value = data.first_name;
-                    document.getElementById('lastName').value = data.last_name;
-                    document.getElementById('email').value = data.email;
-                    document.getElementById('phone').value = data.phone_number || '';
-                    document.getElementById('specialization').value = data.specialization;
-                    document.getElementById('licenseNumber').value = data.license_number;
-                    document.getElementById('department').value = data.department_id;
-
-                    doctorModal.style.display = 'flex';
-                } catch (error) {
-                    console.error('Error:', error);
+    // Edit Doctor Buttons
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const doctorId = this.dataset.id;
+            try {
+                const response = await fetch(`${basePath}/hospital/getDoctorDetails?id=${doctorId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
-            });
+                const data = await response.json();
+
+                document.getElementById('modalTitle').textContent = 'Edit Doctor';
+                document.getElementById('doctorId').value = data.doctor_id;
+                document.getElementById('firstName').value = data.first_name;
+                document.getElementById('lastName').value = data.last_name;
+                document.getElementById('email').value = data.email;
+                document.getElementById('phone').value = data.phone_number || '';
+                document.getElementById('specialization').value = data.specialization;
+                document.getElementById('licenseNumber').value = data.license_number;
+                document.getElementById('department').value = data.department_id;
+
+                doctorModal.classList.add('show');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to fetch doctor details: ' + error.message);
+            }
         });
+    });
 
-        // Manage Schedule
-        document.querySelectorAll('.schedule-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                document.getElementById('scheduleDoctor').value = doctorId;
-
-                try {
-                    const response = await fetch(`${basePath}/hospital/get-doctor-schedule?id=${doctorId}`);
-                    const schedule = await response.json();
-
-                    // Populate schedule form
-                    Object.entries(schedule).forEach(([day, times]) => {
-                        const dayInputs = scheduleForm.querySelector(`[name="schedule[${day}][start]"]`);
-                        if (dayInputs) {
-                            dayInputs.value = times.start || '';
-                            scheduleForm.querySelector(`[name="schedule[${day}][end]"]`).value = times.end || '';
-                            scheduleForm.querySelector(`[name="schedule[${day}][available]"]`).checked = times.available;
-                        }
-                    });
-
-                    scheduleModal.style.display = 'flex';
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            });
-        });
-
-        // Toggle Status
-        document.querySelectorAll('.toggle-status-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const doctorId = this.dataset.id;
-                const currentStatus = this.dataset.active === '1';
-
-                if (confirm(`Are you sure you want to ${currentStatus ? 'deactivate' : 'activate'} this doctor?`)) {
-                    try {
-                        const response = await fetch(`${basePath}/hospital/toggle-doctor-status`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `doctor_id=${doctorId}&csrf_token=${document.querySelector('[name="csrf_token"]').value}`
-                        });
-                        const data = await response.json();
-
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert(data.error || 'An error occurred');
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
+    // Schedule Buttons
+    document.querySelectorAll('.schedule-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const doctorId = this.dataset.id;
+            document.getElementById('scheduleDoctor').value = doctorId;
+            
+            try {
+                // Clear previous schedule data
+                const dayInputs = scheduleForm.querySelectorAll('input[type="time"], input[type="checkbox"]');
+                dayInputs.forEach(input => {
+                    if (input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
                     }
+                });
+                
+                // Fetch doctor's schedule
+                const response = await fetch(`${basePath}/hospital/getDoctorSchedule?id=${doctorId}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                
+                const schedule = await response.json();
+                
+                // Populate schedule form
+                for (const day in schedule) {
+                    const startTime = scheduleForm.querySelector(`input[name="schedule[${day}][start]"]`);
+                    const endTime = scheduleForm.querySelector(`input[name="schedule[${day}][end]"]`);
+                    const available = scheduleForm.querySelector(`input[name="schedule[${day}][available]"]`);
+                    
+                    if (startTime) startTime.value = schedule[day].start;
+                    if (endTime) endTime.value = schedule[day].end;
+                    if (available) available.checked = schedule[day].available == 1;
+                }
+                
+                scheduleModal.classList.add('show');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to fetch doctor schedule: ' + error.message);
+            }
+        });
+    });
+
+    // Toggle Status Buttons
+    document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const doctorId = this.dataset.id;
+            const csrf_token = document.querySelector('input[name="csrf_token"]').value;
+            
+            try {
+                const response = await fetch(`${basePath}/hospital/toggleDoctorStatus`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `doctor_id=${doctorId}&csrf_token=${csrf_token}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Toggle the visual indicator without page reload
+                    const doctorCard = this.closest('.doctor-card');
+                    const isActive = this.dataset.active === '1';
+                    this.dataset.active = isActive ? '0' : '1';
+                    
+                    if (doctorCard) {
+                        doctorCard.dataset.status = isActive ? 'inactive' : 'active';
+                    }
+                    
+                    // Optional: Show success message
+                    alert('Doctor status updated successfully');
+                    // Reload to reflect changes
+                    location.reload();
+                } else {
+                    alert(result.error || 'Failed to update doctor status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to update doctor status: ' + error.message);
+            }
+        });
+    });
+
+    // Doctor Form Submission
+    doctorForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const params = new URLSearchParams();
+        
+        for (const [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+        
+        try {
+            const response = await fetch(`${basePath}/hospital/saveDoctor`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: params.toString()
             });
-        });
-
-        // Form Submissions
-        doctorForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            try {
-                const response = await fetch(`${basePath}/hospital/save-doctor`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.error || 'An error occurred while saving the doctor');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while saving the doctor');
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-        });
-
-        scheduleForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-
-            try {
-                const response = await fetch(`${basePath}/hospital/save-doctor-schedule`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.error || 'An error occurred while saving the schedule');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while saving the schedule');
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                window.location.reload();
+            } else {
+                alert(result.error || 'An error occurred');
             }
-        });
-
-        // Close Modal Functions
-        function closeModal() {
-            doctorModal.style.display = 'none';
-            doctorForm.reset();
-        }
-
-        function closeScheduleModal() {
-            scheduleModal.style.display = 'none';
-            scheduleForm.reset();
-        }
-
-        // Close modals when clicking outside
-        document.querySelectorAll('.close-btn').forEach(btn => {
-            btn.onclick = function() {
-                const modal = this.closest('.modal');
-                if (modal === doctorModal) {
-                    closeModal();
-                } else if (modal === scheduleModal) {
-                    closeScheduleModal();
-                }
-            }
-        });
-
-        window.onclick = function(event) {
-            if (event.target === doctorModal) {
-                closeModal();
-            } else if (event.target === scheduleModal) {
-                closeScheduleModal();
-            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save doctor: ' + error.message);
         }
     });
+
+    // Schedule Form Submission
+    scheduleForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const doctorId = formData.get('doctor_id');
+        const csrf_token = formData.get('csrf_token');
+        
+        // Convert form data to structured schedule object
+        const scheduleData = {};
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        days.forEach(day => {
+            const start = formData.get(`schedule[${day}][start]`);
+            const end = formData.get(`schedule[${day}][end]`);
+            const available = formData.has(`schedule[${day}][available]`) ? 1 : 0;
+            
+            if (start || end) {
+                scheduleData[day] = {
+                    start: start || '',
+                    end: end || '',
+                    available: available
+                };
+            }
+        });
+        
+        try {
+            const response = await fetch(`${basePath}/hospital/saveDoctorSchedule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    doctor_id: doctorId,
+                    csrf_token: csrf_token,
+                    schedule: scheduleData
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                window.location.reload();
+            } else {
+                alert(result.error || 'An error occurred');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to save schedule: ' + error.message);
+        }
+    });
+
+    // Close Modals - X buttons
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const modal = this.closest('.modal');
+            if (modal === doctorModal) {
+                window.closeModal();
+            } else if (modal === scheduleModal) {
+                window.closeScheduleModal();
+            }
+        });
+    });
+
+    // Close Modals - Click outside
+    window.addEventListener('click', function(event) {
+        if (event.target === doctorModal) {
+            window.closeModal();
+        } else if (event.target === scheduleModal) {
+            window.closeScheduleModal();
+        }
+    });
+
+    // Search and Filter functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', filterDoctors);
+    }
+    
+    if (departmentFilter) {
+        departmentFilter.addEventListener('change', filterDoctors);
+    }
+    
+    function filterDoctors() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const departmentId = departmentFilter.value;
+        
+        document.querySelectorAll('.doctor-card').forEach(card => {
+            const doctorName = card.querySelector('h3').textContent.toLowerCase();
+            const doctorDepartment = card.dataset.department;
+            
+            const matchesSearch = !searchTerm || doctorName.includes(searchTerm);
+            const matchesDepartment = !departmentId || doctorDepartment === departmentId;
+            
+            if (matchesSearch && matchesDepartment) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+});
 </script>
 </body>
 

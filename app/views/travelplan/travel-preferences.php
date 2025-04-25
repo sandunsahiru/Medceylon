@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/destinations.css">
+<link rel="stylesheet" href="http://localhost/Medceylon/public/assets/css/travel-plan.css">
 
 <!-- Travel Plan Page -->
 <div class="travel-page-content">
