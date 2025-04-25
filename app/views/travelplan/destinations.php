@@ -21,7 +21,7 @@
     <div class="filter-bar">
         <form method="get" action="http://localhost/Medceylon/travelplan/destinations">
         <div class="filter-item">
-            <label for="province">Select Your Current Location</label>
+            <label for="province">Select Province:</label>
             <select id="province" name="province_id">
                 <option value="">Select Province</option>
                 <?php foreach ($provinces as $province): ?>
@@ -29,25 +29,6 @@
                 <?php endforeach; ?>
             </select>
         </div>
-
-        <div class="filter-item" id="district-container" style="display: none;">
-            <label for="district">District:</label>
-            <select name="district_id" id="district">
-                <option value="">Select District</option>
-            </select>
-        </div>
-
-        <div class="filter-item" id="town-container" style="display: none;">
-            <label for="town">Town:</label>
-            <select name="town_id" id="town">
-                <option value="">Select Town</option>
-            </select>
-        </div>
-
-            <div class="filter-item">
-                <label for="distance">Max Distance (km):</label>
-                <input type="number" name="distance" id="distance" min="0">
-            </div>
 
             <div class="filter-item">
                 <label for="wheelchair">Wheelchair Accessiblity:</label>

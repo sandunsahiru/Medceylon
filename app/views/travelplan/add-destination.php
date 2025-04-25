@@ -18,11 +18,11 @@
                         <span class="destination-name" id ="modalDestinationName"><b><?= htmlspecialchars($destination['destination_name']) ?></b></span><br>
                         
                         <!-- Check-In (Start Date) -->
-                        <label for="check_in">Check-In</label>
+                        <label for="check_in">Start Date</label>
                         <input type="date" id="check_in" name="check_in" required>
 
                         <!-- Check-Out (End Date) -->
-                        <label for="check_out">Check-Out</label>
+                        <label for="check_out">End Date</label>
                         <input type="date" id="check_out" name="check_out" required>
                     </div>
 

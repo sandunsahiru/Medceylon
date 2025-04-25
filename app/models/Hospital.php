@@ -469,7 +469,7 @@ class Hospital
             $query = "SELECT u.*, c.city_name 
                      FROM users u 
                      LEFT JOIN cities c ON u.city_id = c.city_id
-                     JOIN userroles r ON u.role_id = r.role_id 
+                     JOIN roles r ON u.role_id = r.role_id 
                      WHERE u.role_id = 1
                      ORDER BY u.first_name ASC";
             return $this->db->query($query);

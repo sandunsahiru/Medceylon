@@ -207,7 +207,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Booking successful!');
                 bookingModal.classList.remove('show');
                 // Redirect to booking details page on success
-                window.location.href = `${basePath}/accommodation/get-booking-details`;
+                console.log("Redirecting to:", `${basePath}/accommodation/accommodation-providers`);
+                window.location.href = `${basePath}/accommodation/accommodation-providers`;
             } else {
                 alert('Booking failed: ' + (result.error || 'Unknown error'));
             }
