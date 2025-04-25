@@ -138,11 +138,19 @@ class Accommodation {
 
     public function getAllBookings($userId) {
         try {
-            $sql = "SELECT aa.*, ap.name AS accommodation_name, ap.contact_info, ap.address_line1, ap.address_line2, ap.city_id, c.city_name, ap.image_path
-                    FROM accommodationassistance aa 
-                    JOIN accommodationproviders ap ON aa.accommodation_provider_id = ap.provider_id 
+            // Updated query to get data from room_bookings table
+            $sql = "SELECT rb.*, 
+                    hr.room_type, hr.cost_per_night, hr.services_offered,
+                    ap.name AS accommodation_name, ap.contact_info, 
+                    ap.address_line1, ap.address_line2, ap.city_id, 
+                    c.city_name, ap.image_path
+                    FROM room_bookings rb 
+                    JOIN hotel_rooms hr ON rb.room_id = hr.room_id
+                    JOIN accommodationproviders ap ON hr.provider_id = ap.provider_id 
                     JOIN cities c ON ap.city_id = c.city_id 
-                    WHERE aa.patient_id = ?";
+                    WHERE rb.patient_id = ?
+                    ORDER BY rb.check_in_date DESC";
+            
             $stmt = $this->db->prepare($sql);
             $stmt->bind_param("i", $userId);
             $stmt->execute();
