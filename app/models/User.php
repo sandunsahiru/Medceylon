@@ -99,6 +99,7 @@ class User {
         $stmt->bind_param("iss", $userId, $token, $expiry);
         return $stmt->execute();
     }
+    
 
     public function resetPasswordWithToken($token, $newPassword) {
         $now = date('Y-m-d H:i:s');

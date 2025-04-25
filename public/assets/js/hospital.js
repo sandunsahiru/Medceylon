@@ -118,12 +118,19 @@ function handleViewRequest(e) {
     const requestId = e.currentTarget.dataset.id;
     showLoadingSpinner();
 
-    // Replace with actual API call
-    fetch(`api/requests/${requestId}`)
-        .then(handleResponse)
-        .then(data => {
+    // Actual API call to get request details
+    fetch(`http://localhost/MedCeylon/hospital/get-request-details?id=${requestId}`)
+
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then(data => {
             hideLoadingSpinner();
             displayRequestDetails(data);
+            console.log('Request details:', data);
         })
         .catch(error => {
             hideLoadingSpinner();
@@ -131,6 +138,7 @@ function handleViewRequest(e) {
             console.error('Error:', error);
         });
 }
+
 
 function handleRespond(e) {
     e.preventDefault();
@@ -154,8 +162,7 @@ function handleApprove(e) {
     if (confirm('Are you sure you want to approve this request?')) {
         showLoadingSpinner();
         
-        // Replace with actual API call
-        fetch(`api/requests/${requestId}/approve`, {
+        fetch(`http://localhost/MedCeylon/hospital/approve-request?id=${requestId}/approve`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -183,18 +190,23 @@ function handleResponseSubmit(e) {
 
     if (!validateResponseForm(formData)) return;
 
-    const submitButton = form.querySelector('.send-response');
+    const submitButton = form.querySelector('.submit-btn');
+    if (!submitButton) {
+        console.error("Submit button not found!");
+    }
     const originalText = submitButton.innerHTML;
     submitButton.innerHTML = '<i class="ri-loader-4-line"></i> Sending...';
     submitButton.disabled = true;
 
-    // Replace with actual API call
-    fetch(`api/requests/${formData.get('request_id')}/respond`, {
+    const requestId = form.querySelector('#request_id').value;
+
+    formData.append("new_status", "Approved");
+
+    console.log("Request ID:", requestId);
+
+    fetch(`http://localhost/MedCeylon/hospital/process-response`, {
         method: 'POST',
         body: formData,
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-        }
     })
     .then(handleResponse)
     .then(() => {
@@ -297,12 +309,36 @@ function handleNotifications() {
 }
 
 function displayRequestDetails(data) {
-    // Implement request details display logic
-    console.log('Request details:', data);
+    // Populate the modal fields
+    document.getElementById('patientName').textContent = data.patient_name || 'N/A';
+    document.getElementById('patientEmail').textContent = data.patient_email || 'N/A';
+    document.getElementById('patientPhone').textContent = data.patient_phone || 'N/A';
+
+    document.getElementById('treatmentType').textContent = data.treatment_type || 'N/A';
+    document.getElementById('doctorPreference').textContent = data.doctor_preference || 'N/A';
+    document.getElementById('preferredDate').textContent = data.preferred_date || 'N/A';
+
+    document.getElementById('estimatedCost').textContent = data.estimated_cost || 'N/A';
+    document.getElementById('specialRequirements').textContent = data.special_requirements || 'N/A';
+
+    // Show the modal
+    const modal = document.getElementById('viewDetailsModal');
+    modal.classList.add('show');
+    console.log('Request details:', data)
 }
+
+function closeViewDetailsModal() {
+    const modal = document.getElementById('viewDetailsModal');
+    modal.classList.remove('show');
+}
+
 
 // Error handling
 window.addEventListener('error', function(e) {
     console.error('Global error:', e.error);
     showToast('An unexpected error occurred', 'error');
 });
+
+
+
+    

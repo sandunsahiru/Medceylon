@@ -12,7 +12,15 @@ class HospitalController extends BaseController
     {
         parent::__construct();
         $this->hospitalModel = new Hospital();
-        $this->validateAccess();
+
+        $publicMethods = ['hospitals'];
+
+        $currentMethod = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'];
+
+        if (!in_array($currentMethod, $publicMethods)) {
+            $this->validateAccess();
+        }
+        
     }
 
     private function validateAccess()
@@ -37,10 +45,12 @@ class HospitalController extends BaseController
             
             $totalData = $this->hospitalModel->getRequestStatistics();
             $requests = $this->hospitalModel->getLatestRequests(5);
+            $hospitalDetails = $this->hospitalModel->getHospitalDetails($this->session->getUserId());
             
             $data = [
                 'pageTitle' => 'Hospital Dashboard',
                 'currentPage' => 'dashboard',
+                'hospitalDetails' => $hospitalDetails,
                 'totalData' => $totalData,
                 'requests' => $requests,
                 'basePath' => $this->basePath,
@@ -56,24 +66,57 @@ class HospitalController extends BaseController
         }
     }
 
-    public function hospitals()
+    public function hospitalDetails()
     {
         try {
-            $hospitals = $this->hospitalModel->getAllHospitals();
-
+            $hospitalDetails = $this->hospitalModel->getHospitalDetails($this->session->getUserId());
+            if (!$hospitalDetails) {
+                error_log("No hospital details found for user ID: " . $this->session->getUserId());
+                $this->session->setFlash('error', 'No hospital details found');
+                header('Location: ' . $this->url('error/404'));
+                exit();
+            }
             $data = [
-                'pageTitle' => 'Hospitals',
-                'currentPage' => 'partner-hospitals',
-                'departments' => $hospitals,
+                'pageTitle' => 'Hospital Details',
+                'currentPage' => 'hospital-details',
+                'hospitalDetails' => $hospitalDetails,
                 'basePath' => $this->basePath,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success')
             ];
-            echo $this->view('hospital/pertner-hospitals', $data);
+            echo $this->view('hospital/', $data);
+        } catch (\Exception $e) {
+            error_log("Error in hospitalName: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function hospitals()
+    {
+        try {
+            error_log("Starting hospitals view");
+            $hospitals = $this->hospitalModel->getAllHospitals();
+
+            if  (!$hospitals || count($hospitals) === 0) {
+                error_log("No hospitals found");
+                $this->session->setFlash('error', 'No hospitals available');
+            }
+
+            $data = [
+                'pageTitle' => 'Hospitals',
+                'currentPage' => 'partner-hospitals',
+                'hospitals' => $hospitals,
+                'basePath' => $this->basePath,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success')
+            ];
+            echo $this->view('hospital/partner-hospitals', $data);
+            exit();
         } catch (\Exception $e) {
             error_log("Error in hospitals: " . $e->getMessage());
-            $this->session->setFlash('error', 'An error occurred while loading hospitals');
-            throw $e;
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('error/404'));
+            exit();
         }
         
     }
@@ -100,6 +143,31 @@ class HospitalController extends BaseController
             error_log("Error in departments: " . $e->getMessage());
             $this->session->setFlash('error', 'An error occurred while loading departments');
             throw $e;
+        }
+    }
+
+    public function addDepertment(){
+        try {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $departmentName = filter_var($_POST['department_name'], FILTER_SANITIZE_STRING);
+            $description = filter_var($_POST['description'], FILTER_SANITIZE_STRING);
+            $headDoctorId = filter_var($_POST['head_doctor_id'], FILTER_SANITIZE_NUMBER_INT);
+            $doctorCount = filter_var($_POST['doctor_count'], FILTER_SANITIZE_NUMBER_INT);
+            
+            $this->hospitalModel->createDepartment($departmentName, $description, $headDoctorId, $doctorCount);
+
+            $this->session->setFlash('success', 'Department added successfully');
+            header('Location: ' . $this->url('hospital/departments'));
+            exit();
+
+        } catch (\Exception $e) {
+            error_log("Error in addDepartment: " . $e->getMessage());
+            $this->session->setFlash('error', 'An error occurred while adding the department');
+            header('Location: ' . $this->url('hospital/departments'));
+            exit();
         }
     }
 
@@ -195,6 +263,25 @@ class HospitalController extends BaseController
         }
     }
 
+    public function getDoctorDetails()
+    {
+        try {
+            $doctorId = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
+            if ($doctorId <= 0) {
+                throw new \Exception('Invalid Doctor ID');
+            }
+            
+            $details = $this->hospitalModel->getDoctorDetails($doctorId);
+            
+            header('Content-Type: application/json');
+            echo json_encode($details);
+        } catch (\Exception $e) {
+            error_log("Error in getDoctorDetails: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
     public function saveDoctor()
     {
         try {
@@ -203,18 +290,19 @@ class HospitalController extends BaseController
             }
 
             $doctorData = [
-                'first_name' => $_POST['first_name'],
-                'last_name' => $_POST['last_name'],
-                'email' => $_POST['email'],
-                'phone_number' => $_POST['phone_number'],
-                'specialization' => $_POST['specialization'],
-                'license_number' => $_POST['license_number'],
-                'department_id' => $_POST['department_id'],
+                'first_name' => filter_var($_POST['first_name'], FILTER_SANITIZE_STRING),
+                'last_name' => filter_var($_POST['last_name'], FILTER_SANITIZE_STRING),
+                'email' => filter_var($_POST['email'], FILTER_SANITIZE_EMAIL),
+                'phone_number' => filter_var($_POST['phone_number'], FILTER_SANITIZE_STRING),
+                'specialization' => filter_var($_POST['specialization'], FILTER_SANITIZE_STRING),
+                'license_number' => filter_var($_POST['license_number'], FILTER_SANITIZE_STRING),
+                'department_id' => filter_var($_POST['department_id'], FILTER_VALIDATE_INT),
                 'updated_by' => $this->session->getUserId()
             ];
 
             if (!empty($_POST['doctor_id'])) {
-                $this->hospitalModel->updateDoctor($_POST['doctor_id'], $doctorData);
+                $doctorId = filter_var($_POST['doctor_id'], FILTER_VALIDATE_INT);
+                $this->hospitalModel->updateDoctor($doctorId, $doctorData);
                 $message = 'Doctor updated successfully';
             } else {
                 $this->hospitalModel->createDoctor($doctorData);
@@ -231,30 +319,31 @@ class HospitalController extends BaseController
         }
     }
 
-    public function getDoctorDetails()
-    {
-        try {
-            $doctorId = $_GET['id'] ?? 0;
-            $details = $this->hospitalModel->getDoctorDetails($doctorId);
-            
-            header('Content-Type: application/json');
-            echo json_encode($details);
-        } catch (\Exception $e) {
-            error_log("Error in getDoctorDetails: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
     public function saveDoctorSchedule()
     {
         try {
-            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
-                throw new \Exception("Invalid CSRF token");
-            }
+            if ($_SERVER['CONTENT_TYPE'] === 'application/json') {
+                $input = file_get_contents('php://input');
+                $data = json_decode($input, true);
+                
+                if (!$this->session->verifyCSRFToken($data['csrf_token'])) {
+                    throw new \Exception("Invalid CSRF token");
+                }
 
-            $doctorId = $_POST['doctor_id'];
-            $scheduleData = $_POST['schedule'];
+                $doctorId = filter_var($data['doctor_id'], FILTER_VALIDATE_INT);
+                $scheduleData = $data['schedule'];
+            } else {
+                if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                    throw new \Exception("Invalid CSRF token");
+                }
+
+                $doctorId = filter_var($_POST['doctor_id'], FILTER_VALIDATE_INT);
+                $scheduleData = $_POST['schedule'];
+            }
+            
+            if ($doctorId <= 0) {
+                throw new \Exception("Invalid doctor ID");
+            }
             
             $this->hospitalModel->updateDoctorSchedule($doctorId, $scheduleData);
             
@@ -271,7 +360,11 @@ class HospitalController extends BaseController
     public function getDoctorSchedule()
     {
         try {
-            $doctorId = $_GET['id'] ?? 0;
+            $doctorId = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
+            if ($doctorId <= 0) {
+                throw new \Exception('Invalid Doctor ID');
+            }
+            
             $schedule = $this->hospitalModel->getDoctorSchedule($doctorId);
             
             header('Content-Type: application/json');
@@ -290,11 +383,15 @@ class HospitalController extends BaseController
                 throw new \Exception("Invalid CSRF token");
             }
 
-            $doctorId = $_POST['doctor_id'];
-            $this->hospitalModel->toggleDoctorStatus($doctorId);
+            $doctorId = filter_var($_POST['doctor_id'], FILTER_VALIDATE_INT);
+            if ($doctorId <= 0) {
+                throw new \Exception("Invalid doctor ID");
+            }
+            
+            $result = $this->hospitalModel->toggleDoctorStatus($doctorId);
             
             header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => $result]);
         } catch (\Exception $e) {
             error_log("Error in toggleDoctorStatus: " . $e->getMessage());
             header('Content-Type: application/json');
@@ -329,32 +426,44 @@ class HospitalController extends BaseController
     public function getPatientDetails()
     {
         try {
-            $patientId = $_GET['id'] ?? 0;
-            $details = $this->hospitalModel->getPatientDetails($patientId);
-            
-            header('Content-Type: application/json');
-            echo json_encode($details);
+            if (!isset($_GET['id'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing patient ID']);
+                return;
+            }
+
+            $id = intval($_GET['id']);
+            $details = $this->hospitalModel->getPatientDetails($id);
+            if ($details) {
+                echo json_encode($details);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Patient not found']);
+            }
         } catch (\Exception $e) {
-            error_log("Error in getPatientDetails: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'Server error']);
         }
     }
 
-    public function getMedicalHistory()
+public function getMedicalHistory()
     {
         try {
-            $patientId = $_GET['id'] ?? 0;
-            $history = $this->hospitalModel->getPatientMedicalHistory($patientId);
-            
-            header('Content-Type: application/json');
+            if (!isset($_GET['id'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing patient ID']);
+                return;
+            }
+
+            $id = intval($_GET['id']);
+            $history = $this->hospitalModel->getPatientMedicalHistory($id);
             echo json_encode($history);
         } catch (\Exception $e) {
-            error_log("Error in getMedicalHistory: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'Server error']);
         }
     }
+
 
     // Treatment Request Methods
     public function treatmentRequests()
@@ -380,36 +489,47 @@ class HospitalController extends BaseController
     }
 
     public function processResponse()
-    {
-        try {
-            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
-                throw new \Exception("Invalid CSRF token");
-            }
+{
 
-            $requestId = $_POST['request_id'];
-            $responseData = [
-                'estimated_cost' => $_POST['estimated_cost'],
-                'response_message' => $_POST['response_message'],
-                'additional_requirements' => $_POST['additional_requirements'],
-                'updated_by' => $this->session->getUserId()
-            ];
-
-            $this->hospitalModel->updateRequest($requestId, $responseData);
-            
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
-        } catch (\Exception $e) {
-            error_log("Error in processResponse: " . $e->getMessage());
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+    try {
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
         }
+
+        if (!isset($_POST['estimated_cost'], $_POST['response_message'], $_POST['additional_requirements'])) {
+            throw new \Exception("Missing required form fields");
+        }
+
+        $requestId = $_POST['request_id'];
+        $responseData = [
+            'estimated_cost' => $_POST['estimated_cost'],
+            'response_message' => $_POST['response_message'],
+            'additional_requirements' => $_POST['additional_requirements'],
+            'updated_by' => $this->session->getUserId()
+        ];
+
+        $this->hospitalModel->updateRequest($requestId, $responseData);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+
+    } catch (\Exception $e) {
+        error_log("Error in processResponse: " . $e->getMessage());
+        header('Content-Type: application/json');
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
     }
+}
 
     public function getRequestDetails()
     {
         try {
-            $requestId = $_GET['id'] ?? 0;
+            $requestId = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
+            if ($requestId <= 0) {
+                throw new \Exception('Invalid Request ID');
+            }
+
             $details = $this->hospitalModel->getRequestDetails($requestId);
             
             header('Content-Type: application/json');
@@ -417,7 +537,25 @@ class HospitalController extends BaseController
         } catch (\Exception $e) {
             error_log("Error in getRequestDetails: " . $e->getMessage());
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            echo json_encode(['error' => 'An unexpected error occurred.']);
+        }
+    }
+    
+    public function getLatestRequests()
+    {
+        try {
+            $requestId = filter_var($_GET['id'] ?? 0, FILTER_VALIDATE_INT);
+            if ($requestId <= 0) {
+                throw new \Exception('Invalid Request ID');
+            }
+            $requests = $this->hospitalModel->getLatestRequests(2);
+            
+            header('Content-Type: application/json');
+            echo json_encode($requests);
+        } catch (\Exception $e) {
+            error_log("Error in getLatestRequests: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['error' => 'An unexpected error occurred.']);
         }
     }
 
@@ -429,12 +567,54 @@ class HospitalController extends BaseController
             }
 
             $requestId = $_POST['request_id'];
-            $this->hospitalModel->updateRequestStatus($requestId, 'Approved', $this->session->getUserId());
+            error_log("Approving request ID: " . $requestId);
+            $result = $this->hospitalModel->updateRequestStatus($requestId, 'Approved', $this->session->getUserId());
+            error_log("Request approval result: " . ($result ? "success" : "failure"));
             
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
         } catch (\Exception $e) {
             error_log("Error in approveRequest: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function rejectRequest()
+    {
+        try {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $requestId = $_POST['request_id'];
+            $this->hospitalModel->updateRequestStatus($requestId, 'Rejected', $this->session->getUserId());
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            error_log("Error in rejectRequest: " . $e->getMessage());
+            header('Content-Type: application/json');
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function completeRequest()
+    {
+        try {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $requestId = $_POST['request_id'];
+            $this->hospitalModel->updateRequestStatus($requestId, 'Completed', $this->session->getUserId());
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            error_log("Error in completeRequest: " . $e->getMessage());
             header('Content-Type: application/json');
             http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);

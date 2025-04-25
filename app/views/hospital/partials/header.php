@@ -13,6 +13,7 @@
         <aside class="sidebar">
             <div class="logo">
                 <a href="<?php echo $basePath; ?>" style="text-decoration: none; color: var(--primary-color);">
+                    <p style="text-align: center;">Hospital Admin</p>
                     <h1>MedCeylon</h1>
                 </a>
             </div>
