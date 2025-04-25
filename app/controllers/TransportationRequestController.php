@@ -4,6 +4,8 @@ namespace App\Controllers;
 use App\Models\TransportationAssistance;
 use App\Helpers\SessionHelper;
 use App\Helpers\DistanceHelper;
+use App\Models\User;
+
 
 class TransportationRequestController {
     private $model;
@@ -91,4 +93,17 @@ class TransportationRequestController {
         $this->model->delete($id, $this->session->getUserId());
         header("Location: /Medceylon/patient/transport");
     }
+
+    public function downloadReport() {
+        $userId = $this->session->getUserId();
+    
+        $userModel = new User($GLOBALS['db']);
+        $user = $userModel->getUserById($userId); // 👈 get user details
+    
+        $rides = $this->model->getAllByPatientWithVehicle($userId);
+    
+        require ROOT_PATH . '/app/views/transportation/patient/ride-report.php';
+    }
+    
+    
 }

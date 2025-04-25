@@ -11,6 +11,8 @@ $db = new mysqli($db_host, $db_user, $db_pass, $db_name);
 if ($db->connect_error) {
     die("Connection failed: " . $db->connect_error);
 }
-define('DEBUG_MODE', true); // Set to false in production
-// Make the database connection available globally
+if (!defined('DEBUG_MODE')) {
+    define('DEBUG_MODE', true);
+}
+
 return $db;

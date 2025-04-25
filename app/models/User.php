@@ -137,16 +137,13 @@ class User {
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
-    
-    public function updatePassword($email, $newPassword)
-{
-    $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-    $stmt = $this->db->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
-    $stmt->bind_param("ss", $passwordHash, $email);
-    return $stmt->execute();
-}
-    
-    
+
+    public function updatePassword($email, $newPassword) {
+        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $this->db->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
+        $stmt->bind_param("ss", $passwordHash, $email);
+        return $stmt->execute();
+    }
 
     private function insertDoctorData($userId, $userData) {
         $stmt = $this->db->prepare("INSERT INTO doctors (user_id, license_number) VALUES (?, ?)");
@@ -165,10 +162,17 @@ class User {
             'patient' => 1,
             'general_doctor' => 2,
             'special_doctor' => 3,
-            'admin' => 4,
-            'caretaker' => 5,
+            'caretaker' => 4, // ✅ Corrected from 5 → 4
+            'admin' => 5,
             'hospital' => 6,
             default => 1
         };
+    }
+
+    public function getUserById($userId) {
+        $stmt = $this->db->prepare("SELECT first_name, last_name FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
     }
 }

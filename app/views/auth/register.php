@@ -25,7 +25,7 @@
                 <option value="patient">Patient</option>
                 <option value="general_doctor">General Doctor</option>
                 <option value="special_doctor">Special Doctor</option>
-                <option value="caretaker">Caretaker</option>
+                <option value="caregiver">
             </select>
         </div>
 

@@ -8,42 +8,41 @@ class CaregiverMessageController {
 
     public function list() {
         global $db;
-    
+
         $experience = $_GET['experience'] ?? '';
         $age = $_GET['age'] ?? '';
         $search = $_GET['search'] ?? '';
         $sort = $_GET['sort'] ?? '';
-    
+
         $sql = "SELECT u.user_id, u.first_name, u.last_name, c.experience_years, u.age, u.profile_picture
                 FROM users u 
                 JOIN caretakers c ON u.user_id = c.user_id
                 WHERE u.role_id = 5 AND u.is_active = 1";
-    
+
         if ($experience !== '') {
             $sql .= " AND c.experience_years >= " . intval($experience);
         }
-    
+
         if ($age !== '') {
             $sql .= " AND u.age <= " . intval($age);
         }
-    
+
         if ($search !== '') {
             $search = $db->real_escape_string($search);
             $sql .= " AND CONCAT(u.first_name, ' ', u.last_name) LIKE '%$search%'";
         }
-    
+
         if ($sort === 'experience') {
             $sql .= " ORDER BY c.experience_years DESC";
         } elseif ($sort === 'youngest') {
             $sql .= " ORDER BY u.age ASC";
         }
-    
-        $result = $db->query($sql);
-    
-        require '../app/views/caregiver/list.php';
-    }    
 
-    // 👤 View Caregiver Profile
+        $result = $db->query($sql);
+
+        require '../app/views/caregiver/list.php';
+    }
+
     public function viewProfile($id) {
         global $db;
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -59,7 +58,6 @@ class CaregiverMessageController {
         require '../app/views/caregiver/profile.php';
     }
 
-    // 💬 Send a Message to Caregiver
     public function sendMessage($id) {
         global $db;
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -79,7 +77,6 @@ class CaregiverMessageController {
         exit();
     }
 
-    // 💬 View Chat History with Patient
     public function viewChat($id) {
         global $db;
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -103,27 +100,38 @@ class CaregiverMessageController {
         require '../app/views/caregiver/chat.php';
     }
 
-    // 📥 Caregiver Dashboard: See All Received Messages
     public function dashboard() {
-        global $db;
-        if (session_status() === PHP_SESSION_NONE) session_start();
-
-        if (!isset($_SESSION['user_id'])) {
-            echo "You must be logged in as a caregiver.";
-            exit();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
         }
 
+        if (!defined('ROOT_PATH')) {
+            define('ROOT_PATH', dirname(dirname(__DIR__)));
+        }
+
+        $conn = require ROOT_PATH . '/app/config/database.php';
         $caregiver_id = $_SESSION['user_id'];
 
-        $stmt = $db->prepare("SELECT DISTINCT sender_id, u.first_name, u.last_name
-                              FROM caregiver_messages cm
-                              JOIN users u ON cm.sender_id = u.user_id
-                              WHERE cm.receiver_id = ?
-                              ORDER BY cm.sent_at DESC");
-        $stmt->bind_param("i", $caregiver_id);
-        $stmt->execute();
-        $messages = $stmt->get_result();
+        $stmt1 = $conn->prepare("SELECT DISTINCT u.user_id, u.first_name, u.last_name, m.sender_id
+                         FROM messages m
+                         JOIN conversations c ON m.conversation_id = c.conversation_id
+                         JOIN users u ON m.sender_id = u.user_id
+                         WHERE c.participant1_id = ? OR c.participant2_id = ?");
+        $stmt1->bind_param("ii", $caregiver_id, $caregiver_id);
+        $stmt1->execute();
+        $messages = $stmt1->get_result();
 
-        require '../app/views/caregiver/dashboard.php';
+
+      
+        $stmt2 = $conn->prepare("SELECT cr.*, u.first_name, u.last_name
+                                 FROM caregiver_requests cr
+                                 JOIN users u ON cr.patient_id = u.user_id
+                                 WHERE cr.caregiver_id = ?
+                                 ORDER BY cr.request_id DESC");
+        $stmt2->bind_param("i", $caregiver_id);
+        $stmt2->execute();
+        $requests = $stmt2->get_result();
+
+        require ROOT_PATH . '/app/views/caregiver/dashboard.php';
     }
 }

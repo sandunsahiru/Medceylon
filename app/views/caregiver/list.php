@@ -1,4 +1,15 @@
-<?php $basePath = '/Medceylon'; ?>
+<?php
+if (!defined('ROOT_PATH')) {
+    define('ROOT_PATH', dirname(dirname(__DIR__)));
+}
+$db = require ROOT_PATH . '/app/config/database.php';
+
+$basePath = '/Medceylon';
+
+use App\Models\CaregiverRatingModel;
+$ratingModel = new CaregiverRatingModel($db);
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -46,8 +57,28 @@
                     <h3><?= $c['first_name'] . ' ' . $c['last_name'] ?></h3>
                     <p><strong>Experience:</strong> <?= $c['experience_years'] ?> yrs</p>
                     <p><strong>Age:</strong> <?= $c['age'] ?> y/o</p>
+
+                    <?php
+                        $avgRating = $ratingModel->getAverageRating($c['user_id']);
+                        echo '<p><strong>Rating:</strong> ' . ($avgRating ? $avgRating . ' ⭐' : 'Not rated yet') . '</p>';
+                    ?>
+
                     <div class="caregiver-actions">
                         <a href="<?= $basePath ?>/caregiver/profile/<?= $c['user_id'] ?>" class="btn">Contact</a>
+
+                        <?php
+                            $stmt = $db->prepare("SELECT status FROM caregiver_requests WHERE patient_id = ? AND caregiver_id = ? ORDER BY request_id DESC LIMIT 1");
+                            $stmt->bind_param("ii", $_SESSION['user_id'], $c['user_id']);
+                            $stmt->execute();
+                            $checkResult = $stmt->get_result();
+                            $requestStatus = $checkResult->fetch_assoc();
+                        ?>
+
+                        <?php if ($requestStatus && $requestStatus['status'] === 'Accepted'): ?>
+                            <a href="<?= $basePath ?>/caregiver/rate/<?= $c['user_id'] ?>" class="btn">Rate Caregiver</a>
+                        <?php else: ?>
+                            <p style="font-size: 13px; color: #888;">You can rate this caregiver after your request is accepted.</p>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

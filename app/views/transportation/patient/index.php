@@ -20,27 +20,37 @@
             <a href="/Medceylon/patient/transport/create" class="new-request-btn">+ New Request</a>
         </div>
 
+        <a href="/Medceylon/patient/transport/report" class="btn" target="_blank">📄 Download Ride History (PDF)</a>
+
         <?php if (empty($requests)): ?>
             <p class="empty">You have not made any requests yet.</p>
         <?php else: ?>
             <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Pickup</th>
-                        <th>Dropoff</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Vehicle</th>
-                        <th>Fare (Rs.)</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+            <thead>
+            <thead>
+    <tr>
+        <th>#</th>
+        <th>Pickup</th>
+        <th>Dropoff</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Vehicle</th>
+        <th>Fare (Rs.)</th>
+        <th>Status</th>
+        <th>Vehicle No</th>   <!-- ✅ now matches below -->
+        <th>Driver</th>
+        <th>Contact</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+
+</thead>
                 <tbody>
                     <?php foreach ($requests as $index => $req): ?>
                         <tr>
-                            <td><?= $index + 1 ?></td>
+                        <td>
+                            <?= $index + 1 ?>
+                            </td>
                             <td><?= htmlspecialchars($req['pickup_location']) ?></td>
                             <td><?= htmlspecialchars($req['dropoff_location']) ?></td>
                             <td><?= htmlspecialchars($req['date']) ?></td>
@@ -48,6 +58,11 @@
                             <td><?= htmlspecialchars($req['transport_type']) ?></td>
                             <td><?= number_format($req['fare'] ?? 0, 2) ?></td>
                             <td><?= htmlspecialchars($req['status']) ?></td>
+                            <td><?= htmlspecialchars($req['vehicle_number'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($req['driver_name'] ?? '-') ?></td>
+                            <td><?= htmlspecialchars($req['contact_number'] ?? '-') ?></td>
+            
+
                             <td>
                                 <?php if ($req['status'] === 'Pending'): ?>
                                     <div class="request-actions">
