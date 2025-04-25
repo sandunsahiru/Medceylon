@@ -80,6 +80,18 @@
                                         <i class="ri-check-line"></i>
                                         Approve
                                     </button>
+                                    <button class="action-btn reject-btn" data-id="<?php echo $request['request_id']; ?>"
+                                            title="Reject Request">
+                                            <i class="ri-close-line"></i>
+                                        Reject
+                                    </button>
+                                <?php endif; ?>
+                                <?php if ($request['request_status'] === 'Approved'): ?>
+                                    <button class="action-btn complete-btn" data-id="<?php echo $request['request_id']; ?>"
+                                            title="Approve Request">
+                                            <i class="ri-star-line"></i>
+                                        Complete
+                                    </button>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -89,19 +101,49 @@
         </main>
     </div>
 
+    <div id="viewDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>Request Details</h1>  
+            </div>
+            <div class="modal-body">
+                <div class="details-section">
+                    <h3>Patient Information</h3>
+                    <p><strong>Name:</strong> <span id="patientName"></span></p>
+                    <p><strong>Email:</strong> <span id="patientEmail"></span></p>
+                    <p><strong>Phone:</strong> <span id="patientPhone"></span></p>
+                </div>
+                <div class="details-section">
+                    <h3>Treatment Information</h3>
+                    <p><strong>Treatment Type:</strong> <span id="treatmentType"></span></p>
+                    <p><strong>Doctor Preference:</strong> <span id="doctorPreference"></span></p>
+                    <p><strong>Preferred Date:</strong> <span id="preferredDate"></span></p>
+                </div>
+                <div class="details-section">
+                    <h3>Additional Information</h3>
+                    <p><strong>Estimated Cost:</strong> $<span id="estimatedCost"></span></p>
+                    <p><strong>Special Requirements:</strong> <span id="specialRequirements"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="close-btn" onclick="closeViewDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div> 
+
     <!-- Response Modal -->
     <div id="responseModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Respond to Treatment Request</h2>
                 <button class="close-btn">&times;</button>
+                <h2>Respond to Treatment Request</h2>
             </div>
             <form id="responseForm">
                 <input type="hidden" name="request_id" id="request_id">
                 <div class="form-group">
                     <label for="estimated_cost">Estimated Cost ($)</label>
                     <input type="number" id="estimated_cost" name="estimated_cost" 
-                           min="0" step="0.01" required>
+                           min="0" step="100" required>
                 </div>
                 <div class="form-group">
                     <label for="response_message">Response Message</label>
@@ -128,7 +170,9 @@
     </div>
 
     <script>
-        const basePath = '<?php echo $basePath; ?>';
+        const basePath = "http://localhost/MedCeylon";
+        const csrfToken = "<?php echo $this->session->getCSRFToken(); ?>";
+
         document.addEventListener('DOMContentLoaded', function() {
             // Search Functionality
             const searchInput = document.getElementById('searchInput');
@@ -155,78 +199,237 @@
             // Modal Handling
             const modal = document.getElementById('responseModal');
             const closeBtn = modal.querySelector('.close-btn');
+            const viewDetailsModal = document.getElementById('viewDetailsModal');
 
+            // View button handler
             document.querySelectorAll('.action-btn.view-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const requestId = this.dataset.id;
                     try {
+                        showLoadingSpinner();
                         const response = await fetch(`${basePath}/hospital/get-request-details?id=${requestId}`);
+                        hideLoadingSpinner();
+                        
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
                         const data = await response.json();
-                        // Handle view details
-                        console.log(data);
+                        
+                        // Populate the view details modal
+                        document.getElementById('patientName').textContent = data.patient_name || 'N/A';
+                        document.getElementById('patientEmail').textContent = data.patient_email || 'N/A';
+                        document.getElementById('patientPhone').textContent = data.patient_phone || 'N/A';
+                        document.getElementById('treatmentType').textContent = data.treatment_type || 'N/A';
+                        document.getElementById('doctorPreference').textContent = data.doctor_preference || 'N/A';
+                        document.getElementById('preferredDate').textContent = data.preferred_date || 'N/A';
+                        document.getElementById('estimatedCost').textContent = data.estimated_cost || 'N/A';
+                        document.getElementById('specialRequirements').textContent = data.special_requirements || 'N/A';
+                        
+                        // Show the view details modal
+                        viewDetailsModal.classList.add('show');
                     } catch (error) {
                         console.error('Error:', error);
+                        showToast('Error loading request details', 'error');
                     }
                 });
             });
 
+            // Response button handler
             document.querySelectorAll('.action-btn.respond-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const requestId = this.dataset.id;
                     document.getElementById('request_id').value = requestId;
-                    modal.style.display = 'flex';
+                    modal.classList.add('show');
                 });
             });
 
+            // Close modal buttons
+            closeBtn.onclick = () => modal.classList.remove('show');
+            window.onclick = (e) => {
+                if (e.target === modal) modal.classList.remove('show');
+                if (e.target === viewDetailsModal) viewDetailsModal.classList.remove('show');
+            }
+
+            // Response form submission
+    document.getElementById('responseForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            showLoadingSpinner();
+            const response = await fetch(`${basePath}/hospital/process-response`, {
+                method: 'POST',
+                body: formData
+            });
+            hideLoadingSpinner();
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                showToast("Server error: " + (errorData.error || "Unknown error"), 'error');
+                return;
+            }
+            
+            const data = await response.json();
+            if (data.success) {
+                showToast('Response sent successfully', 'success');
+                closeModal();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'An error occurred', 'error');
+            }
+        } catch (error) {
+            hideLoadingSpinner();
+            console.error('Error:', error);
+            showToast('Error sending response', 'error');
+        }
+    });
+
+            // Handle approve, reject, and complete buttons
             document.querySelectorAll('.action-btn.approve-btn').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const requestId = this.dataset.id;
                     if (confirm('Are you sure you want to approve this request?')) {
                         try {
+                            showLoadingSpinner();
                             const response = await fetch(`${basePath}/hospital/approve-request`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
                                 },
-                                body: `request_id=${requestId}`
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
                             });
+                            hideLoadingSpinner();
+                            
+                            if (!response.ok) {
+                                const errorData = await response.json();
+                                console.error("Server error:", errorData);
+                                showToast("Server error: " + (errorData.error || "Unknown error"), 'error');
+                                return;
+                            }
+
                             const data = await response.json();
                             if (data.success) {
-                                location.reload();
+                                showToast('Request approved successfully', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showToast(data.error || 'An error occurred', 'error');
                             }
                         } catch (error) {
+                            hideLoadingSpinner();
                             console.error('Error:', error);
+                            showToast('Error approving request', 'error');
                         }
                     }
                 });
             });
 
-            // Response form submission
-            document.getElementById('responseForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                
-                try {
-                    const response = await fetch(`${basePath}/hospital/process-response`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        modal.style.display = 'none';
-                        location.reload();
+            document.querySelectorAll('.action-btn.reject-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const requestId = this.dataset.id;
+                    if (confirm('Are you sure you want to reject this request?')) {
+                        try {
+                            showLoadingSpinner();
+                            const response = await fetch(`${basePath}/hospital/reject-request`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
+                            });
+                            hideLoadingSpinner();
+                            
+                            const data = await response.json();
+                            if (data.success) {
+                                showToast('Request rejected successfully', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showToast(data.error || 'An error occurred', 'error');
+                            }
+                        } catch (error) {
+                            hideLoadingSpinner();
+                            console.error('Error:', error);
+                            showToast('Error rejecting request', 'error');
+                        }
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                }
+                });
             });
 
-            closeBtn.onclick = () => modal.style.display = 'none';
-            window.onclick = (e) => {
-                if (e.target === modal) modal.style.display = 'none';
-            }
+            document.querySelectorAll('.action-btn.complete-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const requestId = this.dataset.id;
+                    if (confirm('Are you sure you want to mark this request as completed?')) {
+                        try {
+                            showLoadingSpinner();
+                            const response = await fetch(`${basePath}/hospital/complete-request`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                body: `request_id=${requestId}&csrf_token=${csrfToken}`
+                            });
+                            hideLoadingSpinner();
+                            
+                            const data = await response.json();
+                            if (data.success) {
+                                showToast('Request marked as completed', 'success');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showToast(data.error || 'An error occurred', 'error');
+                            }
+                        } catch (error) {
+                            hideLoadingSpinner();
+                            console.error('Error:', error);
+                            showToast('Error completing request', 'error');
+                        }
+                    }
+                });
+            });
         });
+
+        // Utility functions
+        function closeModal() {
+            const modal = document.getElementById('responseModal');
+            modal.classList.remove('show');
+        }
+
+        function closeViewDetailsModal() {
+            const modal = document.getElementById('viewDetailsModal');
+            modal.classList.remove('show');
+        }
+
+        function showLoadingSpinner() {
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            document.body.appendChild(spinner);
+        }
+
+        function hideLoadingSpinner() {
+            const spinner = document.querySelector('.loading-spinner');
+            if (spinner) spinner.remove();
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            
+            const container = document.querySelector('.toast-container') || createToastContainer();
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => toast.classList.add('show'));
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
     </script>
 </body>
 </html>

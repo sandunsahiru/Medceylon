@@ -73,8 +73,8 @@
     <div id="departmentModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Add Department</h2>
                 <button class="close-btn">&times;</button>
+                <h2 id="modalTitle">Add Department</h2>
             </div>
             <form id="departmentForm">
                 <input type="hidden" name="csrf_token" value="<?php echo $this->session->getCSRFToken(); ?>">
@@ -107,7 +107,7 @@
                         <i class="ri-save-line"></i>
                         Save Department
                     </button>
-                    <button type="button" class="cancel-btn" onclick="closeModal()">
+                    <button type="button" class="close-btn" onclick="closeModal()">
                         <i class="ri-close-line"></i>
                         Cancel
                     </button>
@@ -120,8 +120,8 @@
     <div id="deleteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Delete Department</h2>
                 <button class="close-btn">&times;</button>
+                <h2>Delete Department</h2>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this department? This action cannot be undone.</p>
@@ -131,7 +131,7 @@
                     <i class="ri-delete-bin-line"></i>
                     Delete
                 </button>
-                <button class="cancel-btn" onclick="closeDeleteModal()">
+                <button class="close-btn" onclick="closeDeleteModal()">
                     <i class="ri-close-line"></i>
                     Cancel
                 </button>
@@ -141,138 +141,139 @@
 
     <script>
         const basePath = '<?php echo $basePath; ?>';
-        document.addEventListener('DOMContentLoaded', function() {
-            // Search Functionality
-            const searchInput = document.getElementById('searchInput');
-            const departmentCards = document.querySelectorAll('.department-card');
+        document.addEventListener('DOMContentLoaded', function () {
+    // Search Functionality
+        const searchInput = document.getElementById('searchInput');
+        const departmentCards = document.querySelectorAll('.department-card');
 
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                departmentCards.forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    card.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-                });
+        searchInput.addEventListener('input', function () {
+            const searchTerm = this.value.toLowerCase();
+            departmentCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(searchTerm) ? 'flex' : 'none';
             });
+        });
 
-            // Modal Handling
-            const departmentModal = document.getElementById('departmentModal');
-            const deleteModal = document.getElementById('deleteModal');
-            const departmentForm = document.getElementById('departmentForm');
-            let currentDepartmentId = null;
+        // Modal Handling
+        const departmentModal = document.getElementById('departmentModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const departmentForm = document.getElementById('departmentForm');
+        let currentDepartmentId = null;
 
-            // Add Department Button
-            document.getElementById('addDepartmentBtn').addEventListener('click', function() {
-                document.getElementById('modalTitle').textContent = 'Add Department';
-                departmentForm.reset();
-                document.getElementById('departmentId').value = '';
-                departmentModal.style.display = 'flex';
-            });
+        // Add Department Button
+        document.getElementById('addDepartmentBtn').addEventListener('click', function () {
+            document.getElementById('modalTitle').textContent = 'Add Department';
+            departmentForm.reset();
+            document.getElementById('departmentId').value = '';
+            departmentModal.classList.add('show'); // Show the modal
+        });
 
-            // Edit Department Buttons
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const departmentId = this.dataset.id;
-                    try {
-                        const response = await fetch(`${basePath}/hospital/get-department-details?id=${departmentId}`);
-                        const data = await response.json();
-                        
-                        document.getElementById('modalTitle').textContent = 'Edit Department';
-                        document.getElementById('departmentId').value = data.department_id;
-                        document.getElementById('departmentName').value = data.department_name;
-                        document.getElementById('description').value = data.description;
-                        document.getElementById('headDoctor').value = data.head_doctor_id || '';
-                        
-                        departmentModal.style.display = 'flex';
-                    } catch (error) {
-                        console.error('Error:', error);
-                    }
-                });
-            });
-
-            // Delete Department Buttons
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    currentDepartmentId = this.dataset.id;
-                    deleteModal.style.display = 'flex';
-                });
-            });
-
-            // Form Submission
-            departmentForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                
+        // Edit Department Buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', async function () {
+                const departmentId = this.dataset.id;
                 try {
-                    const response = await fetch(`${basePath}/hospital/save-department`, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const response = await fetch(`${basePath}/hospital/get-department-details?id=${departmentId}`);
                     const data = await response.json();
-                    
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.error || 'An error occurred');
-                    }
+
+                    document.getElementById('modalTitle').textContent = 'Edit Department';
+                    document.getElementById('departmentId').value = data.department_id;
+                    document.getElementById('departmentName').value = data.department_name;
+                    document.getElementById('description').value = data.description;
+                    document.getElementById('headDoctor').value = data.head_doctor_id || '';
+
+                    departmentModal.classList.add('show'); // Show the modal
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('An error occurred while saving the department');
+                    alert('Failed to fetch department details');
                 }
             });
+        });
 
-            // Confirm Delete
-            document.getElementById('confirmDelete').addEventListener('click', async function() {
-                try {
-                    const response = await fetch(`${basePath}/hospital/delete-department`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `department_id=${currentDepartmentId}&csrf_token=${document.querySelector('[name="csrf_token"]').value}`
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.error || 'An error occurred');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('An error occurred while deleting the department');
-                }
+        // Delete Department Buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                currentDepartmentId = this.dataset.id;
+                deleteModal.classList.add('show'); // Show the delete modal
             });
+        });
 
-            // Close Modals
-            function closeModal() {
-                departmentModal.style.display = 'none';
-                departmentForm.reset();
-            }
+        // Form Submission
+        departmentForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
 
-            function closeDeleteModal() {
-                deleteModal.style.display = 'none';
-                currentDepartmentId = null;
-            }
+            try {
+                const response = await fetch(`${basePath}/hospital/save-department`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
 
-            document.querySelectorAll('.close-btn').forEach(btn => {
-                btn.onclick = function() {
-                    const modal = this.closest('.modal');
-                    if (modal === departmentModal) {
-                        closeModal();
-                    } else if (modal === deleteModal) {
-                        closeDeleteModal();
-                    }
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'An error occurred');
                 }
-            });
-
-            window.onclick = function(event) {
-                if (event.target === departmentModal) {
-                    closeModal();
-                } else if (event.target === deleteModal) {
-                    closeDeleteModal();
-                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while saving the department');
             }
         });
+
+        // Confirm Delete
+        document.getElementById('confirmDelete').addEventListener('click', async function () {
+            try {
+                const response = await fetch(`${basePath}/hospital/delete-department`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `department_id=${currentDepartmentId}&csrf_token=${document.querySelector('[name="csrf_token"]').value}`
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error || 'An error occurred');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the department');
+            }
+        });
+
+        // Close Modals
+        function closeModal() {
+            departmentModal.classList.remove('show'); // Hide the modal
+            departmentForm.reset();
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('show'); // Hide the delete modal
+            currentDepartmentId = null;
+        }
+
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.onclick = function () {
+                const modal = this.closest('.modal');
+                if (modal === departmentModal) {
+                    closeModal();
+                } else if (modal === deleteModal) {
+                    closeDeleteModal();
+                }
+            };
+        });
+
+        window.onclick = function (event) {
+            if (event.target === departmentModal) {
+                closeModal();
+            } else if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        };
+    });
     </script>
 </body>
 </html>

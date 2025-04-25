@@ -32,13 +32,36 @@ class Hospital
         }
     }
 
-    public function getAllHospitals(){
+    public function getAllHospitals()
+    {
         try{
-            $query = "SELECT * 
+            $sql = "SELECT * 
                     FROM hospitals";
-            return $this->db->query($query);
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
         }catch (\Exception $e) {
             error_log("Error in getAllHospitals: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getHospitalDetails($userId)
+    {
+        try {
+            $query = "SELECT h.* 
+                      FROM hospitals h 
+                      JOIN users u ON h.user_id = u.user_id  
+                      WHERE u.user_id = ?";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in getHospitalName: " . $e->getMessage());
             throw $e;
         }
     }
@@ -88,7 +111,7 @@ class Hospital
             $this->db->begin_transaction();
 
             $query = "INSERT INTO hospital_departments 
-                      (department_name, description, head_doctor_id, created_by) 
+                      (department_name, description, head_doctor_id, doctor_count) 
                       VALUES (?, ?, ?, ?)";
 
             $stmt = $this->db->prepare($query);
@@ -97,7 +120,7 @@ class Hospital
                 $data['department_name'],
                 $data['description'],
                 $data['head_doctor'],
-                $data['updated_by']
+                $data['doctor_count']
             );
 
             if (!$stmt->execute()) {
@@ -410,18 +433,19 @@ class Hospital
 
             // Insert new schedule
             $insertQuery = "INSERT INTO doctor_schedules 
-                           (doctor_id, day, start_time, end_time, is_available) 
-                           VALUES (?, ?, ?, ?, ?)";
+                        (doctor_id, day, start_time, end_time, is_available) 
+                        VALUES (?, ?, ?, ?, ?)";
             $stmt = $this->db->prepare($insertQuery);
 
             foreach ($scheduleData as $day => $times) {
+                $available = isset($times['available']) ? $times['available'] : 0;
                 $stmt->bind_param(
                     "isssi",
                     $doctorId,
                     $day,
                     $times['start'],
                     $times['end'],
-                    $times['available']
+                    $available
                 );
 
                 if (!$stmt->execute()) {
@@ -480,13 +504,14 @@ class Hospital
             $query = "SELECT h.*, 
                       CONCAT(d.first_name, ' ', d.last_name) as doctor_name,
                       tr.treatment_type,
-                      tr.request_status
-                      FROM health_recorda h
-                      JOIN treatment_requests tr ON h.request_id = tr.request_id
+                      tr.request_status, a.appointment_date
+                      FROM healthrecords h
+                      JOIN treatment_requests tr ON h.record_id = tr.request_id
                       LEFT JOIN doctors doc ON h.doctor_id = doc.doctor_id
                       LEFT JOIN users d ON doc.user_id = d.user_id
+                      LEFT JOIN appointments a ON h.appointment_id = a.appointment_id
                       WHERE tr.patient_id = ?
-                      ORDER BY h.appointment_date DESC";
+                      ORDER BY h.date_created DESC";
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("i", $patientId);
@@ -526,7 +551,7 @@ class Hospital
         }
     }
 
-    public function getLatestRequests($limit = 5)
+    public function getLatestRequests($limit)
     {
         try {
             $query = "SELECT 
@@ -560,41 +585,37 @@ class Hospital
     {
         try {
             $this->db->begin_transaction();
-
+    
+            // Fetch old status
+            $statusQuery = "SELECT request_status FROM treatment_requests WHERE request_id = ?";
+            $statusStmt = $this->db->prepare($statusQuery);
+            $statusStmt->bind_param("i", $requestId);
+            $statusStmt->execute();
+            $statusResult = $statusStmt->get_result();
+            $row = $statusResult->fetch_assoc();
+            $oldStatus = $row['request_status'];
+    
+            // Update treatment_requests
             $query = "UPDATE treatment_requests SET 
-                      estimated_cost = ?,
-                      response_message = ?,
-                      additional_requirements = ?,
-                      updated_by = ?,
-                      updated_at = NOW()
+                      estimated_cost = ?, 
+                      response_message = ?, 
+                      additional_requirements = ?, 
+                      last_updated = NOW()
                       WHERE request_id = ?";
-
+    
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
-                "dasii",
+                "dsssi",
                 $data['estimated_cost'],
                 $data['response_message'],
                 $data['additional_requirements'],
-                $data['updated_by'],
                 $requestId
             );
-
+    
             if (!$stmt->execute()) {
                 throw new \Exception($stmt->error);
             }
-
-            // Add notification
-            $notificationQuery = "INSERT INTO notifications 
-                                (user_id, type, message, related_id) 
-                                SELECT patient_id, 'request_update', 
-                                'Your treatment request has been updated', request_id 
-                                FROM treatment_requests 
-                                WHERE request_id = ?";
-
-            $notifStmt = $this->db->prepare($notificationQuery);
-            $notifStmt->bind_param("i", $requestId);
-            $notifStmt->execute();
-
+    
             $this->db->commit();
             return true;
         } catch (\Exception $e) {
@@ -603,38 +624,30 @@ class Hospital
             throw $e;
         }
     }
+    
 
     public function updateRequestStatus($requestId, $status, $updatedBy)
     {
         try {
+            error_log("Starting updateRequestStatus: ID=$requestId, Status=$status, UpdatedBy=$updatedBy");
             $this->db->begin_transaction();
 
             $query = "UPDATE treatment_requests SET 
                       request_status = ?,
-                      updated_by = ?,
-                      updated_at = NOW()
+                      last_updated_by = ?,
+                      last_updated = NOW()
                       WHERE request_id = ?";
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("sii", $status, $updatedBy, $requestId);
 
             if (!$stmt->execute()) {
+                error_log("SQL Error: " . $stmt->error);
                 throw new \Exception($stmt->error);
             }
 
-            // Add notification
-            $notificationQuery = "INSERT INTO notifications 
-                                (user_id, type, message, related_id) 
-                                SELECT patient_id, 'status_update', 
-                                CONCAT('Your request status has been updated to ', ?), 
-                                request_id 
-                                FROM treatment_requests 
-                                WHERE request_id = ?";
-
-            $notifStmt = $this->db->prepare($notificationQuery);
-            $notifStmt->bind_param("si", $status, $requestId);
-            $notifStmt->execute();
-
+            error_log("Query executed successfully. Affected rows: " . $stmt->affected_rows);
+        
             $this->db->commit();
             return true;
         } catch (\Exception $e) {
@@ -665,10 +678,17 @@ class Hospital
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("i", $requestId);
             $stmt->execute();
-            return $stmt->get_result()->fetch_assoc();
+            $result = $stmt->get_result()->fetch_assoc();
+
+            if (!$result) {
+                throw new \Exception('Treatment request not found');
+            }
+
+            return $result;
         } catch (\Exception $e) {
             error_log("Error in getRequestDetails: " . $e->getMessage());
             throw $e;
         }
     }
+
 }

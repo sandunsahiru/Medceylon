@@ -5,6 +5,7 @@ ini_set('display_errors', 1);
 
 define('ROOT_PATH', dirname(__DIR__));
 
+
 // Require dependencies
 require_once ROOT_PATH . '/vendor/autoload.php';
 
@@ -112,8 +113,11 @@ try {
     $router->post('/vpdoctor/update-specializations', 'VPDoctorController', 'updateSpecializations', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/vpdoctor/profile', 'VPDoctorController', 'profile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
+    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals', \App\Core\Middleware\AuthMiddleware::class);
+
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->get('hospital/partials/header', 'HospitalController', 'hospitalName', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/treatment-requests', 'HospitalController', 'treatmentRequests', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/doctors', 'HospitalController', 'doctors', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/departments', 'HospitalController', 'departments', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -124,6 +128,7 @@ try {
     $router->post('/hospital/process-response', 'HospitalController', 'processResponse', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/get-department-details', 'HospitalController', 'getDepartmentDetails', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->post('/hospital/save-department', 'HospitalController', 'saveDepartment', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->post('/hospital/add-department', 'HospitalController', 'addDepartment', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->post('/hospital/delete-department', 'HospitalController', 'deleteDepartment', \App\Core\Middleware\HospitalAuthMiddleware::class);
 
     // Doctor Management Routes
@@ -139,6 +144,8 @@ try {
 
     // Treatment Request Management Routes
     $router->post('/hospital/approve-request', 'HospitalController', 'approveRequest', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->post('/hospital/reject-request', 'HospitalController', 'rejectRequest', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/hospital/complete-request', 'HospitalController', 'completeRequest', \App\Core\Middleware\AuthMiddleware::class);
 
     // Patient routes (existing)
     $router->get('/patient/dashboard', 'PatientController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
@@ -164,6 +171,8 @@ try {
     $router->post('/travelplan/add-destination', 'TravelPlanController', 'addDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/edit-plan', 'TravelPlanController','editDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/delete-destination', 'TravelPlanController','deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/provinces', 'TravelPlanController','provinces', \App\Core\Middleware\AuthMiddleware::class);
+    
     $router->get('/travelplan/travel-plans', 'TravelPlanController','TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
     
@@ -199,6 +208,15 @@ $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond'
 
     // TEMP TEST (Remove later)
     $router->get('/agent/test', 'AgentTransportationController', 'index');
+
+
+    $router->post('/travelplan/districts', 'TravelPlanController', 'districts', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/towns', 'TravelPlanController', 'towns', \App\Core\Middleware\AuthMiddleware::class);
+
+    $router->get('/accommodation/accommodation-providers','AccommodationController', 'accommodations', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
 
 
     // Set 404 handler
