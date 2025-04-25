@@ -84,7 +84,7 @@
 </div>
 <br>
 
-<button onclick="location.href='<?php echo $basePath; ?>/accommodation/get-booking-details';">View Bookings</button>
+<button onclick="location.href='<?php echo $basePath; ?>/accommodation/get-booking-details';">View Booking Status</button>
 <br>
 <br>
 
@@ -123,6 +123,8 @@
             <input type="hidden" name="accommodation_provider_id" id="accommodationProviderId">
             <input type="hidden" name="patient_id" value="<?php echo $_SESSION['user_id']; ?>">
             <input type="hidden" name="accommodation_type" id="accommodationType">
+            <input type="hidden" name="room_type" id="roomType">
+            <input type="hidden" name="total_price" id="totalPriceInput">
             
             <div class="form-group">
                 <label for="accommodationName">Accommodation</label>

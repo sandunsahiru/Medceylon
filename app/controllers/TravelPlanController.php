@@ -359,4 +359,119 @@ class TravelPlanController extends BaseController
         }
     }
 
+    public function markCompleted()
+    {
+        try {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $travel_id = filter_var($_POST['travel_id'], FILTER_SANITIZE_NUMBER_INT);
+            
+            if (empty($travel_id)) {
+                throw new \Exception('Invalid travel plan ID');
+            }
+
+            error_log("Marking travel plan as completed - ID: " . $travel_id);
+
+            if ($this->travelPlanModel->markTravelPlanCompleted($travel_id)) {
+                $this->session->setFlash('success', 'Travel plan marked as completed!');
+            } else {
+                throw new \Exception('Failed to update travel plan status');
+            }
+
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in markCompleted: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error updating travel plan: ' . $e->getMessage());
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
+        }
+    }
+
+    public function addMemories()
+    {
+        try {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $travel_id = filter_var($_POST['travel_id'], FILTER_SANITIZE_NUMBER_INT);
+            $note = filter_var($_POST['memory_note'], FILTER_SANITIZE_STRING);
+            $rating = filter_var($_POST['rating'], FILTER_SANITIZE_NUMBER_INT);
+            
+            if (empty($travel_id)) {
+                throw new \Exception('Invalid travel plan ID');
+            }
+            
+            // Process photo uploads
+            $photos = [];
+            if (!empty($_FILES['memory_photos']['name'][0])) {
+                $uploadDir = 'public/uploads/memories/';
+                
+                // Create directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                // Process each uploaded file
+                $fileCount = count($_FILES['memory_photos']['name']);
+                for ($i = 0; $i < $fileCount; $i++) {
+                    // Check if upload is valid
+                    if ($_FILES['memory_photos']['error'][$i] === UPLOAD_ERR_OK) {
+                        $tempName = $_FILES['memory_photos']['tmp_name'][$i];
+                        $originalName = $_FILES['memory_photos']['name'][$i];
+                        
+                        // Create unique filename
+                        $extension = pathinfo($originalName, PATHINFO_EXTENSION);
+                        $newFileName = uniqid('memory_') . '.' . $extension;
+                        $destination = $uploadDir . $newFileName;
+                        
+                        // Move the uploaded file
+                        if (move_uploaded_file($tempName, $destination)) {
+                            $photos[] = $destination;
+                        }
+                    }
+                }
+            }
+            
+            // Save memories data
+            if ($this->travelPlanModel->addTravelMemories($travel_id, $note, $rating, $photos)) {
+                $this->session->setFlash('success', 'Memories added successfully!');
+            } else {
+                throw new \Exception('Failed to add memories');
+            }
+
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in addMemories: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error adding memories: ' . $e->getMessage());
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
+        }
+    }
+
+    public function getMemories()
+    {
+        try {
+            $travel_id = filter_var($_GET['travel_id'], FILTER_SANITIZE_NUMBER_INT);
+            
+            if (empty($travel_id)) {
+                throw new \Exception('Invalid travel plan ID');
+            }
+            
+            $memories = $this->travelPlanModel->getTravelMemories($travel_id);
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'memories' => $memories]);
+            exit();
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit();
+        }
+    }
+
 }

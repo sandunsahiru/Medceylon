@@ -219,4 +219,198 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+
+    const markCompletedModal = document.getElementById('markCompletedModal');
+    const markCompletedButtons = document.querySelectorAll('.mark-completed-button');
+    const closeMarkCompletedModal = document.getElementById('closeMarkCompletedModal');
+    const cancelMarkCompleted = document.getElementById('cancelMarkCompleted');
+    const completeTraveId = document.getElementById('complete_travel_id');
+
+    if (markCompletedModal && markCompletedButtons.length) {
+        markCompletedButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const travelId = button.getAttribute('data-plan-travelid');
+                completeTraveId.value = travelId;
+                markCompletedModal.classList.add('active');
+            });
+        });
+
+        closeMarkCompletedModal.addEventListener('click', () => {
+            markCompletedModal.classList.remove('active');
+        });
+
+        cancelMarkCompleted.addEventListener('click', () => {
+            markCompletedModal.classList.remove('active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === markCompletedModal) {
+                markCompletedModal.classList.remove('active');
+            }
+        });
+    }
+
+    // Add Memories Modal
+    const addMemoriesModal = document.getElementById('addMemoriesModal');
+    const addMemoriesButtons = document.querySelectorAll('.add-memories-button');
+    const closeAddMemoriesModal = document.getElementById('closeAddMemoriesModal');
+    const cancelAddMemories = document.getElementById('cancelAddMemories');
+    const memoriesTraveId = document.getElementById('memories_travel_id');
+    const memoriesDestinationName = document.getElementById('memoriesDestinationName');
+    const photoInput = document.getElementById('memory_photos');
+    const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+
+    if (addMemoriesModal && addMemoriesButtons.length) {
+        addMemoriesButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const travelId = button.getAttribute('data-plan-travelid');
+                const destinationName = button.getAttribute('data-plan-name');
+                
+                memoriesTraveId.value = travelId;
+                memoriesDestinationName.textContent = destinationName;
+                
+                // Clear any existing preview
+                if (photoPreviewContainer) {
+                    photoPreviewContainer.innerHTML = '';
+                }
+                
+                addMemoriesModal.classList.add('active');
+            });
+        });
+
+        // Photo preview functionality
+        if (photoInput && photoPreviewContainer) {
+            photoInput.addEventListener('change', () => {
+                photoPreviewContainer.innerHTML = '';
+                
+                if (photoInput.files.length > 5) {
+                    alert('You can upload a maximum of 5 photos');
+                    photoInput.value = '';
+                    return;
+                }
+                
+                for (let i = 0; i < photoInput.files.length; i++) {
+                    const file = photoInput.files[i];
+                    
+                    if (!file.type.match('image.*')) {
+                        continue;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const preview = document.createElement('div');
+                        preview.className = 'photo-preview';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.title = file.name;
+                        
+                        preview.appendChild(img);
+                        photoPreviewContainer.appendChild(preview);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        closeAddMemoriesModal.addEventListener('click', () => {
+            addMemoriesModal.classList.remove('active');
+        });
+
+        cancelAddMemories.addEventListener('click', () => {
+            addMemoriesModal.classList.remove('active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === addMemoriesModal) {
+                addMemoriesModal.classList.remove('active');
+            }
+        });
+    }
+
+    // View Memories Modal
+    const viewMemoriesModal = document.getElementById('viewMemoriesModal');
+    const viewMemoriesButtons = document.querySelectorAll('.view-memories-button');
+    const closeViewMemoriesModal = document.getElementById('closeViewMemoriesModal');
+    const viewMemoriesContent = document.getElementById('viewMemoriesContent');
+    const viewMemoriesDestinationName = document.getElementById('viewMemoriesDestinationName');
+
+    if (viewMemoriesModal && viewMemoriesButtons.length) {
+        viewMemoriesButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const travelId = button.getAttribute('data-plan-travelid');
+                
+                // Show loading state
+                viewMemoriesContent.innerHTML = '<div class="memory-loading">Loading memories...</div>';
+                viewMemoriesModal.classList.add('active');
+                
+                // Fetch memories data
+                fetch(`/travelplan/getMemories?travel_id=${travelId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.memories) {
+                            const memories = data.memories;
+                            viewMemoriesDestinationName.textContent = memories.destination_name;
+                            
+                            let memoryHTML = `
+                                <div class="memory-content">
+                                    <div class="memory-rating">
+                                        <p>Rating: ${generateStars(memories.rating)}</p>
+                                    </div>
+                                    <div class="memory-note">
+                                        <p>${memories.note || 'No notes added'}</p>
+                                    </div>
+                                    <div class="memory-date">
+                                        <p>Added on: ${new Date(memories.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            if (memories.photos && memories.photos.length > 0) {
+                                memoryHTML += '<div class="memory-photos">';
+                                memories.photos.forEach(photo => {
+                                    memoryHTML += `
+                                        <div class="memory-photo">
+                                            <img src="${photo.photo_path}" alt="Travel Memory">
+                                        </div>
+                                    `;
+                                });
+                                memoryHTML += '</div>';
+                            } else {
+                                memoryHTML += '<p class="no-photos">No photos added</p>';
+                            }
+                            
+                            viewMemoriesContent.innerHTML = memoryHTML;
+                        } else {
+                            viewMemoriesContent.innerHTML = '<p class="error-message">Failed to load memories</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching memories:', error);
+                        viewMemoriesContent.innerHTML = '<p class="error-message">Failed to load memories</p>';
+                    });
+            });
+        });
+
+        closeViewMemoriesModal.addEventListener('click', () => {
+            viewMemoriesModal.classList.remove('active');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === viewMemoriesModal) {
+                viewMemoriesModal.classList.remove('active');
+            }
+        });
+    }
+
+    // Helper function to generate star rating display
+    function generateStars(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            stars += `<span class="star ${i <= rating ? 'filled' : ''}">★</span>`;
+        }
+        return stars;
+    }
 });

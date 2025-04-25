@@ -214,16 +214,173 @@ class TravelPlan {
         }
     }
 
+    public function markTravelPlanCompleted($travel_plan_id) {
+        try {
+            $sql = "UPDATE travel_plans 
+                    SET status = 'Completed'
+                    WHERE travel_plan_id = ?";
+    
+            $stmt = $this->db->prepare($sql);
+    
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+    
+            $stmt->bind_param("i", $travel_plan_id);
+    
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+    
+            $stmt->close();
+            return true;
+    
+        } catch (\Exception $e) {
+            error_log("Error in markTravelPlanCompleted: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function addTravelMemories($travel_plan_id, $note, $rating, $photos) {
+        try {
+            // Begin transaction
+            $this->db->begin_transaction();
+            
+            // Insert memory data
+            $sql = "INSERT INTO travel_memories (travel_plan_id, note, rating, created_at) 
+                    VALUES (?, ?, ?, NOW())";
+                    
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+            
+            $stmt->bind_param("isi", $travel_plan_id, $note, $rating);
+            
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+            
+            $memory_id = $stmt->insert_id;
+            $stmt->close();
+            
+            // Insert photos if any
+            if (!empty($photos)) {
+                $sql = "INSERT INTO memory_photos (memory_id, photo_path) VALUES (?, ?)";
+                $stmt = $this->db->prepare($sql);
+                
+                if (!$stmt) {
+                    throw new \Exception("Prepare failed for photos: " . $this->db->error);
+                }
+                
+                foreach ($photos as $photo) {
+                    $stmt->bind_param("is", $memory_id, $photo);
+                    
+                    if (!$stmt->execute()) {
+                        throw new \Exception("Execute failed for photo insert: " . $stmt->error);
+                    }
+                }
+                
+                $stmt->close();
+            }
+            
+            // Update travel plan to have memories
+            $sql = "UPDATE travel_plans SET has_memories = 1 WHERE travel_plan_id = ?";
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                throw new \Exception("Prepare failed for plan update: " . $this->db->error);
+            }
+            
+            $stmt->bind_param("i", $travel_plan_id);
+            
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed for plan update: " . $stmt->error);
+            }
+            
+            $stmt->close();
+            
+            // Commit transaction
+            $this->db->commit();
+            return true;
+            
+        } catch (\Exception $e) {
+            // Rollback on error
+            $this->db->rollback();
+            error_log("Error in addTravelMemories: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function getTravelMemories($travel_plan_id) {
+        try {
+            $sql = "SELECT m.memory_id, m.note, m.rating, m.created_at, 
+                           d.destination_name
+                    FROM travel_memories m
+                    JOIN travel_plans t ON m.travel_plan_id = t.travel_plan_id
+                    JOIN traveldestinations d ON t.destination_id = d.destination_id
+                    WHERE m.travel_plan_id = ?";
+                    
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+            
+            $stmt->bind_param("i", $travel_plan_id);
+            
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+            
+            $result = $stmt->get_result();
+            $memory = $result->fetch_assoc();
+            $stmt->close();
+            
+            if ($memory) {
+                // Get photos for this memory
+                $sql = "SELECT photo_id, photo_path FROM memory_photos WHERE memory_id = ?";
+                $stmt = $this->db->prepare($sql);
+                
+                if (!$stmt) {
+                    throw new \Exception("Prepare failed for photos: " . $this->db->error);
+                }
+                
+                $stmt->bind_param("i", $memory['memory_id']);
+                
+                if (!$stmt->execute()) {
+                    throw new \Exception("Execute failed for photos: " . $stmt->error);
+                }
+                
+                $photoResult = $stmt->get_result();
+                $photos = $photoResult->fetch_all(MYSQLI_ASSOC);
+                $stmt->close();
+                
+                $memory['photos'] = $photos;
+            }
+            
+            return $memory;
+            
+        } catch (\Exception $e) {
+            error_log("Error in getTravelMemories: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    // Update the getAllTravelPlans method to include memory info
     public function getAllTravelPlans($userId) {
         try {
             $sql = "SELECT d.destination_name, d.province_id, d.image_path, 
                            t.stay_duration, t.check_in, t.check_out, 
                            t.travel_plan_id, t.destination_id, p.province_name,
+                           t.has_memories,
                            CASE
                                WHEN CURDATE() < t.check_in THEN 'Pending'
                                WHEN CURDATE() BETWEEN t.check_in AND t.check_out THEN 'Ongoing'
                                WHEN CURDATE() > t.check_out THEN 'Completed'
-                           END AS status
+                           END AS status,
+                           (SELECT m.rating FROM travel_memories m WHERE m.travel_plan_id = t.travel_plan_id LIMIT 1) as rating
                     FROM traveldestinations d 
                     JOIN travel_plans t ON d.destination_id = t.destination_id
                     JOIN provinces p ON d.province_id = p.province_id

@@ -433,18 +433,19 @@ class Hospital
 
             // Insert new schedule
             $insertQuery = "INSERT INTO doctor_schedules 
-                           (doctor_id, day, start_time, end_time, is_available) 
-                           VALUES (?, ?, ?, ?, ?)";
+                        (doctor_id, day, start_time, end_time, is_available) 
+                        VALUES (?, ?, ?, ?, ?)";
             $stmt = $this->db->prepare($insertQuery);
 
             foreach ($scheduleData as $day => $times) {
+                $available = isset($times['available']) ? $times['available'] : 0;
                 $stmt->bind_param(
                     "isssi",
                     $doctorId,
                     $day,
                     $times['start'],
                     $times['end'],
-                    $times['available']
+                    $available
                 );
 
                 if (!$stmt->execute()) {
