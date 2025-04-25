@@ -39,93 +39,60 @@
 
         </div>
         <div class="mid-container">
+            <div class="pending-requests">
+                <h2>Pending Requests</h2>
+                <div class="info-card">
+                    <h2>New Users </h2>
+                    <h2>10</h2>
+                </div>
+                <div class="info-card">
+                    <h2>Hotel Bookings - </h2>
+                    <h2><?= htmlspecialchars((string)($booking_count ?? '')) ?></h2>
+
+                </div>
+                <div class="info-card">
+                    <h2>New Doctors</h2>
+                    <h2>10</h2>
+                </div>
+            </div>
             <div class="upcoming-appointments">
                 <h2>Upcoming Appointments</h2>
-                <div class="info-card">
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">Dr. Lakmal</div>
-                            <div class="time-ago">Cardiologist</div>
+                <?php if (empty($appointments)): ?>
+                    <p>No upcoming appointments.</p>
+                <?php else: ?>
+                    <?php foreach (array_slice($appointments, 0, 4) as $appointment): ?>
+                        <div class="info-card">
+                            <div class="info-header">
+                                <div class="header-details">
+                                    <div class="org-name">
+                                        <?= htmlspecialchars($appointment['doctor']['first_name'] . ' ' . $appointment['doctor']['last_name']) ?>
+                                    </div>
+                                    <div class="time-ago"><?= htmlspecialchars($appointment['specialization']) ?></div>
+                                </div>
+                            </div>
+                            <div class="info-header">
+                                <div class="header-details">
+                                    <div class="org-name">
+                                        <?= htmlspecialchars($appointment['patient']['first_name'] . ' ' . $appointment['patient']['last_name']) ?>
+                                    </div>
+                                    <div class="time-ago">Patient</div>
+                                </div>
+                            </div>
+                            <div class="info-header">
+                                <div class="header-details">
+                                    <div class="org-name">
+                                        <?= htmlspecialchars($appointment['appointment']['date'] . '|' . $appointment['appointment']['time']) ?>
+                                    </div>
+                                    <div class="time-ago">Date and Time</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">William Smith</div>
-                            <div class="time-ago">Patient</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">11 / 12 / 2024</div>
-                            <div class="time-ago">Date and Time</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">Dr. Sahiru Bandara</div>
-                            <div class="time-ago">Neurologist</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">John keels</div>
-                            <div class="time-ago">Patient</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">16 / 12 / 2024</div>
-                            <div class="time-ago">Date and Time</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">Dr. Kumara Jayaweera</div>
-                            <div class="time-ago">General Doctor</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">Lasith Chamara</div>
-                            <div class="time-ago">Patient</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">20 / 12 / 2024</div>
-                            <div class="time-ago">Date and Time</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="info-card">
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">Dr. Lakmal</div>
-                            <div class="time-ago">Cardiologist</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">David Robert</div>
-                            <div class="time-ago">Patient</div>
-                        </div>
-                    </div>
-                    <div class="info-header">
-                        <div class="header-details">
-                            <div class="org-name">24 / 12 / 2024</div>
-                            <div class="time-ago">Date and Time</div>
-                        </div>
-                    </div>
-                </div>
-
+                    <?php endforeach; ?>
+                <?php endif; ?>
 
             </div>
+
+
         </div>
     </div>
 

@@ -88,8 +88,11 @@
                                         <td>Mar 4, 2024</td>
                                         <td>July 4, 2022</td>
                                         <td>
-                                            <button class="view-profile"
-                                                onclick="navigateprofile(<?= $row['user_id'] ?>, '<?= $page ?>')">View Profile</button>
+                                            <button class="view-profile" 
+                                                onclick="window.location.href='<?= $basePath ?>/admin/editProfile?user_id=<?= $row['user_id'] ?>'">
+                                                Edit Profile
+                                            </button>
+
                                         </td>
                                     <?php endif; ?>
                                 </tr>
@@ -120,10 +123,7 @@
 
             </div>
 
-            <script src="script.js"></script>
         </body>
-
-
 
         </html>
 
@@ -132,8 +132,8 @@
             function navigate(page) {
                 window.location.href = `?page=${page}`;
             }
-            function navigateprofile(user_id, page) {
-                window.location.href = `editProfile?user_id=${user_id}&page=${page}`;
+            function navigateprofile(user_id) {
+                window.location.href = `editProfile?user_id=${user_id}`;
             }
 
 
