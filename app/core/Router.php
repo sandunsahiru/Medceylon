@@ -117,9 +117,18 @@ class Router
                     }
                 }
 
-                //  NEW — pass dynamic params like {id}
-                $params = $this->params;
-                unset($params['controller'], $params['action'], $params['middleware'], $params['route']);
+                // Check if we have captured numeric parameters from URL
+                $actionParams = [];
+                if (isset($this->params['_numeric_params']) && !empty($this->params['_numeric_params'])) {
+                    $actionParams = $this->params['_numeric_params'];
+                    error_log("Using numeric params: " . print_r($actionParams, true));
+                } else {
+                    // Extract named parameters
+                    $params = $this->params;
+                    unset($params['controller'], $params['action'], $params['middleware'], $params['route'], $params['_numeric_params']);
+                    $actionParams = array_values($params);
+                    error_log("Using named params: " . print_r($actionParams, true));
+                }
 
                 error_log("Executing action: " . $action . " with parameters: " . print_r($actionParams, true));
                 return call_user_func_array([$controllerObject, $action], $actionParams);

@@ -105,19 +105,11 @@
                         </select>
                     </div>
 
-                   <button type="submit" class="submit-btn">Book Appointment</button>
-
-
-               </form>
-               <a href="<?php echo $basePath; ?>/patient/dashboard/"><button class="submit-btn">Next Page</button></a>
-           </section>
-       </main>
-   </div>
-
                     <div class="form-group">
                         <label for="reason">Reason for Visit:</label>
                         <textarea name="reason_for_visit" id="reason" required></textarea>
                     </div>
+
                     <div class="form-group">
                         <label for="medical_history">Medical History (Optional):</label>
                         <textarea name="medical_history" id="medical_history"></textarea>

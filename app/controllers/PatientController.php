@@ -781,11 +781,6 @@ class PatientController extends BaseController
         return $sessionData;
     }
 
-    public function paymentPlan()
-    {
-        try {
-            $patientId = $this->session->getUserId();
-            // $paymentPlans = $this->patientModel->getPaymentPlans($patientId);
 
     private function createMeetLinkForAppointment($appointmentId, $patientId, $doctorId, $date, $time, $reason) {
         try {
@@ -1039,7 +1034,14 @@ class PatientController extends BaseController
             exit();
         }
     }
-
+    
+    public function paymentPlan()
+    {
+        try {
+            $data = [
+                'basePath' => $this->basePath
+            ];
+            
             echo $this->view('patient/paymentPlan', $data);
             exit();
         } catch (\Exception $e) {

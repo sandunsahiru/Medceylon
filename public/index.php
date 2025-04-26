@@ -188,7 +188,10 @@ try {
     $router->get('/patient/get-appointment-details', 'PatientController', 'getAppointmentDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/upload-medical-report', 'PatientController', 'uploadMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/delete-medical-report', 'PatientController', 'deleteMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/patient/paymentPlan', 'PatientController', 'paymentPlan', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/patient/start-medical-session', 'PatientController', 'startMedicalSession', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/patient/confirm-medical-session', 'PatientController', 'confirmMedicalSession', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/patient/process-appointment-with-meet-link', 'PatientController', 'processAppointmentWithMeetLink', \App\Core\Middleware\AuthMiddleware::class);
+
 
     // Caregiver routes
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
@@ -214,7 +217,7 @@ try {
     $router->get('/patient/transport/edit/{id}', 'TransportationRequestController', 'edit', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/update/{id}', 'TransportationRequestController', 'update', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/delete/{id}', 'TransportationRequestController', 'delete', \App\Core\Middleware\AuthMiddleware::class);
-    
+    $router->get('/doctor/patient-session/create/:id', 'DoctorController@createSessionFromAppointment', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
 
     // Transportation Module — Travel Agent
