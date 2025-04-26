@@ -12,7 +12,11 @@ class Router
     public function add($method, $route, $controller, $action, $middleware = null)
     {
         $pattern = preg_replace('/\//', '\\/', $route);
+
+        // Handle named parameters like {id}
         $pattern = preg_replace('/\{([a-z]+)\}/', '(?P<\1>[a-z0-9-]+)', $pattern);
+
+        // Add ^ and $ to ensure full match
         $pattern = '/^' . $pattern . '$/i';
 
         $this->routes[$method][$pattern] = [
@@ -45,19 +49,36 @@ class Router
 
     private function match($url, $method)
     {
+        error_log("Attempting to match URL: " . $url . " with method: " . $method);
+
         if (isset($this->routes[$method])) {
             foreach ($this->routes[$method] as $pattern => $params) {
+                error_log("Checking pattern: " . $pattern . " against URL: " . $url);
+
                 if (preg_match($pattern, $url, $matches)) {
+                    // Extract numeric parameters
+                    $numericParams = [];
                     foreach ($matches as $key => $match) {
+                        if (is_int($key) && $key > 0) {
+                            $numericParams[] = $match;
+                        }
                         if (is_string($key)) {
                             $params[$key] = $match;
                         }
                     }
+                
+                    // Store numeric params if there are any
+                    if (!empty($numericParams)) {
+                        $params['_numeric_params'] = $numericParams;
+                    }
+                
                     $this->params = $params;
                     return true;
                 }
             }
         }
+
+        error_log("No match found for URL: " . $url);
         return false;
     }
 
@@ -65,6 +86,8 @@ class Router
     {
         $url = $this->cleanUrl($url);
         $method = $_SERVER['REQUEST_METHOD'];
+
+        error_log("Attempting to dispatch URL: " . $url . " with method: " . $method);
 
         if ($this->match($url, $method)) {
             try {
@@ -94,12 +117,21 @@ class Router
                     }
                 }
 
-                // ✅ NEW — pass dynamic params like {id}
-                $params = $this->params;
-                unset($params['controller'], $params['action'], $params['middleware'], $params['route']);
+                // Check if we have captured numeric parameters from URL
+                $actionParams = [];
+                if (isset($this->params['_numeric_params']) && !empty($this->params['_numeric_params'])) {
+                    $actionParams = $this->params['_numeric_params'];
+                    error_log("Using numeric params: " . print_r($actionParams, true));
+                } else {
+                    // Extract named parameters
+                    $params = $this->params;
+                    unset($params['controller'], $params['action'], $params['middleware'], $params['route'], $params['_numeric_params']);
+                    $actionParams = array_values($params);
+                    error_log("Using named params: " . print_r($actionParams, true));
+                }
 
-                error_log("Executing action: " . $action);
-                return call_user_func_array([$controllerObject, $action], $params);
+                error_log("Executing action: " . $action . " with parameters: " . print_r($actionParams, true));
+                return call_user_func_array([$controllerObject, $action], $actionParams);
             } catch (\Exception $e) {
                 error_log("Error in dispatch: " . $e->getMessage());
                 throw $e;

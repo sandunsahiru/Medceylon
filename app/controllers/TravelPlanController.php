@@ -3,16 +3,20 @@
 namespace App\Controllers;
 
 use App\Models\TravelPlan;
+use App\Models\Accommodation;
+use App\Helpers\DistanceHelper;
 
 
 class TravelPlanController extends BaseController
 {
     private $travelPlanModel;
+    private $accommodationModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->travelPlanModel = new TravelPlan();
+        $this->accommodationModel = new Accommodation();
     }
 
     public function dashboard()
@@ -39,62 +43,47 @@ class TravelPlanController extends BaseController
     }
 
     public function destinations()
-    {
-        try {
-            error_log("Executing action: destinations");
+{
+    try {
+        error_log("Executing action: destinations");
 
-            // Get provinces and destination types
-            $provinces = $this->travelPlanModel->getAllProvinces();
-            $destinationTypes = $this->travelPlanModel->getDestinationTypes();
+        // Get provinces and destination types
+        $provinces = $this->travelPlanModel->getAllProvinces();
+        $destinationTypes = $this->travelPlanModel->getDestinationTypes();
 
-            $province_id = filter_input(INPUT_GET, 'province_id', FILTER_SANITIZE_NUMBER_INT);
-            $district_id = filter_input(INPUT_GET, 'district_id', FILTER_SANITIZE_NUMBER_INT);
+        // Get filters from query params
+        $filters = [
+            'province_id' => $_GET['province_id'] ?? null,
+            'wheelchair' => $_GET['wheelchair'] ?? null,
+            'type_id' => $_GET['type_id'] ?? null,
+            'cost_category' => $_GET['cost_category'] ?? null
+        ];
 
-            // Get filters from query params
-            $filters = [
-                'province_id' => $province_id,
-                'district_id' => $district_id,
-                'town_id' => filter_input(INPUT_GET, 'town_id', FILTER_SANITIZE_NUMBER_INT),
-                'distance' => filter_input(INPUT_GET, 'distance', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-                'wheelchair' => isset($_GET['wheelchair']) && $_GET['wheelchair'] !== '' ? $_GET['wheelchair'] : null,
-                'type_id' => filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT),
-                'budget' => filter_input(INPUT_GET, 'budget', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)
-            ];
+        error_log("Filters applied: " . print_r($filters, true));
 
-            error_log("Filters applied: " . print_r($filters, true));
+        // Get destinations with filters
+        $destinations = $this->travelPlanModel->getFilteredDestinations($filters);
 
-            // Get dependent dropdown data
-            $districts = $filters['province_id'] ? $this->travelPlanModel->getDistricts($filters['province_id']) : [];
-            $towns = $filters['district_id'] ? $this->travelPlanModel->getTowns($filters['district_id']) : [];
+        // Prepare view data
+        $data = [
+            'provinces' => $provinces,
+            'destinationTypes' => $destinationTypes,
+            'destinations' => $destinations,
+            'error' => $this->session->getFlash('error'),
+            'success' => $this->session->getFlash('success'),
+            'basePath' => $this->basePath
+        ];
 
-            // Get destinations with filters
-            $destinations = $this->travelPlanModel->getFilteredDestinations($filters);
+        echo $this->view('/travelplan/destinations', $data);
+        exit();
 
-            // Prepare view data
-            $data = [
-                'provinces' => $provinces,
-                'destinationTypes' => $destinationTypes,
-                'districts' => $districts,
-                'towns' => $towns,
-                'destinations' => $destinations,
-                'error' => $this->session->getFlash('error'),
-                'success' => $this->session->getFlash('success'),
-                'basePath' => $this->basePath
-            ];
-
-            echo $this->view('/travelplan/destinations', $data);
-            exit();
-
-        } catch (\Exception $e) {
-            error_log("Error in destinations(): " . $e->getMessage());
-            $this->session->setFlash('error', "Something went wrong. Please try again.");
-            header('Location: ' . $this->url('error/404'));
-            exit();
-        }
+    } catch (\Exception $e) {
+        error_log("Error in destinations(): " . $e->getMessage());
+        $this->session->setFlash('error', "Something went wrong. Please try again.");
+        header('Location: ' . $this->url('error/404'));
+        exit();
     }
-
-
-
+}
 
     public function provinces()
     {
@@ -121,46 +110,6 @@ class TravelPlanController extends BaseController
             $this->session->setFlash('error', $e->getMessage());
             header('Location: ' . $this->url('error/404'));
             exit();
-        }
-    }
-
-    public function districts()
-    {
-        try {
-            if (!isset($_POST['province_id'])) {
-                throw new \Exception("Province ID is required");
-            }
-
-            $province_id = filter_var($_POST['province_id'], FILTER_SANITIZE_NUMBER_INT);
-            $districts = $this->travelPlanModel->getDistricts($province_id);
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'districts' => $districts]);
-            exit;
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-        public function towns()
-    {
-        try {
-            if (!isset($_POST['district_id'])) {
-                throw new \Exception("District ID is required");
-            }
-
-            $district_id = filter_var($_POST['district_id'], FILTER_SANITIZE_NUMBER_INT);
-            $towns = $this->travelPlanModel->getTowns($district_id);
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'towns' => $towns]);
-            exit;
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            exit;
         }
     }
 
@@ -234,42 +183,58 @@ class TravelPlanController extends BaseController
 
     public function editDestination()
     {
+        // Clear output buffer and set JSON header
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json');
+
         try {
-            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            // Verify CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'] ?? '')) {
                 throw new \Exception("Invalid CSRF token");
             }
 
-            $travel_id = filter_var($_POST['travel_id'], FILTER_SANITIZE_NUMBER_INT);
-            $startDate = filter_var($_POST['check_in'], FILTER_SANITIZE_STRING);
-            $endDate = filter_var($_POST['check_out'], FILTER_SANITIZE_STRING);
-
-            if ($this->travelPlanModel->hasOverlappingPlan(
-                $this->session->getUserId(),
-                $startdate,
-                $enddate
-            )) {
-                $this->session->setFlash('error', 'You already have a travel plan during these dates!');
-                header('Location: ' . $this->url('travelplan/travel-plans'));
-                exit();
+            // Validate required fields
+            $required = ['travel_id', 'destination_id', 'check_in', 'check_out'];
+            $missing = [];
+            foreach ($required as $field) {
+                if (empty($_POST[$field])) {
+                    $missing[] = $field;
+                }
+            }
+            
+            if (!empty($missing)) {
+                throw new \Exception("Missing required fields: " . implode(', ', $missing));
             }
 
-            error_log("Editing travel plan - ID: $travel_id, Start: $startDate, End: $endDate");
+            // Sanitize inputs
+            $travel_id = (int)$_POST['travel_id'];
+            $destination_id = (int)$_POST['destination_id'];
+            $startDate = date('Y-m-d', strtotime($_POST['check_in']));
+            $endDate = date('Y-m-d', strtotime($_POST['check_out']));
 
-            if ($this->travelPlanModel->editTravelPlan($travel_id, $startDate, $endDate)) {
-                $this->session->setFlash('success', 'Travel plan updated successfully!');
+            // Validate dates
+            if ($startDate > $endDate) {
+                throw new \Exception("End date cannot be before start date");
+            }
+
+            // Update in database
+            if ($this->travelPlanModel->editTravelPlan($travel_id, $destination_id, $startDate, $endDate)) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Dates updated successfully',
+                    'redirect' => $this->url('travelplan/travel-plans')
+                ]);
             } else {
-                throw new \Exception('Failed to update travel plan');
+                throw new \Exception('Database update failed');
             }
-
-            header('Location: ' . $this->url('travelplan/travel-plans'));
-            exit();
-
         } catch (\Exception $e) {
-            error_log("Error in editDestination: " . $e->getMessage());
-            $this->session->setFlash('error', 'Error updating travel plan: ' . $e->getMessage());
-            header('Location: ' . $this->url('error/404'));
-            exit();
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
         }
+        exit();
     }
             
     public function deleteDestination()
@@ -473,5 +438,231 @@ class TravelPlanController extends BaseController
             exit();
         }
     }
+    /**
+     * Core calculation logic for travel plan dates
+     */
+    private function calculatePlanDates($accommodation, $destinations)
+    {
+        $averageSpeed = 40; // km/h
+        $maxDailyHours = 8; // Maximum hours per day
+        
+        $plan = [];
+        $currentDate = new \DateTime($accommodation['check_out']);
+        $previousLocation = [
+            'latitude' => $accommodation['latitude'],
+            'longitude' => $accommodation['longitude']
+        ];
+
+        foreach ($destinations as $index => $destination) {
+            // Calculate distance from previous location
+            $distance = DistanceHelper::calculateDistanceInKm(
+                $previousLocation['latitude'],
+                $previousLocation['longitude'],
+                $destination['latitude'],
+                $destination['longitude']
+            );
+
+            // Calculate travel time (hours)
+            $travelTime = $distance / $averageSpeed;
+            
+            // Total time needed (travel + visit)
+            $totalTime = $travelTime + $destination['minimum_hours_spent'];
+            
+            // Determine if we need to move to next day
+            $startDate = clone $currentDate;
+            $endDate = clone $startDate;
+            
+            if ($totalTime > $maxDailyHours) {
+                $endDate->modify('+1 day');
+            }
+            
+            // Add to plan
+            $plan[] = [
+                'destination_id' => $destination['destination_id'],
+                'destination_name' => $destination['destination_name'],
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'travel_time_hours' => round($travelTime, 2),
+                'time_spent_hours' => $destination['minimum_hours_spent']
+            ];
+            
+            // Update for next iteration
+            $currentDate = $endDate;
+            $previousLocation = [
+                'latitude' => $destination['latitude'],
+                'longitude' => $destination['longitude']
+            ];
+        }
+
+        // Calculate total trip time
+        $totalTripTime = array_reduce($plan, function($carry, $item) {
+            return $carry + $item['travel_time_hours'] + $item['time_spent_hours'];
+        }, 0);
+
+        return [
+            'items' => $plan,
+            'total_trip_time_hours' => round($totalTripTime, 2)
+        ];
+    }
+
+    // Remove any TravelDestination model references and use these methods instead:
+
+    public function calculateTravelDates()
+    {
+        // Start with clean output buffer
+        if (ob_get_length()) ob_clean();
+        
+        try {
+            // Set proper headers first
+            header('Content-Type: application/json');
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+            
+            // Get and validate input
+            $json = file_get_contents('php://input');
+            if (empty($json)) {
+                throw new \Exception("No input data received");
+            }
+            
+            $data = json_decode($json, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception("Invalid JSON: " . json_last_error_msg());
+            }
+            
+            if (empty($data['destination_ids'])) {
+                throw new \Exception("Please select at least one destination");
+            }
+
+            error_log("Starting calculation for user: " . $this->session->getUserId());
+            
+            // Get accommodation data
+            $accommodationData = $this->travelPlanModel->getUserActiveAccommodation(
+                $this->session->getUserId()
+            );
+            
+            // Set default accommodation values
+            $accommodation = [
+                'name' => 'Default Location',
+                'check_out' => date('Y-m-d', strtotime('+1 day')),
+                'latitude' => 6.927079,
+                'longitude' => 79.861244
+            ];
+            
+            // Override with actual data if available
+            if ($accommodationData) {
+                $accommodation = [
+                    'name' => $accommodationData['name'],
+                    'check_out' => $accommodationData['check_out'],
+                    'latitude' => $accommodationData['latitude'],
+                    'longitude' => $accommodationData['longitude']
+                ];
+            }
+
+            // Get destination details from model
+            $destinations = [];
+            foreach ($data['destination_ids'] as $destinationId) {
+                $destination = $this->travelPlanModel->getDestinationById($destinationId);
+                if (!$destination) {
+                    throw new \Exception("Destination not found: $destinationId");
+                }
+                $destinations[] = $destination;
+            }
+
+            // Calculate plan dates
+            $plan = $this->calculatePlanDates($accommodation, $destinations);
+
+            // Final JSON response
+            echo json_encode([
+                'success' => true,
+                'plan' => $plan,
+                'accommodation' => $accommodation,
+                'has_accommodation' => $accommodationData !== null
+            ]);
+            exit();
+
+        } catch (\Exception $e) {
+            // Ensure clean error response
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => DEBUG_MODE ? $e->getTrace() : null
+            ]);
+            exit();
+        }
+    }
+
+    public function saveCompletePlan()
+    {
+        try {
+            $userId = $this->session->getUserId();
+            $planData = json_decode($_POST['plan_data'], true);
+            
+            if ($this->travelPlanModel->saveMultiDestinationPlan($userId, $planData)) {
+                echo json_encode(['success' => true]);
+            } else {
+                throw new \Exception('Failed to save travel plan');
+            }
+        } catch (\Exception $e) {
+            error_log("Error in saveCompletePlan: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit();
+    }
+
+    public function savePlan() {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // For new plans (temp ID)
+        if (str_starts_with($input['travel_id'] ?? '', 'temp-')) {
+            $newTravelId = $this->travelPlanModel->createNewTravelPlan(
+                $this->session->getUserId()
+            );
+            
+            foreach ($input['destinations'] as $destination) {
+                $this->travelPlanModel->addDestinationToPlan(
+                    $newTravelId,
+                    $destination['id'],
+                    $destination['start_date'],
+                    $destination['end_date']
+                );
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'new_travel_id' => $newTravelId
+            ]);
+        }
+        // For existing plans
+        else {
+            $this->travelPlanModel->updateTravelPlan(
+                $input['travel_id'],
+                $input['destinations']
+            );
+            
+            echo json_encode(['success' => true]);
+        }
+    }
+
+    public function viewMultiDestinationPlan()
+    {
+        try {
+            $userId = $this->session->getUserId();
+            $plan = $this->travelPlanModel->getMultiDestinationPlan($userId);
+            
+            $data = [
+                'plan' => $plan,
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('travelplan/multi-destination-view', $data);
+        } catch (\Exception $e) {
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('travelplan/destinations'));
+        }
+        exit();
+    }
+
 
 }

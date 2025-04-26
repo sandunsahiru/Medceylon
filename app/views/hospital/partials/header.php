@@ -39,10 +39,6 @@
                     <i class="ri-nurse-line"></i>
                     <span>Doctors</span>
                 </a>
-                <a href="<?php echo $basePath; ?>/hospital/messages" class="nav-item <?php echo $currentPage === 'messages' ? 'active' : ''; ?>">
-                    <i class="ri-message-2-line"></i>
-                    <span>Messages</span>
-                </a>
             </nav>
             
             <a href="<?php echo $basePath; ?>/logout" class="exit-button">

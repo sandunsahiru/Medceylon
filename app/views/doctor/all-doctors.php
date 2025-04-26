@@ -154,7 +154,11 @@
 
 <script>
     const basePath = '<?php echo $basePath; ?>';
-    // Doctor Profile Functions
+
+    // ============================================================
+    // DOCTOR PROFILE FUNCTIONS
+    // ============================================================
+    
     function viewDoctorProfile(doctorId) {
         fetch(`${basePath}/doctor/getDocProfile?doctor_id=${doctorId}`, {
                 method: 'GET',
@@ -176,17 +180,17 @@
 
                 const data = response.data;
                 document.getElementById('doctorContent').innerHTML = `
-            <div class="profile-details">
-                <p><strong>Name:</strong> Dr. ${data.first_name} ${data.last_name}</p>
-                <p><strong>Specializations:</strong> ${data.specializations || 'Not specified'}</p>
-                <p><strong>Qualifications:</strong> ${data.qualifications || 'Not specified'}</p>
-                <p><strong>Experience:</strong> ${data.years_of_experience || 0} years</p>
-                <p><strong>Hospital:</strong> ${data.hospital_name || 'Not specified'}</p>
-                <p><strong>Email:</strong> ${data.email || 'Not specified'}</p>
-                <p><strong>Phone:</strong> ${data.phone_number || 'Not specified'}</p>
-                <p><strong>Profile:</strong> ${data.profile_description || 'No description available'}</p>
-            </div>
-        `;
+                    <div class="profile-details">
+                        <p><strong>Name:</strong> Dr. ${data.first_name} ${data.last_name}</p>
+                        <p><strong>Specializations:</strong> ${data.specializations || 'Not specified'}</p>
+                        <p><strong>Qualifications:</strong> ${data.qualifications || 'Not specified'}</p>
+                        <p><strong>Experience:</strong> ${data.years_of_experience || 0} years</p>
+                        <p><strong>Hospital:</strong> ${data.hospital_name || 'Not specified'}</p>
+                        <p><strong>Email:</strong> ${data.email || 'Not specified'}</p>
+                        <p><strong>Phone:</strong> ${data.phone_number || 'Not specified'}</p>
+                        <p><strong>Profile:</strong> ${data.profile_description || 'No description available'}</p>
+                    </div>
+                `;
                 document.getElementById('doctorModal').style.display = 'block';
             })
             .catch(error => {
@@ -199,7 +203,11 @@
         document.getElementById('doctorModal').style.display = 'none';
     }
 
-    // Update the bookAppointment function
+    // ============================================================
+    // BOOKING APPOINTMENT FUNCTIONS
+    // ============================================================
+
+    // Function to show booking modal and load patients
     function bookAppointment(doctorId) {
         // Set the specialist ID
         document.getElementById('specialist_id').value = doctorId;
@@ -248,57 +256,6 @@
             });
     }
 
-    function fetchTimeSlots(doctorId, date) {
-        fetch(`${basePath}/doctor/getTimeSlots?doctor_id=${doctorId}&date=${date}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to fetch time slots');
-                }
-
-                // Get or create time slot container
-                let timeSlotsContainer = document.getElementById('time_slot_container');
-                if (!timeSlotsContainer) {
-                    timeSlotsContainer = document.createElement('div');
-                    timeSlotsContainer.id = 'time_slot_container';
-                    timeSlotsContainer.className = 'form-group';
-                    const formActions = document.querySelector('.form-actions');
-                    formActions.parentNode.insertBefore(timeSlotsContainer, formActions);
-                }
-
-                if (!data.slots || data.slots.length === 0) {
-                    timeSlotsContainer.innerHTML = `
-                    <label>Available Time Slots:</label>
-                    <p class="error-message">No time slots available for selected date</p>
-                `;
-                    return;
-                }
-
-                timeSlotsContainer.innerHTML = `
-                <label for="appointment_time">Available Time Slots:*</label>
-                <select name="appointment_time" id="appointment_time" required>
-                    <option value="">Select Time</option>
-                    ${data.slots.map(slot => `<option value="${slot}">${slot}</option>`).join('')}
-                </select>
-            `;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const timeSlotsContainer = document.getElementById('time_slot_container');
-                if (timeSlotsContainer) {
-                    timeSlotsContainer.innerHTML = `
-                    <label>Available Time Slots:</label>
-                    <p class="error-message">Error loading time slots: ${error.message}</p>
-                `;
-                }
-            });
-    }
-
     // Function to setup date listener
     function setupDateListener(doctorId) {
         const dateInput = document.querySelector('input[name="preferred_date"]');
@@ -319,8 +276,15 @@
     // Function to fetch time slots
     function fetchTimeSlots(doctorId, date) {
         fetch(`${basePath}/doctor/getTimeSlots?doctor_id=${doctorId}&date=${date}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Time slots response:', data); // Debug log
+                
                 if (!data.success) {
                     throw new Error(data.error || 'Failed to fetch time slots');
                 }
@@ -343,13 +307,12 @@
                     return;
                 }
 
+                // Use the time slots directly as they come from the server
                 timeSlotsContainer.innerHTML = `
                 <label for="appointment_time">Available Time Slots:*</label>
                 <select name="appointment_time" id="appointment_time" required>
                     <option value="">Select Time</option>
-                    ${data.slots.map(slot => 
-                        `<option value="${slot.value}">${slot.display}</option>`
-                    ).join('')}
+                    ${data.slots.map(slot => `<option value="${slot}">${slot}</option>`).join('')}
                 </select>
             `;
             })
@@ -365,8 +328,11 @@
             });
     }
 
-    // Form submission handling
-    // Update the form submission event listener in all-doctors.php
+    // ============================================================
+    // FORM SUBMISSION & MODAL CONTROL
+    // ============================================================
+
+    // Form submission handler
     document.getElementById('bookingForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -408,7 +374,7 @@
                         return JSON.parse(text);
                     } catch (e) {
                         console.error('JSON parse error:', e);
-                        throw new Error(text);
+                        throw new Error('Server returned invalid response: ' + text);
                     }
                 });
             })
@@ -428,48 +394,23 @@
             });
     });
 
-    // Add new function to fetch available time slots
-    function fetchAvailableTimeSlots(doctorId, date) {
-        fetch(`${basePath}/doctor/getTimeSlots?doctor_id=${doctorId}&date=${date}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                const timeSelect = document.getElementById('appointment_time');
-                if (!timeSelect) {
-                    // Create time slot select if it doesn't exist
-                    const timeSlotDiv = document.createElement('div');
-                    timeSlotDiv.className = 'form-group';
-                    timeSlotDiv.innerHTML = `
-                    <label for="appointment_time">Preferred Time:</label>
-                    <select name="appointment_time" id="appointment_time" required>
-                        <option value="">Select Time</option>
-                        ${data.slots.map(slot => `<option value="${slot}">${slot}</option>`).join('')}
-                    </select>
-                `;
-
-                    // Insert before the form actions
-                    const formActions = document.querySelector('.form-actions');
-                    formActions.parentNode.insertBefore(timeSlotDiv, formActions);
-                } else {
-                    // Update existing time slot select
-                    timeSelect.innerHTML = `
-                    <option value="">Select Time</option>
-                    ${data.slots.map(slot => `<option value="${slot}">${slot}</option>`).join('')}
-                `;
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error fetching available time slots: ' + error.message);
-            });
-    }
-
+    // Function to close booking modal
     function closeBookingModal() {
         document.getElementById('bookingModal').style.display = 'none';
+        
+        // Reset form fields
+        document.getElementById('bookingForm').reset();
+        
+        // Clear time slots container
+        const timeSlotsContainer = document.getElementById('time_slot_container');
+        if (timeSlotsContainer) {
+            timeSlotsContainer.innerHTML = '';
+        }
     }
+
+    // ============================================================
+    // OTHER FUNCTIONALITY
+    // ============================================================
 
     // Search functionality
     document.getElementById('searchInput').addEventListener('input', function(e) {
@@ -504,5 +445,4 @@
 </script>
 
 </body>
-
 </html>
