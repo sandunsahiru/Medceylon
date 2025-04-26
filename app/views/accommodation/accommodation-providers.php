@@ -35,8 +35,8 @@
             <label for="budget">Budget Category:</label>
             <select id="budget" name="budget">
                 <option value="">Select Budget</option>
-                <option value="Affordable" <?= (($selected_budget ?? '') == 'Affordable') ? 'selected' : '' ?>>Low</option>
-                <option value="Luxury" <?= (($selected_budget ?? '') == 'Luxury') ? 'selected' : '' ?>>Medium</option>
+                <option value="Affordable" <?= (($selected_budget ?? '') == 'Affordable') ? 'selected' : '' ?>>Affordable</option>
+                <option value="Luxury" <?= (($selected_budget ?? '') == 'Luxury') ? 'selected' : '' ?>>Luxury</option>
             </select>
         </div>
 

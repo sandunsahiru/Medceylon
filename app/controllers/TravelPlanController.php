@@ -43,59 +43,47 @@ class TravelPlanController extends BaseController
     }
 
     public function destinations()
-    {
-        try {
-            error_log("Executing action: destinations");
+{
+    try {
+        error_log("Executing action: destinations");
 
-            // Get provinces and destination types
-            $provinces = $this->travelPlanModel->getAllProvinces();
-            $destinationTypes = $this->travelPlanModel->getDestinationTypes();
+        // Get provinces and destination types
+        $provinces = $this->travelPlanModel->getAllProvinces();
+        $destinationTypes = $this->travelPlanModel->getDestinationTypes();
 
-            $province_id = filter_input(INPUT_GET, 'province_id', FILTER_SANITIZE_NUMBER_INT);
-            $district_id = filter_input(INPUT_GET, 'district_id', FILTER_SANITIZE_NUMBER_INT);
+        // Get filters from query params
+        $filters = [
+            'province_id' => $_GET['province_id'] ?? null,
+            'wheelchair' => $_GET['wheelchair'] ?? null,
+            'type_id' => $_GET['type_id'] ?? null,
+            'cost_category' => $_GET['cost_category'] ?? null
+        ];
 
-            // Get filters from query params
-            $filters = [
-                'province_id' => $province_id,
-                'district_id' => $district_id,
-                'town_id' => filter_input(INPUT_GET, 'town_id', FILTER_SANITIZE_NUMBER_INT),
-                'distance' => filter_input(INPUT_GET, 'distance', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION),
-                'wheelchair' => isset($_GET['wheelchair']) && $_GET['wheelchair'] !== '' ? $_GET['wheelchair'] : null,
-                'type_id' => filter_input(INPUT_GET, 'type_id', FILTER_SANITIZE_NUMBER_INT),
-                'budget' => filter_input(INPUT_GET, 'budget', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION)
-            ];
+        error_log("Filters applied: " . print_r($filters, true));
 
-            error_log("Filters applied: " . print_r($filters, true));
+        // Get destinations with filters
+        $destinations = $this->travelPlanModel->getFilteredDestinations($filters);
 
-            // Get dependent dropdown data
-            $districts = $filters['province_id'] ? $this->travelPlanModel->getDistricts($filters['province_id']) : [];
-            $towns = $filters['district_id'] ? $this->travelPlanModel->getTowns($filters['district_id']) : [];
+        // Prepare view data
+        $data = [
+            'provinces' => $provinces,
+            'destinationTypes' => $destinationTypes,
+            'destinations' => $destinations,
+            'error' => $this->session->getFlash('error'),
+            'success' => $this->session->getFlash('success'),
+            'basePath' => $this->basePath
+        ];
 
-            // Get destinations with filters
-            $destinations = $this->travelPlanModel->getFilteredDestinations($filters);
+        echo $this->view('/travelplan/destinations', $data);
+        exit();
 
-            // Prepare view data
-            $data = [
-                'provinces' => $provinces,
-                'destinationTypes' => $destinationTypes,
-                'districts' => $districts,
-                'towns' => $towns,
-                'destinations' => $destinations,
-                'error' => $this->session->getFlash('error'),
-                'success' => $this->session->getFlash('success'),
-                'basePath' => $this->basePath
-            ];
-
-            echo $this->view('/travelplan/destinations', $data);
-            exit();
-
-        } catch (\Exception $e) {
-            error_log("Error in destinations(): " . $e->getMessage());
-            $this->session->setFlash('error', "Something went wrong. Please try again.");
-            header('Location: ' . $this->url('error/404'));
-            exit();
-        }
+    } catch (\Exception $e) {
+        error_log("Error in destinations(): " . $e->getMessage());
+        $this->session->setFlash('error', "Something went wrong. Please try again.");
+        header('Location: ' . $this->url('error/404'));
+        exit();
     }
+}
 
     public function provinces()
     {
