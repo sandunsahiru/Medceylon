@@ -16,65 +16,69 @@ class AuthController extends BaseController
     }
 
     public function register()
-{
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $userData = [
-            'user_type' => $_POST['user_type'] ?? '',
-            'name' => trim($_POST['name'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-            'password' => $_POST['password'] ?? '',
-            'country' => $_POST['country'] ?? null,
-            'contact_number' => $_POST['contact_number'] ?? null,
-            'slmc_registration_number' => $_POST['slmc_registration_number'] ?? null,
-            'age' => $_POST['age'] ?? null,
-            'experience_years' => $_POST['experience_years'] ?? null
-        ];
+    {
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $userData = [
+                'user_type' => $_POST['user_type'] ?? '',
+                'name' => trim($_POST['name'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
+                'password' => $_POST['password'] ?? '',
+                'country' => $_POST['country'] ?? null,
+                'contact_number' => $_POST['contact_number'] ?? null,
+                'slmc_registration_number' => $_POST['slmc_registration_number'] ?? null,
+                'age' => $_POST['age'] ?? null,
+                'experience_years' => $_POST['experience_years'] ?? null
+            ];
 
-        // 🔒 BACKEND VALIDATION
-        if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
-            $error = "Name can only contain letters and spaces.";
-        } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
-            $error = "Invalid email format.";
-        } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d).{8,}$/', $userData['password'])) {
-            $error = "Password must be at least 8 characters with 1 uppercase & 1 digit.";
-        } elseif ($userData['contact_number'] && !preg_match('/^\+?\d+$/', $userData['contact_number'])) {
-            $error = "Invalid phone number.";
-        } elseif ($userData['slmc_registration_number'] && !preg_match('/^SLMC\d+$/', $userData['slmc_registration_number'])) {
-            $error = "SLMC number must start with 'SLMC' followed by digits.";
-        } elseif ($userData['age'] && $userData['age'] < 18) {
-            $error = "Age must be 18 or older.";
-        } elseif ($userData['experience_years'] && $userData['experience_years'] < 0) {
-            $error = "Experience must be a positive number.";
-        }
+            // 🔒 BACKEND VALIDATION
+            if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
+                $error = "Name can only contain letters and spaces.";
+            } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
+                $error = "Invalid email format.";
+            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d).{8,}$/', $userData['password'])) {
+                $error = "Password must be at least 8 characters with 1 uppercase & 1 digit.";
+            } elseif ($userData['contact_number'] && !preg_match('/^\+?\d+$/', $userData['contact_number'])) {
+                $error = "Invalid phone number.";
+            } elseif ($userData['slmc_registration_number'] && !preg_match('/^SLMC\d+$/', $userData['slmc_registration_number'])) {
+                $error = "SLMC number must start with 'SLMC' followed by digits.";
+            } elseif ($userData['age'] && $userData['age'] < 18) {
+                $error = "Age must be 18 or older.";
+            } elseif ($userData['experience_years'] && $userData['experience_years'] < 0) {
+                $error = "Experience must be a positive number.";
+            }
 
-        if (isset($error)) {
+            if (isset($error)) {
+                echo $this->view('auth/register', [
+                    'error' => $error,
+                    'oldInput' => $userData,
+                    'basePath' => $this->basePath
+                ]);
+                return;
+            }
+
+            // Register logic
+            $result = $this->userModel->register($userData);
+
+            if ($result['success']) {
+                $_SESSION['registration_success'] = true;
+                header("Location: {$this->basePath}/login");
+                exit();
+            }
+
             echo $this->view('auth/register', [
-                'error' => $error,
+                'error' => $result['error'],
                 'oldInput' => $userData,
-                'basePath' => $this->basePath
+                'basePath' => $this->basePath,
+                'formAction' => $this->basePath . '/register'
             ]);
             return;
         }
 
-        // Register logic
-        $result = $this->userModel->register($userData);
-
-        if ($result['success']) {
-            $_SESSION['registration_success'] = true;
-            header("Location: {$this->basePath}/login");
-            exit();
-        }
-
         echo $this->view('auth/register', [
-            'error' => $result['error'],
-            'oldInput' => $userData,
-            'basePath' => $this->basePath
+            'basePath' => $this->basePath,
+            'formAction' => $this->basePath . '/register'
         ]);
-        return;
     }
-
-    echo $this->view('auth/register', ['basePath' => $this->basePath]);
-}
 
 
     public function login()
