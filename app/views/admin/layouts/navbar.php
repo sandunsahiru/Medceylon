@@ -34,10 +34,12 @@
                 <a href="#">Chat</a>
             </li>
 
-            <a href="<?php echo $basePath; ?>/home  " class="exit-button">
-                <i class="ri-logout-box-line"></i>
-                <span>Exit</span>
-            </a>
+            <li>
+                <a href="<?php echo $basePath; ?>/home  " class="exit-button">
+                    <i style="color: #853405;" class="ri-logout-box-line"></i>
+                    <span>Exit</span>
+                </a>
+            </li>
         </ul>
     </nav>
 
