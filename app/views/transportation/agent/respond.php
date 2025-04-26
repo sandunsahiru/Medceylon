@@ -75,29 +75,39 @@
     </div>
 
     <form method="POST" action="/Medceylon/agent/transport/respond/<?= $request['transport_request_id'] ?>">
-        <label for="status">Status</label>
-        <select name="status" id="status" required onchange="toggleVehicleDropdown()">
-            <option value="">-- Select Response --</option>
-            <option value="Accepted">Accept</option>
-            <option value="Rejected">Reject</option>
+    <label>Status</label>
+    <select name="status" required>
+        <option value="Accepted">Accept</option>
+        <option value="Rejected">Reject</option>
+    </select>
+
+    <?php if (!empty($availableVehicles)): ?>
+        <label>Select Available Vehicle</label>
+        <select name="vehicle_id">
+            <option value="">-- Select a vehicle --</option>
+            <?php foreach ($availableVehicles as $vehicle): ?>
+                <option value="<?= $vehicle['vehicle_id'] ?>">
+                    <?= $vehicle['vehicle_number'] ?> (<?= $vehicle['vehicle_type'] ?>)
+                </option>
+            <?php endforeach; ?>
+            <option value="manual">Other (3rd Party Vehicle)</option>
         </select>
+    <?php else: ?>
+        <p>No internal vehicles available. Please enter 3rd-party vehicle details below.</p>
+    <?php endif; ?>
 
-        <?php if (isset($availableVehicles)): ?>
-        <div id="vehicle-selection">
-            <label for="vehicle_id">Select Vehicle</label>
-            <select name="vehicle_id" id="vehicle_id">
-                <option value="">-- Choose a Vehicle --</option>
-                <?php foreach ($availableVehicles as $v): ?>
-                    <option value="<?= $v['vehicle_id'] ?>">
-                        <?= htmlspecialchars($v['vehicle_number']) ?> - <?= htmlspecialchars($v['driver_name']) ?> (<?= $v['contact_number'] ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <?php endif; ?>
+    <label>Vehicle Number (External)</label>
+    <input type="text" name="external_vehicle_number" placeholder="E.g. WP-1234" />
 
-        <button type="submit" class="submit-btn">Submit Response</button>
-    </form>
+    <label>Driver Name</label>
+    <input type="text" name="external_driver_name" placeholder="E.g. John Perera" />
+
+    <label>Contact Number</label>
+    <input type="text" name="external_driver_contact" placeholder="E.g. 0777123456" />
+
+    <button type="submit" class="submit-btn">Submit Response</button>
+</form>
+
 </div>
 
 <script>

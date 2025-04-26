@@ -5,7 +5,7 @@ use App\Models\TransportationAssistance;
 use App\Helpers\SessionHelper;
 use App\Helpers\DistanceHelper;
 use App\Models\User;
-
+use App\Models\Vehicle;
 
 class TransportationRequestController {
     private $model;
@@ -18,7 +18,14 @@ class TransportationRequestController {
     }
 
     public function index() {
-        $requests = $this->model->getAllByPatient($this->session->getUserId());
+        $userId = $this->session->getUserId();
+
+        $requests = $this->model->getAllByPatient($userId);
+
+        // ➕ Add vehicle availability counts for the top pie chart
+        $vehicleModel = new Vehicle($GLOBALS['db']);
+        $counts = $vehicleModel->getAvailableVehicleCounts();
+
         require_once ROOT_PATH . '/app/views/transportation/patient/index.php';
     }
 
@@ -104,6 +111,4 @@ class TransportationRequestController {
     
         require ROOT_PATH . '/app/views/transportation/patient/ride-report.php';
     }
-    
-    
 }

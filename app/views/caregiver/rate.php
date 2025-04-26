@@ -1,20 +1,24 @@
-<?php $basePath = '/Medceylon'; ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Rate Caregiver</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/public/assets/css/caregiver.css">
-</head>
-<body>
-    <h2>Rate <?= $caregiver['first_name'] ?> <?= $caregiver['last_name'] ?></h2>
-    <form method="POST" action="<?= $basePath ?>/caregiver/save-rating/<?= $caregiver['user_id'] ?>">
-        <label for="rating">Rating (1–5):</label>
-        <input type="number" name="rating" min="1" max="5" required>
+<?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
+<link rel="stylesheet" href="/Medceylon/public/assets/css/caregiver.css?v=4">
 
-        <label for="review">Your Review:</label>
-        <textarea name="review" required></textarea>
+<div class="page-wrapper">
+    <div class="container">
+        <h2 class="page-title">Rate Your Caregiver</h2>
 
-        <button type="submit" class="btn">Submit</button>
-    </form>
-</body>
-</html>
+        <form method="POST" action="">
+            <div class="form-group">
+                <label for="rating">Rating (1-5):</label>
+                <input type="number" name="rating" min="1" max="5" required>
+            </div>
+
+            <div class="form-group">
+                <label for="review">Review (optional):</label>
+                <textarea name="review" rows="4" placeholder="Write something..."></textarea>
+            </div>
+
+            <button type="submit" class="btn">Submit Rating</button>
+        </form>
+    </div>
+</div>
+
+<?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>

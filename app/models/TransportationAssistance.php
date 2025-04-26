@@ -128,6 +128,27 @@ class TransportationAssistance {
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
     
+    public function respondToRequestWithVehicle($id, $data) {
+        $stmt = $this->db->prepare("UPDATE transportationassistance 
+            SET status = ?, transport_provider_id = ?, vehicle_id = ?, 
+                external_vehicle_number = ?, external_driver_name = ?, external_driver_contact = ?, 
+                last_updated = NOW() 
+            WHERE transport_request_id = ?");
+    
+        $stmt->bind_param(
+            "siisssi",
+            $data['status'],
+            $data['provider_id'],
+            $data['vehicle_id'],
+            $data['external_vehicle_number'],
+            $data['external_driver_name'],
+            $data['external_driver_contact'],
+            $id
+        );
+    
+        return $stmt->execute();
+    }
+    
     
     
 }

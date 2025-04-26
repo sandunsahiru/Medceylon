@@ -33,4 +33,21 @@ class Vehicle {
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
+    
+    public function getAvailableVehicleCounts() {
+        $sql = "SELECT vehicle_type, COUNT(*) as count 
+                FROM vehicles 
+                WHERE is_available = 1 
+                GROUP BY vehicle_type";
+    
+        $result = $this->db->query($sql);
+        $counts = [];
+    
+        while ($row = $result->fetch_assoc()) {
+            $counts[$row['vehicle_type']] = $row['count'];
+        }
+    
+        return $counts;
+    }
+    
 }

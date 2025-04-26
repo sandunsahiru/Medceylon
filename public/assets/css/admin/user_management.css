@@ -115,8 +115,11 @@ tr:hover {
 
 .view-profile {
     background-color: #ace4cb;
+    color: #ffffff;
     padding: 8px 12px;
     font-size: 14px;
+    border-radius: 8px;
+    border: none;
     text-decoration: none;
     display: inline-block;
     text-align: center;

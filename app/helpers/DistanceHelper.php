@@ -5,7 +5,6 @@ class DistanceHelper {
     public static function getCoordinates($place) {
         $url = "https://nominatim.openstreetmap.org/search?format=json&q=" . urlencode($place);
 
-        // Add a User-Agent header to prevent Nominatim from blocking the request
         $opts = [
             'http' => [
                 'method' => 'GET',

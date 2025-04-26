@@ -1,88 +1,121 @@
-<?php
-if (!defined('ROOT_PATH')) {
-    define('ROOT_PATH', dirname(dirname(__DIR__)));
-}
-$db = require ROOT_PATH . '/app/config/database.php';
+<?php include ROOT_PATH . '/app/views/layouts/header.php'; ?>
+<link rel="stylesheet" href="/Medceylon/public/assets/css/caregiver.css?v=5">
+<link rel="stylesheet" href="/Medceylon/public/assets/css/header.css?v=1">
+<link rel="stylesheet" href="/Medceylon/public/assets/css/footer.css?v=1">
 
-$basePath = '/Medceylon';
+<div class="page-wrapper">
+    <div class="container">
+        <h2 class="page-title">Find a Caregiver</h2>
 
-use App\Models\CaregiverRatingModel;
-$ratingModel = new CaregiverRatingModel($db);
-?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Available Caregivers</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/public/assets/css/caregiver.css">
-    <style>
-        .caregiver-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 12px;
-        }
-    </style>
-</head>
-<body>
-    <h2>Available Caregivers</h2>
-
-    <form method="GET" action="<?= $basePath ?>/caregivers" class="filter-form">
-        <input type="text" name="search" placeholder="Search by name" value="<?= $_GET['search'] ?? '' ?>">
-
-        <label>Min Experience:
-            <input type="number" name="experience" value="<?= $_GET['experience'] ?? '' ?>">
-        </label>
-
-        <label>Max Age:
-            <input type="number" name="age" value="<?= $_GET['age'] ?? '' ?>">
-        </label>
-
-        <label>Sort by:
-            <select name="sort">
-                <option value="">--</option>
-                <option value="experience" <?= ($_GET['sort'] ?? '') === 'experience' ? 'selected' : '' ?>>Most Experienced</option>
-                <option value="youngest" <?= ($_GET['sort'] ?? '') === 'youngest' ? 'selected' : '' ?>>Youngest</option>
+        <!-- Filter + Sort Form -->
+        <form method="GET" action="/Medceylon/caregivers" class="filter-form">
+            <select name="filter">
+                <option value="">-- Filter --</option>
+                <option value="experience" <?= ($_GET['filter'] ?? '') == 'experience' ? 'selected' : '' ?>>5+ Years Experience</option>
+                <option value="young" <?= ($_GET['filter'] ?? '') == 'young' ? 'selected' : '' ?>>Age below 30</option>
             </select>
-        </label>
 
-        <button type="submit">Apply</button>
-    </form>
+            <select name="sort">
+                <option value="">-- Sort By --</option>
+                <option value="experience" <?= ($_GET['sort'] ?? '') == 'experience' ? 'selected' : '' ?>>Most Experienced</option>
+                <option value="young" <?= ($_GET['sort'] ?? '') == 'young' ? 'selected' : '' ?>>Youngest</option>
+                <option value="rating" <?= ($_GET['sort'] ?? '') == 'rating' ? 'selected' : '' ?>>Highest Rated</option>
+            </select>
 
-    <div class="caregiver-grid">
-        <?php while ($c = $result->fetch_assoc()): ?>
-            <div class="caregiver-card">
-                <div class="caregiver-img" style="background-image: url('<?= $c['profile_picture'] ? $basePath . '/public/uploads/' . $c['profile_picture'] : 'https://via.placeholder.com/100' ?>');"></div>
-                <div class="caregiver-details">
-                    <h3><?= $c['first_name'] . ' ' . $c['last_name'] ?></h3>
-                    <p><strong>Experience:</strong> <?= $c['experience_years'] ?> yrs</p>
-                    <p><strong>Age:</strong> <?= $c['age'] ?> y/o</p>
+            <button type="submit" class="btn">Apply</button>
+        </form>
 
-                    <?php
-                        $avgRating = $ratingModel->getAverageRating($c['user_id']);
-                        echo '<p><strong>Rating:</strong> ' . ($avgRating ? $avgRating . ' ⭐' : 'Not rated yet') . '</p>';
-                    ?>
+        <!-- Caregiver Cards -->
+        <?php if (empty($caregivers)): ?>
+            <p class="empty">No caregivers available at the moment.</p>
+        <?php else: ?>
+            <div class="caregiver-cards-grid">
+                <?php foreach ($caregivers as $caregiver): ?>
+                    <div class="caregiver-card" onclick="openProfileModal(<?= $caregiver['user_id'] ?>)">
+                        <img src="<?= htmlspecialchars($caregiver['profile_picture'] ?? '/Medceylon/public/assets/img/default-profile.png') ?>" alt="Profile" class="caregiver-image">
 
-                    <div class="caregiver-actions">
-                        <a href="<?= $basePath ?>/caregiver/profile/<?= $c['user_id'] ?>" class="btn">Contact</a>
+                        <h3><?= htmlspecialchars($caregiver['first_name'] . ' ' . $caregiver['last_name']) ?></h3>
+                        <p>Age: <?= htmlspecialchars($caregiver['age']) ?></p>
+                        <p>Experience: <?= htmlspecialchars($caregiver['experience_years']) ?> years</p>
+                        <p>Average Rating: ⭐ <?= number_format($caregiver['average_rating'] ?? 0, 1) ?>/5</p>
 
-                        <?php
-                            $stmt = $db->prepare("SELECT status FROM caregiver_requests WHERE patient_id = ? AND caregiver_id = ? ORDER BY request_id DESC LIMIT 1");
-                            $stmt->bind_param("ii", $_SESSION['user_id'], $c['user_id']);
-                            $stmt->execute();
-                            $checkResult = $stmt->get_result();
-                            $requestStatus = $checkResult->fetch_assoc();
-                        ?>
-
-                        <?php if ($requestStatus && $requestStatus['status'] === 'Accepted'): ?>
-                            <a href="<?= $basePath ?>/caregiver/rate/<?= $c['user_id'] ?>" class="btn">Rate Caregiver</a>
+                        <?php if ($caregiver['already_requested']): ?>
+                            <button class="btn requested-btn" disabled>✅ Request Sent</button>
                         <?php else: ?>
-                            <p style="font-size: 13px; color: #888;">You can rate this caregiver after your request is accepted.</p>
+                            <form method="POST" action="/Medceylon/caregivers/request/<?= $caregiver['user_id'] ?>" onclick="event.stopPropagation();">
+                                <button type="submit" class="btn request-btn">👉🏻 Request Caregiver</button>
+                            </form>
                         <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        <?php endwhile; ?>
+
+                    </div> <!-- caregiver-card -->
+                <?php endforeach; ?> <!-- foreach end -->
+            </div> <!-- caregiver-cards-grid -->
+        <?php endif; ?> <!-- if caregivers end -->
+
+    </div> <!-- container -->
+</div> <!-- page-wrapper -->
+
+<!-- Profile Popup Modal -->
+<div id="profileModal" class="profile-modal">
+    <div class="profile-modal-content">
+        <span class="close-btn" onclick="closeProfileModal()">&times;</span>
+        <div id="profileDetails"></div>
     </div>
-</body>
-</html>
+</div>
+
+<style>
+/* Popup Modal */
+.profile-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.profile-modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 30px;
+    border-radius: 14px;
+    width: 400px;
+    box-shadow: 0 4px 12px rgba(41, 157, 151, 0.2);
+    text-align: center;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    right: 14px;
+    top: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #299D97;
+    cursor: pointer;
+}
+</style>
+
+<script>
+function openProfileModal(caregiverId) {
+    fetch(`/Medceylon/caregivers/profile/${caregiverId}`)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('profileDetails').innerHTML = data;
+            document.getElementById('profileModal').style.display = "block";
+        })
+        .catch(error => {
+            console.error('Error loading profile:', error);
+        });
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').style.display = "none";
+}
+</script>
+
+<?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>

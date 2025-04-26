@@ -39,6 +39,7 @@ try {
 
     // Home dashboard
     $router->get('/home', 'HomeController', 'home', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/ratedoctor', 'HomeController', 'rateDoctor');
 
     // Chat routes
     $router->get('/patient/chat', 'ChatController', 'index', \App\Core\Middleware\AuthMiddleware::class);
@@ -46,6 +47,7 @@ try {
     $router->get('/patient/get-new-messages', 'ChatController', 'getNewMessages', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/archive-conversation', 'ChatController', 'archiveConversation', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/download-attachment', 'ChatController', 'downloadAttachment', \App\Core\Middleware\AuthMiddleware::class);
+
 
     // Doctor Chat Routes
     $router->get('/doctor/chat', 'ChatController', 'index', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -67,6 +69,8 @@ try {
     $router->get('/admin/appointments', 'AdminController', 'appointments', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/bookings', 'AdminController', 'bookings', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/updateProfile', 'AdminController', 'updateProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/hotelBookings', 'AdminController', 'hotelBookings', \App\Core\Middleware\AdminMiddleware::class);
 
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -155,20 +159,7 @@ try {
     $router->get('/patient/get-appointment-details', 'PatientController', 'getAppointmentDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/upload-medical-report', 'PatientController', 'uploadMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/delete-medical-report', 'PatientController', 'deleteMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
-
-    // Caregiver routes
-    $router->get('/caregivers', 'CaregiverMessageController', 'list');
-    $router->get('/caregiver/profile/{id}', 'CaregiverMessageController', 'viewProfile');
-    $router->post('/caregiver/send-message/{id}', 'CaregiverMessageController', 'sendMessage');
-    $router->get('/caregiver/chat/{id}', 'CaregiverMessageController', 'viewChat');
-    $router->get('/caregiver/dashboard', 'CaregiverMessageController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/caregiver/request/{id}', 'CaregiverRequestController', 'sendRequest', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
-
-    // Caregiver rating
-    $router->get('/caregiver/rate/{id}', 'CaregiverRatingController', 'showRatingForm', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/caregiver/save-rating/{id}', 'CaregiverRatingController', 'saveRating', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/patient/paymentPlan', 'PatientController', 'paymentPlan', \App\Core\Middleware\AuthMiddleware::class);
 
     // Travel routes
     $router->get('/travelplan/destinations', 'TravelPlanController', 'destinations', \App\Core\Middleware\AuthMiddleware::class);
@@ -193,21 +184,26 @@ try {
     $router->get('/patient/transport/edit/{id}', 'TransportationRequestController', 'edit', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/update/{id}', 'TransportationRequestController', 'update', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/delete/{id}', 'TransportationRequestController', 'delete', \App\Core\Middleware\AuthMiddleware::class);
+    
 
     $router->get('/agent/transport-requests', 'AgentTransportationController', 'index', \App\Core\Middleware\TravelAgentMiddleware::class);
     $router->get('/agent/transport/view/{id}', 'AgentTransportationController', 'view', \App\Core\Middleware\TravelAgentMiddleware::class);
     $router->post('/agent/transport/respond/{id}', 'AgentTransportationController', 'respond', \App\Core\Middleware\TravelAgentMiddleware::class);
 
-    $router->get('/caregivers', 'CaregiverMessageController', 'list');
-    $router->get('/caregiver/profile/{id}', 'CaregiverMessageController', 'viewProfile');
-    $router->post('/caregiver/send-message/{id}', 'CaregiverMessageController', 'sendMessage');
-    $router->get('/caregiver/chat/{id}', 'CaregiverMessageController', 'viewChat');
-    $router->get('/caregiver/dashboard', 'CaregiverMessageController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/caregivers', 'CaregiverMessageController', 'list');
-    $router->post('/caregiver/request/{id}', 'CaregiverRequestController', 'sendRequest', \App\Core\Middleware\AuthMiddleware::class);
-$router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
-$router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/caregivers', 'CaregiverController', 'list');
+    $router->post('/caregivers/request/{id}', 'CaregiverController', 'request');
+    $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard');
+    $router->get('/caregiver/respond/{requestId}/{action}', 'CaregiverController', 'respond');    
 
+    $router->get('/caregiver/rate/{id}', 'CaregiverController', 'rate');
+    $router->post('/caregiver/rate/{id}', 'CaregiverController', 'rate');
+    
+    $router->get('/caregivers/profile/{id}', 'CaregiverController', 'profile');
+    
+
+
+    $router->get('/caregiver/dashboard', 'CaregiverDashboardController', 'index');
+$router->post('/caregiver/request/respond/{id}', 'CaregiverDashboardController', 'respond');
 
     // TEMP TEST (Remove later)
     $router->get('/agent/test', 'AgentTransportationController', 'index');
