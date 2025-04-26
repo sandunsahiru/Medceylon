@@ -39,6 +39,7 @@ try {
 
     // Protected routes (require authentication)
     $router->get('/home', 'HomeController', 'home', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/ratedoctor', 'HomeController', 'rateDoctor');
 
     // Patient Chat Routes
     $router->get('/patient/chat', 'ChatController', 'index', \App\Core\Middleware\AuthMiddleware::class);
@@ -46,6 +47,7 @@ try {
     $router->get('/patient/get-new-messages', 'ChatController', 'getNewMessages', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/archive-conversation', 'ChatController', 'archiveConversation', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/download-attachment', 'ChatController', 'downloadAttachment', \App\Core\Middleware\AuthMiddleware::class);
+
 
     // Doctor Chat Routes
     $router->get('/doctor/chat', 'ChatController', 'index', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -67,6 +69,16 @@ try {
     $router->get('/admin/appointments', 'AdminController', 'appointments', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/bookings', 'AdminController', 'bookings', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/updateProfile', 'AdminController', 'updateProfile', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/hotelBookings', 'AdminController', 'hotelBookings', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/confirm-booking', 'AdminController', 'confirmBooking', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/reject-booking', 'AdminController', 'rejectBooking', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/pending-bookings', 'AdminController', 'pendingBookings', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/ongoing-bookings', 'AdminController', 'ongoingBookings', \App\Core\Middleware\AdminMiddleware::class);
+    $router->get('/admin/cancelled-bookings', 'AdminController', 'cancelledBookings', \App\Core\Middleware\AdminMiddleware::class);
+    
 
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -155,6 +167,7 @@ try {
     $router->get('/patient/get-appointment-details', 'PatientController', 'getAppointmentDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/upload-medical-report', 'PatientController', 'uploadMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/delete-medical-report', 'PatientController', 'deleteMedicalReport', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/patient/paymentPlan', 'PatientController', 'paymentPlan', \App\Core\Middleware\AuthMiddleware::class);
 
     // Caregiver routes
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
@@ -187,6 +200,7 @@ try {
     $router->get('/patient/transport/edit/{id}', 'TransportationRequestController', 'edit', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/update/{id}', 'TransportationRequestController', 'update', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/delete/{id}', 'TransportationRequestController', 'delete', \App\Core\Middleware\AuthMiddleware::class);
+    
 
 
     // Transportation Module — Travel Agent

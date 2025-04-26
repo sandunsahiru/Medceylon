@@ -3,7 +3,7 @@
 <div class="hero">
     <h1>Your Health, Your Journey, Your Choice</h1>
     <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
-    <a href="<?php echo $basePath; ?>/patient/book-appointment/" class="cta-btn">Start Your Medical Journey!</a>
+    <a href="<?php echo $basePath; ?>/patient/paymentPlan/" class="cta-btn">Start Your Medical Journey!</a>
 </div>
 
 <section class="services">
@@ -55,8 +55,8 @@
             </a>
         </div>
         <div class="service">
-            <a href="<?php echo $basePath; ?>/rate-doctor">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle271573.jpg" alt="Rate your doctor">
+            <a href="<?php echo $basePath; ?>/ratedoctor">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle251573.jpg" alt="Rate your doctor">
                 <h3>Rate your doctor</h3>
             </a>
         </div>

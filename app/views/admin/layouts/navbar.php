@@ -26,8 +26,19 @@
                 <a href="<?php echo $basePath; ?>/admin/bookings">Bookings</a>
             </li>
             <li>
+                <i class="ri-calendar-line"></i>
+                <a href="<?php echo $basePath; ?>/admin/hotelbookings">Hotel Bookings</a>
+            </li>
+            <li>
                 <i class="ri-chat-4-line"></i>
                 <a href="#">Chat</a>
+            </li>
+
+            <li>
+                <a href="<?php echo $basePath; ?>/home  " class="exit-button">
+                    <i style="color: #853405;" class="ri-logout-box-line"></i>
+                    <span>Exit</span>
+                </a>
             </li>
         </ul>
     </nav>

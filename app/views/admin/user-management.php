@@ -29,8 +29,8 @@
                     </div>
                     <div>
                         <!-- <span>All users <strong>44</strong></span> -->
-
-                        <button class="add-user-btn">+ Add user</button>
+                        <button class="add-user-btn" onclick="window.location.href='<?= $basePath ?>/admin/adduser'">+
+                            Add user</button>
                     </div>
                 </div>
 
@@ -57,12 +57,17 @@
                     <thead>
                         <tr>
                             <th></th>
-                            <th>User name</th>
-                            <th>Gender</th>
-                            <th>Age</th>
-                            <th>Access</th>
-                            <th>Last active</th>
-                            <th>Date added</th>
+                            <?php if ($page == 'hospitals'): ?>
+                                <th>Hospital name</th>
+                                <th>Contact number</th>
+                                <th>Website</th>
+                            <?php else: ?>
+                                <th>User name</th>
+                                <th>Gender</th>
+                                <th>Age</th>
+                                <th>Last active</th>
+                                <th>Date added</th>
+                            <?php endif; ?>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -84,12 +89,14 @@
                                         </td>
                                         <td><?= htmlspecialchars($row['gender']) ?></td>
                                         <td><?= htmlspecialchars($row['age']) ?> years</td>
-                                        <td>Patient</td>
-                                        <td>Mar 4, 2024</td>
-                                        <td>July 4, 2022</td>
+                                        <td><?= htmlspecialchars($row['last_login'])?></td>
+                                        <td><?= htmlspecialchars($row['registration_date'])?></td>
                                         <td>
                                             <button class="view-profile"
-                                                onclick="navigateprofile(<?= $row['user_id'] ?>, '<?= $page ?>')">View Profile</button>
+                                                onclick="window.location.href='<?= $basePath ?>/admin/editProfile?user_id=<?= $row['user_id'] ?>'">
+                                                Edit Profile
+                                            </button>
+
                                         </td>
                                     <?php endif; ?>
                                 </tr>
@@ -120,10 +127,7 @@
 
             </div>
 
-            <script src="script.js"></script>
         </body>
-
-
 
         </html>
 
@@ -132,8 +136,8 @@
             function navigate(page) {
                 window.location.href = `?page=${page}`;
             }
-            function navigateprofile(user_id, page) {
-                window.location.href = `editProfile?user_id=${user_id}&page=${page}`;
+            function navigateprofile(user_id) {
+                window.location.href = `editProfile?user_id=${user_id}`;
             }
 
 

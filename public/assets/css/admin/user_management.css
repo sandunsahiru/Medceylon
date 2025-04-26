@@ -32,11 +32,22 @@ header p {
 }
 
 .search-box input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 150px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    width: 220px;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(90, 90, 90, 0.3);
+    outline: none;
+    transition: all 0.3s ease;
 }
+
+.search-box input:focus {
+    box-shadow: 0 6px 10px rgba(0, 128, 0, 0.4);
+    transform: translateY(-2px);
+    border: 2px solid rgba(0, 153, 99, 1);
+}
+
 
 .filters-btn, .add-user-btn {
     background-color: rgba(0, 153, 99, 1);
@@ -115,8 +126,11 @@ tr:hover {
 
 .view-profile {
     background-color: #ace4cb;
+    color: #ffffff;
     padding: 8px 12px;
     font-size: 14px;
+    border-radius: 8px;
+    border: none;
     text-decoration: none;
     display: inline-block;
     text-align: center;
