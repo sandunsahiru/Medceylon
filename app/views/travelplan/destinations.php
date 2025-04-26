@@ -14,9 +14,23 @@
         </div>
     <?php endif; ?>
 
-    <h2>Make Customized Travel Plan</h2>
+    <h2>Local Site Seeing</h2>
     
     <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button>
+
+    <div class="travel-plan-section">
+    <h3>Build Your Travel Plan</h3>
+    
+    <div class="selected-destinations">
+        <h4>Selected Destinations:</h4>
+        <ul id="selectedDestinations"></ul>
+    </div>
+    
+    <button id="calculatePlanBtn" class="btn">Calculate Travel Plan</button>
+    <button id="savePlanBtn" class="btn" style="display:none;">Save Travel Plan</button>
+    
+    <div id="travelPlanContainer"></div>
+</div>
 
     <div class="filter-bar">
         <form method="get" action="http://localhost/Medceylon/travelplan/destinations">
@@ -105,5 +119,6 @@
     <?php include('add-destination.php'); ?>  
 
     <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
+    <script src="<?php echo $basePath; ?>/public/assets/js/travel-plan.js"></script>
       <!-- footer -->
     <?php include ROOT_PATH . '/app/views/layouts/footer.php'; ?>

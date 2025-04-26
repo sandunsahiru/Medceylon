@@ -170,6 +170,10 @@ try {
     
     $router->get('/travelplan/travel-plans', 'TravelPlanController','TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
+
+    $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController','calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/save-complete-plan', 'TravelPlanController','saveCompletePlan', \App\Core\Middleware\AuthMiddleware::class);
+    
     
     $router->get('/forgot-password', 'ForgotPasswordController', 'showForm');
     $router->post('/forgot-password', 'ForgotPasswordController', 'handleForm');

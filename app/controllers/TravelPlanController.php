@@ -3,16 +3,20 @@
 namespace App\Controllers;
 
 use App\Models\TravelPlan;
+use App\Models\Accommodation;
+use App\Helpers\DistanceHelper;
 
 
 class TravelPlanController extends BaseController
 {
     private $travelPlanModel;
+    private $accommodationModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->travelPlanModel = new TravelPlan();
+        $this->accommodationModel = new Accommodation();
     }
 
     public function dashboard()
@@ -93,9 +97,6 @@ class TravelPlanController extends BaseController
         }
     }
 
-
-
-
     public function provinces()
     {
         try {
@@ -121,46 +122,6 @@ class TravelPlanController extends BaseController
             $this->session->setFlash('error', $e->getMessage());
             header('Location: ' . $this->url('error/404'));
             exit();
-        }
-    }
-
-    public function districts()
-    {
-        try {
-            if (!isset($_POST['province_id'])) {
-                throw new \Exception("Province ID is required");
-            }
-
-            $province_id = filter_var($_POST['province_id'], FILTER_SANITIZE_NUMBER_INT);
-            $districts = $this->travelPlanModel->getDistricts($province_id);
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'districts' => $districts]);
-            exit;
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-        public function towns()
-    {
-        try {
-            if (!isset($_POST['district_id'])) {
-                throw new \Exception("District ID is required");
-            }
-
-            $district_id = filter_var($_POST['district_id'], FILTER_SANITIZE_NUMBER_INT);
-            $towns = $this->travelPlanModel->getTowns($district_id);
-
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true, 'towns' => $towns]);
-            exit;
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            exit;
         }
     }
 
@@ -473,5 +434,197 @@ class TravelPlanController extends BaseController
             exit();
         }
     }
+    /**
+     * Core calculation logic for travel plan dates
+     */
+    private function calculatePlanDates($accommodation, $destinations)
+    {
+        $averageSpeed = 40; // km/h
+        $maxDailyHours = 8; // Maximum hours per day
+        
+        $plan = [];
+        $currentDate = new \DateTime($accommodation['check_out']);
+        $previousLocation = [
+            'latitude' => $accommodation['latitude'],
+            'longitude' => $accommodation['longitude']
+        ];
+
+        foreach ($destinations as $index => $destination) {
+            // Calculate distance from previous location
+            $distance = DistanceHelper::calculateDistanceInKm(
+                $previousLocation['latitude'],
+                $previousLocation['longitude'],
+                $destination['latitude'],
+                $destination['longitude']
+            );
+
+            // Calculate travel time (hours)
+            $travelTime = $distance / $averageSpeed;
+            
+            // Total time needed (travel + visit)
+            $totalTime = $travelTime + $destination['minimum_hours_spent'];
+            
+            // Determine if we need to move to next day
+            $startDate = clone $currentDate;
+            $endDate = clone $startDate;
+            
+            if ($totalTime > $maxDailyHours) {
+                $endDate->modify('+1 day');
+            }
+            
+            // Add to plan
+            $plan[] = [
+                'destination_id' => $destination['destination_id'],
+                'destination_name' => $destination['destination_name'],
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'travel_time_hours' => round($travelTime, 2),
+                'time_spent_hours' => $destination['minimum_hours_spent']
+            ];
+            
+            // Update for next iteration
+            $currentDate = $endDate;
+            $previousLocation = [
+                'latitude' => $destination['latitude'],
+                'longitude' => $destination['longitude']
+            ];
+        }
+
+        // Calculate total trip time
+        $totalTripTime = array_reduce($plan, function($carry, $item) {
+            return $carry + $item['travel_time_hours'] + $item['time_spent_hours'];
+        }, 0);
+
+        return [
+            'items' => $plan,
+            'total_trip_time_hours' => round($totalTripTime, 2)
+        ];
+    }
+
+    // Remove any TravelDestination model references and use these methods instead:
+
+    public function calculateTravelDates()
+    {
+        // Start with clean output buffer
+        if (ob_get_length()) ob_clean();
+        
+        try {
+            // Set proper headers first
+            header('Content-Type: application/json');
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+            
+            // Get and validate input
+            $json = file_get_contents('php://input');
+            if (empty($json)) {
+                throw new \Exception("No input data received");
+            }
+            
+            $data = json_decode($json, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception("Invalid JSON: " . json_last_error_msg());
+            }
+            
+            if (empty($data['destination_ids'])) {
+                throw new \Exception("Please select at least one destination");
+            }
+
+            error_log("Starting calculation for user: " . $this->session->getUserId());
+            
+            // Get accommodation data
+            $accommodationData = $this->travelPlanModel->getUserActiveAccommodation(
+                $this->session->getUserId()
+            );
+            
+            // Set default accommodation values
+            $accommodation = [
+                'name' => 'Default Location',
+                'check_out' => date('Y-m-d', strtotime('+1 day')),
+                'latitude' => 6.927079,
+                'longitude' => 79.861244
+            ];
+            
+            // Override with actual data if available
+            if ($accommodationData) {
+                $accommodation = [
+                    'name' => $accommodationData['name'],
+                    'check_out' => $accommodationData['check_out'],
+                    'latitude' => $accommodationData['latitude'],
+                    'longitude' => $accommodationData['longitude']
+                ];
+            }
+
+            // Get destination details from model
+            $destinations = [];
+            foreach ($data['destination_ids'] as $destinationId) {
+                $destination = $this->travelPlanModel->getDestinationById($destinationId);
+                if (!$destination) {
+                    throw new \Exception("Destination not found: $destinationId");
+                }
+                $destinations[] = $destination;
+            }
+
+            // Calculate plan dates
+            $plan = $this->calculatePlanDates($accommodation, $destinations);
+
+            // Final JSON response
+            echo json_encode([
+                'success' => true,
+                'plan' => $plan,
+                'accommodation' => $accommodation,
+                'has_accommodation' => $accommodationData !== null
+            ]);
+            exit();
+
+        } catch (\Exception $e) {
+            // Ensure clean error response
+            if (ob_get_length()) ob_clean();
+            header('Content-Type: application/json');
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => DEBUG_MODE ? $e->getTrace() : null
+            ]);
+            exit();
+        }
+    }
+
+    public function saveCompletePlan()
+    {
+        try {
+            $userId = $this->session->getUserId();
+            $planData = json_decode($_POST['plan_data'], true);
+            
+            if ($this->travelPlanModel->saveMultiDestinationPlan($userId, $planData)) {
+                echo json_encode(['success' => true]);
+            } else {
+                throw new \Exception('Failed to save travel plan');
+            }
+        } catch (\Exception $e) {
+            error_log("Error in saveCompletePlan: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit();
+    }
+
+    public function viewMultiDestinationPlan()
+    {
+        try {
+            $userId = $this->session->getUserId();
+            $plan = $this->travelPlanModel->getMultiDestinationPlan($userId);
+            
+            $data = [
+                'plan' => $plan,
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('travelplan/multi-destination-view', $data);
+        } catch (\Exception $e) {
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('travelplan/destinations'));
+        }
+        exit();
+    }
+
 
 }
