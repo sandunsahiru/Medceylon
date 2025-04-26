@@ -104,6 +104,26 @@ try {
     $router->post('/doctor/processBooking', 'DoctorController', 'processBooking', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->post('/doctor/process-booking', 'DoctorController', 'processBooking', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
+    // View existing session
+    $router->get('/doctor/session/create/([0-9]+)', 'DoctorController', 'createSession', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/session/([0-9]+)', 'DoctorController', 'session', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->get('/doctor/view-appointment/([0-9]+)', 'DoctorController', 'createSession', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Save session notes
+    $router->post('/doctor/session/save-notes', 'DoctorController', 'saveSessionNotes', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Refer to specialist
+    $router->post('/doctor/refer-to-specialist', 'DoctorController@referToSpecialist', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Treatment plan actions
+    $router->post('/doctor/create-treatment-plan', 'DoctorController@createTreatmentPlan', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->post('/doctor/update-treatment-plan', 'DoctorController@updateTreatmentPlan', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    // Complete session
+    $router->post('/doctor/session/complete', 'DoctorController@completeSession', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
+    $router->get('/doctor/patient-session/([0-9]+)', 'DoctorController', 'session', \App\Core\Middleware\DoctorAuthMiddleware::class);
+
     // Specialist Doctor Routes
     $router->get('/vpdoctor/dashboard', 'VPDoctorController', 'dashboard', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->get('/vpdoctor/appointments', 'VPDoctorController', 'appointments', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
@@ -115,6 +135,7 @@ try {
     $router->post('/vpdoctor/manage-availability', 'VPDoctorController', 'manageAvailability', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->get('/vpdoctor/get-patient-details', 'VPDoctorController', 'getPatientDetails', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->get('/vpdoctor/getPatientMedicalReports', 'VPDoctorController', 'getPatientMedicalReports', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
+    $router->get('/vpdoctor/get-appointment-details', 'VPDoctorController', 'getAppointmentDetails', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
     // Specialist Profile Routes
     $router->post('/vpdoctor/update-profile', 'VPDoctorController', 'updateProfile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
@@ -173,22 +194,15 @@ try {
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/patients', 'CaregiverController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
 
-    
+
     //travel routes
     $router->get('/travelplan/destinations', 'TravelPlanController', 'destinations', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/add-destination', 'TravelPlanController', 'addDestination', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/edit-plan', 'TravelPlanController','editDestination', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/delete-destination', 'TravelPlanController','deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/travelplan/provinces', 'TravelPlanController','provinces', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/edit-destination', 'TravelPlanController','editDestination');
-    
-    $router->get('/travelplan/travel-plans', 'TravelPlanController','TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/travelplan/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/edit-plan', 'TravelPlanController', 'editDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/travel-plans', 'TravelPlanController', 'TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/travel-preferences', 'TravelPlanController', 'travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
 
-    $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController','calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/save-complete-plan', 'TravelPlanController','saveCompletePlan', \App\Core\Middleware\AuthMiddleware::class);
-    
-    
     $router->get('/forgot-password', 'ForgotPasswordController', 'showForm');
     $router->post('/forgot-password', 'ForgotPasswordController', 'handleForm');
     $router->get('/reset-password', 'ForgotPasswordController', 'showResetForm');
@@ -215,13 +229,23 @@ try {
     $router->get('/caregiver/dashboard', 'CaregiverMessageController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregivers', 'CaregiverMessageController', 'list');
     $router->post('/caregiver/request/{id}', 'CaregiverRequestController', 'sendRequest', \App\Core\Middleware\AuthMiddleware::class);
-$router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
-$router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
 
+    $router->get('/debug/test-meet', 'DebugController', 'testMeet');
+    $router->get('/debug/check-calendar', 'DebugController', 'checkCalendarAccess');
 
     // TEMP TEST (Remove later)
     $router->get('/agent/test', 'AgentTransportationController', 'index');
-
+    // Add these debug routes
+    $router->get('/debug/test-meet', 'DebugController', 'testMeet');
+    $router->get('/debug/check-calendar', 'DebugController', 'checkCalendarAccess');
+    $router->get('/debug/test-basic-event', 'DebugController', 'testBasicEvent');
+    $router->get('/debug/server-info', 'DebugController', 'serverInfo');
+    $router->get('/debug/test-service-account', 'DebugController', 'testServiceAccount');
+    $router->get('/debug/test-basic-calendar-event', 'DebugController', 'testBasicCalendarEvent');
+    $router->get('/debug/test-conference-event', 'DebugController', 'testConferenceEvent');
+    $router->get('/debug/test-auth', 'DebugController', 'testAuth');
 
     $router->post('/travelplan/districts', 'TravelPlanController', 'districts', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/towns', 'TravelPlanController', 'towns', \App\Core\Middleware\AuthMiddleware::class);

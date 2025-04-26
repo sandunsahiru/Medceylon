@@ -1,0 +1,24 @@
+[2025-04-26 16:47:29] ### INITIALIZING GOOGLE MEET SERVICE ###
+[2025-04-26 16:47:29] Google_Client instantiated
+[2025-04-26 16:47:29] Application name set to: MedCeylon Appointment System
+[2025-04-26 16:47:29] Credentials path set to: /Applications/XAMPP/xamppfiles/htdocs/Medceylon/app/config/medceylon-442811-59334856cb61.json
+[2025-04-26 16:47:29] Credentials file exists with project_id: medceylon-442811 and client_email: medceylon@medceylon-442811.iam.gserviceaccount.com
+[2025-04-26 16:47:29] Auth config set with credentials file
+[2025-04-26 16:47:29] Scopes set for Calendar and Calendar Events
+[2025-04-26 16:47:29] Calendar service created
+[2025-04-26 16:47:29] Calendar ID set to: e7942794146ed23f843652599b49a42d4b27becb43fc7de0b3e42969fa99c296@group.calendar.google.com
+[2025-04-26 16:47:29] GoogleMeetService initialized successfully
+[2025-04-26 16:47:29] ### STARTING CREATE MEET EVENT ###
+[2025-04-26 16:47:29] Input startDateTime: 2025-04-28 09:00:00
+[2025-04-26 16:47:29] Input endDateTime: 2025-04-28 09:30:00
+[2025-04-26 16:47:29] Formatted startDateTime: 2025-04-28T09:00:00+02:00
+[2025-04-26 16:47:29] Formatted endDateTime: 2025-04-28T09:30:00+02:00
+[2025-04-26 16:47:29] Generated manual Meet link: https://meet.google.com/swu-410d-t13
+[2025-04-26 16:47:29] Creating event with manual Meet link
+[2025-04-26 16:47:31] Event successfully created with manual Meet link Data: {
+    "event_id": "ffajjd19641nh5eubddu8sop2g",
+    "html_link": "https://www.google.com/calendar/event?eid=ZmZhampkMTk2NDFuaDVldWJkZHU4c29wMmcgZTc5NDI3OTQxNDZlZDIzZjg0MzY1MjU5OWI0OWE0MmQ0YjI3YmVjYjQzZmM3ZGUwYjNlNDI5NjlmYTk5YzI5NkBn",
+    "meet_link": "https://meet.google.com/swu-410d-t13",
+    "start_time": "2025-04-28T09:00:00+02:00",
+    "end_time": "2025-04-28T09:30:00+02:00"
+}

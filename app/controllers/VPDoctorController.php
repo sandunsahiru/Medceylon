@@ -4,15 +4,21 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\VPDoctor;
+use App\Models\MedicalSession;
+use App\Models\Appointment;
 
 class VPDoctorController extends BaseController
 {
     private $vpDoctorModel;
+    private $medicalSessionModel;
+    private $appointmentModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->vpDoctorModel = new VPDoctor();
+        $this->medicalSessionModel = new MedicalSession();
+        $this->appointmentModel = new Appointment();
     }
 
     private function validateDoctorSession()
@@ -49,17 +55,21 @@ class VPDoctorController extends BaseController
         try {
             $doctorId = $this->validateDoctorSession();
 
+            // Get dashboard stats
             $stats = $this->vpDoctorModel->getDashboardStats($doctorId);
-            $requests = $this->vpDoctorModel->getNewAppointmentRequests($doctorId);
-            $scheduled = $this->vpDoctorModel->getScheduledAppointments($doctorId);
+            
+            // Get appointments categorized into referral and regular
+            $referralAppointments = $this->vpDoctorModel->getReferralAppointments($doctorId);
+            $regularAppointments = $this->vpDoctorModel->getRegularAppointments($doctorId);
 
             $data = [
                 'stats' => $stats,
-                'requests' => $requests,
-                'scheduled' => $scheduled,
+                'referralAppointments' => $referralAppointments,
+                'regularAppointments' => $regularAppointments,
                 'basePath' => $this->basePath,
                 'page_title' => 'Specialist Dashboard',
-                'current_page' => 'dashboard'
+                'current_page' => 'dashboard',
+                'csrfToken' => $_SESSION['csrf_token'] ?? ''
             ];
 
             echo $this->view('vpdoctor/dashboard', $data);
@@ -69,10 +79,98 @@ class VPDoctorController extends BaseController
         }
     }
 
-    
+    // Get appointment details for the modal view
+    public function getAppointmentDetails()
+    {
+        try {
+            $doctorId = $this->validateDoctorSession();
+            $appointmentId = filter_input(INPUT_GET, 'appointment_id', FILTER_VALIDATE_INT);
 
-    // In VPDoctorController.php
-    // In VPDoctorController.php
+            if (!$appointmentId) {
+                throw new \Exception('Invalid appointment ID');
+            }
+
+            $details = $this->vpDoctorModel->getAppointmentDetails($appointmentId, $doctorId);
+
+            if (!$details) {
+                throw new \Exception('Appointment not found');
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'data' => $details
+            ]);
+            exit();
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit();
+        }
+    }
+
+    // Handle appointment actions (complete, cancel)
+    public function appointmentAction()
+    {
+        try {
+            $doctorId = $this->validateDoctorSession();
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new \Exception('Invalid request method');
+            }
+
+            // Verify CSRF token
+            if (!isset($_POST['csrf_token']) || !$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception('Invalid security token');
+            }
+
+            $appointmentId = filter_input(INPUT_POST, 'appointment_id', FILTER_VALIDATE_INT);
+            $action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
+
+            if (!$appointmentId || !$action) {
+                throw new \Exception('Missing required parameters');
+            }
+
+            $result = false;
+            $message = '';
+
+            switch ($action) {
+                case 'complete':
+                    $result = $this->vpDoctorModel->completeAppointment($appointmentId, $doctorId);
+                    $message = 'Appointment completed successfully';
+                    break;
+                case 'cancel':
+                    $reason = $_POST['reason'] ?? 'Canceled by specialist';
+                    $result = $this->vpDoctorModel->cancelAppointment($appointmentId, $doctorId, $reason);
+                    $message = 'Appointment canceled successfully';
+                    break;
+                default:
+                    throw new \Exception('Invalid action');
+            }
+
+            if (!$result) {
+                throw new \Exception('Failed to perform action');
+            }
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'message' => $message
+            ]);
+            exit();
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit();
+        }
+    }
+
     public function updateAppointmentStatus()
     {
         try {
@@ -147,7 +245,6 @@ class VPDoctorController extends BaseController
             exit();
         }
     }
-
 
     public function appointments()
     {
@@ -384,6 +481,342 @@ class VPDoctorController extends BaseController
         }
     }
 
+    // New methods for medical session functionality
+    
+    /**
+     * Save specialist notes
+     */
+    public function saveSpecialistNotes()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+                exit();
+            }
+            
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $sessionId = $_POST['session_id'];
+            $notes = $_POST['specialist_notes'];
+            
+            // Save notes to medical_sessions table
+            $result = $this->medicalSessionModel->updateSpecialistNotes($sessionId, $notes);
+            
+            if (!$result) {
+                throw new \Exception("Failed to save specialist notes");
+            }
+            
+            $this->session->setFlash('success', 'Specialist notes saved successfully');
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in saveSpecialistNotes: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error saving specialist notes: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+    
+    /**
+     * Create treatment plan
+     */
+    public function createTreatmentPlan()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+                exit();
+            }
+            
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $doctorId = $this->validateDoctorSession();
+            $sessionId = $_POST['session_id'];
+            $appointmentId = $_POST['appointment_id'];
+            
+            $treatmentData = [
+                'session_id' => $sessionId,
+                'doctor_id' => $doctorId,
+                'travel_restrictions' => $_POST['travel_restrictions'],
+                'treatment_description' => $_POST['treatment_description'],
+                'estimated_budget' => $_POST['estimated_budget'],
+                'estimated_duration' => $_POST['estimated_duration'],
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            
+            // Create treatment plan
+            $planId = $this->vpDoctorModel->createTreatmentPlan($treatmentData);
+            
+            if (!$planId) {
+                throw new \Exception("Failed to create treatment plan");
+            }
+            
+            // Update the medical session with the treatment plan ID
+            $updateResult = $this->medicalSessionModel->update([
+                'session_id' => $sessionId,
+                'status' => 'Active',
+                'treatment_plan_id' => $planId
+            ]);
+            
+            if (!$updateResult) {
+                throw new \Exception("Failed to update session with treatment plan");
+            }
+            
+            $this->session->setFlash('success', 'Treatment plan created successfully');
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in createTreatmentPlan: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error creating treatment plan: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+    
+    /**
+     * Update treatment plan
+     */
+    public function updateTreatmentPlan()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+                exit();
+            }
+            
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $sessionId = $_POST['session_id'];
+            $appointmentId = $_POST['appointment_id'];
+            
+            // Get session to retrieve the treatment plan ID
+            $session = $this->medicalSessionModel->getById($sessionId);
+            if (!$session || !$session['treatment_plan_id']) {
+                throw new \Exception("Treatment plan not found");
+            }
+            
+            $treatmentPlanId = $session['treatment_plan_id'];
+            
+            // Update the treatment plan
+            $updateData = [
+                'plan_id' => $treatmentPlanId,
+                'travel_restrictions' => $_POST['travel_restrictions'],
+                'treatment_description' => $_POST['treatment_description'],
+                'estimated_budget' => $_POST['estimated_budget'],
+                'estimated_duration' => $_POST['estimated_duration'],
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $result = $this->vpDoctorModel->updateTreatmentPlan($updateData);
+            
+            if (!$result) {
+                throw new \Exception("Failed to update treatment plan");
+            }
+            
+            $this->session->setFlash('success', 'Treatment plan updated successfully');
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in updateTreatmentPlan: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error updating treatment plan: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+    
+    /**
+     * Request medical tests
+     */
+    public function requestMedicalTests()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+                exit();
+            }
+            
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $doctorId = $this->validateDoctorSession();
+            $sessionId = $_POST['session_id'];
+            $appointmentId = $_POST['appointment_id'];
+            $patientId = $_POST['patient_id'];
+            $testType = $_POST['test_type'];
+            $testDescription = $_POST['test_description'];
+            $requiresFasting = $_POST['requires_fasting'] === 'yes';
+            $urgency = $_POST['urgency'];
+            
+            // Insert into medical_tests table
+            $insertData = [
+                'session_id' => $sessionId, 
+                'patient_id' => $patientId, 
+                'doctor_id' => $doctorId, 
+                'test_type' => $testType, 
+                'test_description' => $testDescription, 
+                'requires_fasting' => $requiresFasting ? 1 : 0, 
+                'urgency' => $urgency,
+                'status' => 'Pending',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $result = $this->vpDoctorModel->requestMedicalTest($insertData);
+            
+            if (!$result) {
+                throw new \Exception("Failed to request medical test");
+            }
+            
+            $this->session->setFlash('success', 'Medical test requested successfully');
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in requestMedicalTests: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error requesting medical test: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+    
+    /**
+     * Cancel treatment
+     */
+    public function cancelTreatment()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+                exit();
+            }
+            
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+            
+            $sessionId = $_POST['session_id'];
+            $appointmentId = $_POST['appointment_id'];
+            $cancelReason = $_POST['cancel_reason'] ?? 'Treatment no longer required';
+            
+            // Update session status to canceled
+            $result = $this->medicalSessionModel->cancelSession($sessionId, $cancelReason);
+            
+            if (!$result) {
+                throw new \Exception("Failed to cancel treatment");
+            }
+            
+            // Also update appointment status
+            $this->appointmentModel->updateStatus($appointmentId, 'Canceled');
+            
+            $this->session->setFlash('success', 'Treatment has been canceled successfully');
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in cancelTreatment: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error canceling treatment: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+
+    public function getPatientMedicalReports()
+    {
+        try {
+            $doctorId = $this->validateDoctorSession();
+            $patientId = filter_input(INPUT_GET, 'patient_id', FILTER_VALIDATE_INT);
+
+            if (!$patientId) {
+                throw new \Exception('Invalid patient ID');
+            }
+
+            $reports = $this->vpDoctorModel->getPatientMedicalReports($patientId, $doctorId);
+
+            header('Content-Type: application/json');
+            echo json_encode($reports);
+            exit();
+        } catch (\Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => $e->getMessage()]);
+            exit();
+        }
+    }
+    
+    /**
+     * View a patient session
+     */
+    public function session($sessionId)
+    {
+        try {
+            $doctorId = $this->validateDoctorSession();
+            
+            // Ensure session ID is valid
+            $sessionId = (int)$sessionId;
+            if ($sessionId <= 0) {
+                throw new \Exception("Invalid session ID");
+            }
+            
+            // Check if session exists
+            $session = $this->medicalSessionModel->getById($sessionId);
+            if (!$session) {
+                throw new \Exception("Medical session not found");
+            }
+            
+            // Get patient information
+            $patientId = $session['patient_id'];
+            $patientInfo = $this->vpDoctorModel->getPatientBasicInfo($patientId);
+            
+            if (!$patientInfo) {
+                throw new \Exception("Patient information not found");
+            }
+            
+            // Get session data
+            $sessionData = $this->medicalSessionModel->getFormattedSessionData($sessionId, $patientId);
+            
+            // Get appointment data
+            $appointmentData = $this->appointmentModel->getSessionAppointmentData($sessionId, $doctorId);
+            
+            // Get medical records
+            $medicalRecords = $this->vpDoctorModel->getPatientMedicalReports($patientId, $doctorId);
+            
+            // Check if current doctor is the specialist for this session
+            $isSpecialist = false;
+            if (isset($sessionData['specialist']) && $sessionData['specialist']) {
+                $isSpecialist = ($sessionData['specialist']['id'] == $doctorId);
+            }
+            
+            // Prepare data for the view
+            $data = [
+                'patientInfo' => $patientInfo,
+                'sessionData' => $sessionData,
+                'appointmentData' => $appointmentData,
+                'medicalRecords' => $medicalRecords,
+                'isSpecialist' => $isSpecialist,
+                'basePath' => $this->basePath,
+                'page_title' => 'Patient Session',
+                'current_page' => 'patients',
+                'csrfToken' => $_SESSION['csrf_token'] ?? ''
+            ];
+            
+            echo $this->view('vpdoctor/session', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in session method: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error loading patient session: ' . $e->getMessage());
+            header('Location: ' . $this->basePath . '/vpdoctor/dashboard');
+            exit();
+        }
+    }
+
     private function handleError(\Exception $e)
     {
         error_log("VPDoctor Controller Error: " . $e->getMessage());
@@ -410,27 +843,5 @@ class VPDoctorController extends BaseController
 
         echo $this->view('errors/error', $data);
         exit();
-    }
-
-    public function getPatientMedicalReports()
-    {
-        try {
-            $doctorId = $this->validateDoctorSession();
-            $patientId = filter_input(INPUT_GET, 'patient_id', FILTER_VALIDATE_INT);
-
-            if (!$patientId) {
-                throw new \Exception('Invalid patient ID');
-            }
-
-            $reports = $this->vpDoctorModel->getPatientMedicalReports($patientId, $doctorId);
-
-            header('Content-Type: application/json');
-            echo json_encode($reports);
-            exit();
-        } catch (\Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-            exit();
-        }
     }
 }

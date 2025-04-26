@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\HealthRecord;
 use App\Models\Patient;
+use App\Models\MedicalSession;
 
 class PatientController extends BaseController
 {
@@ -13,6 +14,7 @@ class PatientController extends BaseController
     private $doctorModel;
     private $healthRecordModel;
     private $patientModel;
+    private $medicalSessionModel;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class PatientController extends BaseController
         $this->doctorModel = new Doctor();
         $this->healthRecordModel = new HealthRecord();
         $this->patientModel = new Patient();
+        $this->medicalSessionModel = new MedicalSession();
     }
 
     public function dashboard()
@@ -32,9 +35,10 @@ class PatientController extends BaseController
 
             error_log("Patient ID: " . $patientId);
             error_log("Appointments: " . print_r($appointments, true));
-
             $data = [
                 'appointments' => $appointments,
+                'activeMedicalSession' => $activeMedicalSession,
+                'sessionData' => $sessionData,
                 'basePath' => $this->basePath
             ];
 
@@ -56,12 +60,12 @@ class PatientController extends BaseController
                 error_log("No doctors found");
                 $this->session->setFlash('error', 'No doctors available');
             }
-
             $data = [
                 'doctors' => $doctors,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
-                'basePath' => $this->basePath
+                'basePath' => $this->basePath,
+                'startMedicalSession' => $startMedicalSession
             ];
 
             echo $this->view('patient/book-appointment', $data);
@@ -108,6 +112,15 @@ class PatientController extends BaseController
         try {
             $appointmentId = $_GET['id'] ?? 0;
             $details = $this->appointmentModel->getAppointmentDetails($appointmentId);
+            
+            // Get the full appointment record to access meet_link
+            $appointment = $this->appointmentModel->getById($appointmentId);
+            
+            // Add meet_link to the details if it exists
+            if ($appointment && !empty($appointment['meet_link'])) {
+                $details['appointment']['meet_link'] = $appointment['meet_link'];
+            }
+            
             header('Content-Type: application/json');
             echo json_encode($details);
             exit();
@@ -220,13 +233,11 @@ class PatientController extends BaseController
             $patientId = $this->session->getUserId();
             $records = $this->healthRecordModel->getPatientRecords($patientId);
             $reports = $this->patientModel->getMedicalReports($patientId);
-
             $data = [
                 'records' => $records,
                 'reports' => $reports,
                 'basePath' => $this->basePath
             ];
-
             echo $this->view('patient/medical-history', $data);
             exit();
         } catch (\Exception $e) {
@@ -289,7 +300,6 @@ class PatientController extends BaseController
             ];
 
             $this->patientModel->saveMedicalReport($reportData);
-
             $this->session->setFlash('success', 'Medical report uploaded successfully!');
             header('Location: ' . $this->url('patient/medical-history'));
             exit();
@@ -314,7 +324,6 @@ class PatientController extends BaseController
 
             // Get report details to delete file
             $report = $this->patientModel->getMedicalReport($reportId);
-
             if (!$report || $report['patient_id'] != $patientId) {
                 throw new \Exception("Invalid report");
             }

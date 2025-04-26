@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "medceylon-442811",
+  "private_key_id": "59334856cb61ed44150ef733fdb69d4415ff6d0f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDIW1NSHjZufTS1\nYTsmM1q7u5JX0laGqkY/mZmH2T32SgNHbgIYiKP9KblUjl1rfUTXYo68IUZcUCzS\nyLziBf/hc+knIrZUQrXHRdElJhszhImYBDcPI4m7QkIasU3HkazlkEAUZ3KJRq03\nsjetSCc4w+ZfaTk/Uee4NcJF3OOd3jdQsNGh6sZLwHA0eMYAsOIzR8WQYt+1Jw0G\nF2MHrBQXtbBaFtXdlGpgJVNVSWaxXJU/oPDHEPACr1nUW835AfLyqh9Us4Y8Mt3s\nwR2xzYgnNl0rfBA4ApK/fdOqamPDNeKVf8fKpG/3e/ELRSUPkdcjW7k0BjvuGP3R\n7HvrPXmhAgMBAAECggEABvhmZaz3Z9CjTMwdKq8OsQlNhhCjQfwahYvqc3dzWGYq\nxwlkuUXHrr8M24w4Y8zv4C5lmNXvhLalWI/zQknDJSzLJ7llbnkDqfMb25b/y0MJ\nJmi/IZ+y4vjjI9qXQiInSbVDBXKz4WK8E/v3Q+gGtUrbcOZQP4ux7A6yu4t7v7oz\nl+3kA+xu1MUb+4f2hGjIuH4Rs4PnZ7UWVLxvmkZ/ZLRErP01xzgb3cwmhkO/4Xfe\nYaprnF5GKb4T2HT2R+cd6S4lDBma3BhDRGNcMMTsBChQ1dYh1YAuiEblus07ohGT\nYA+A4X0gfcyHwi/mfwiEbm8GMJ8XnyWVVghTBfe3oQKBgQDxll7hqnyLPcFS70fL\nu58uuXjvEG9Z1QUMXIcWWOCJFzrYO1cwSb7pZlx/caR2sSyEZFfJu6XWcocPt6sC\nWW2MnaQNEVOHoaI2Xk42ArH6dT+21fCqSRSuiCg/TchvnlDFy4l3f1WCWdZcXJdf\nKKDik12fOonWCXCEYQDn06YddwKBgQDUT0MfXq2yYuMvKc0K2HW6hLkIn6ikAqj1\nrb6Far3hxa7Jm2Sc/vZkd4l3GUigXogcXIsHvfUlPQrrEAZFPRCaZaKQqe0iyrg/\nvGnbiw2K4RWHGmBRw5ZPDk24GdRuYkoAwnP2W7NPMjEVRoVGeJFaLpgUn/duLNTi\nIT0zRf4HpwKBgQDECi6yVsM7xoAjSZJsK7MPmmgdLqv9LJQtJMRmCPcjp9sTbovg\n3mbyRSMYM+KugjVKtZZbWE9JhqQ8x+EYRfNUoPNnu0CaFjpoffxfba55PD3YoyDp\nPeZvfoOSYw8cLE8FQpYphwWfgkElr+kRyglL8yOMu1bwfbZ1ZbXzaVcqHwKBgQCo\nZCWM3/9MmXovkiv7Cix2P4ay/E85ppJ0KdYO49avF6fGZ+WpT+AFV3pEaF1eNRwn\nwo7TGSsy2fOq9Q7EI+bjTvFdZCmdisQQaVRcuTGIkXYNrjHvJ/4zvdiOyI3g7zxa\n1eA76geSLPEZOtHCTyaaLJKa6TXKwOwoXsy3ui/9yQKBgGHQjXYIz1io5/xLgTmg\nBjMYsdJNNqFI0R8gHMbqtE22ElBj4gC8SWJooJGMpYHltJz5ZxB3JFnlQb+ZD8Ak\nSihMpNZ7Y14KCotwc4rTIMQR+kQ05SkUc3Z80eqkZaU1d9pmTCYCkyv6GJOw182c\nLjwlqM12N4KXMpztYPWZj6uV\n-----END PRIVATE KEY-----\n",
+  "client_email": "medceylon@medceylon-442811.iam.gserviceaccount.com",
+  "client_id": "104213407966460724423",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/medceylon%40medceylon-442811.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
