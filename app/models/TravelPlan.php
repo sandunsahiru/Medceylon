@@ -32,43 +32,49 @@ class TravelPlan {
         $query = "SELECT 
                     d.*, 
                     p.province_name, 
-                    di.district_name, 
-                    t.town_name
-                FROM traveldestinations d
-                JOIN towns t ON d.town_id = t.town_id
-                JOIN districts di ON t.district_id = di.district_id
-                JOIN provinces p ON di.province_id = p.province_id
-                WHERE 1=1";
+                    GROUP_CONCAT(DISTINCT dt.type_name) AS destination_types
+                  FROM traveldestinations d
+                  JOIN provinces p ON d.province_id = p.province_id
+                  LEFT JOIN destination_type_mapping dm ON d.destination_id = dm.destination_id
+                  LEFT JOIN destination_types dt ON dm.type_id = dt.type_id
+                  WHERE 1=1";
 
         $params = [];
         $types = '';
+        $conditions = [];
 
+        // Dynamically build conditions
         if (!empty($filters['province_id'])) {
-            $query .= " AND p.province_id = ?";
+            $conditions[] = "p.province_id = ?";
             $params[] = $filters['province_id'];
             $types .= 'i';
         }
 
-        if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
-            $query .= " AND d.wheelchair_accessibility = ?";
+        if (isset($filters['wheelchair']) && in_array($filters['wheelchair'], ['No', 'Yes'])) {
+            $conditions[] = "d.wheelchair_accessibility = ?";
             $params[] = $filters['wheelchair'];
-            $types .= 'i';
+            $types .= 's';
         }
 
         if (!empty($filters['type_id'])) {
-            $query .= " AND d.type_id = ?";
+            $conditions[] = "dm.type_id = ?";
             $params[] = $filters['type_id'];
             $types .= 'i';
         }
 
-        if (!empty($filters['budget'])) {
-            if ($filters['budget'] !== null) { // For Low and Medium categories
-                $query .= " AND d.entry_fee <= ?";
-                $params[] = $filters['budget'];
-                $types .= 'd';
-            }
-            // High budget has no upper limit
+        if (isset($filters['cost']) && in_array($filters['cost'], ['Low', 'Medium', 'High'])) {
+            $conditions[] = "d.cost_category = ?";
+            $params[] = $filters['cost'];
+            $types .= 's';
         }
+
+        // Append all dynamic conditions
+        if (!empty($conditions)) {
+            $query .= " AND " . implode(" AND ", $conditions);
+        }
+
+        // Now group
+        $query .= " GROUP BY d.destination_id";
 
         $stmt = $this->db->prepare($query);
 
@@ -101,40 +107,6 @@ class TravelPlan {
 
 
 
-    public function sortByType($typeId){
-        try{
-            $sql = "SELECT t.* FROM traveldestinations t
-            JOIN destination_type_mapping d
-            ON t.type_id = d.type_id
-            WHERE type_id = ? ";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("i", $typeId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            return $result->fetch_all(MYSQLI_ASSOC);
-        }catch (\Exception $e) {
-            error_log("Error in sortByType: " . $e->getMessage());
-            throw new \Exception("Failed to Sort destinations by Type");
-        }
-    }
-
-    public function sortByWheelchairAccess($access)
-    {
-        try{
-            $sql = "SELECT * FROM traveldestinations WHERE wheelchair_accessibility = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("s", $access);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            return $result->fetch_all(MYSQLI_ASSOC);
-        }catch (\Exception $e) {
-            error_log("Error in sortByWheelchairAccess: " . $e->getMessage());
-            throw new \Exception("Failed to Sort destinations by Wheelchair Accessibility");
-        } 
-    }
 
     public function getDestinationTypes()
     {
@@ -322,7 +294,6 @@ class TravelPlan {
         }
     }
     
-    // Update the getAllTravelPlans method to include memory info
     public function getAllTravelPlans($userId) {
         try {
             $sql = "SELECT d.destination_name, d.province_id, d.image_path, 
@@ -479,7 +450,7 @@ class TravelPlan {
         try {
             $this->db->begin_transaction();
 
-            // First delete any existing plan for this user
+            
             $this->db->query("DELETE FROM travel_plans WHERE user_id = $userId");
 
             // Insert each destination in the plan

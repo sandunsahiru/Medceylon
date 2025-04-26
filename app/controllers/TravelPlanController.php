@@ -594,22 +594,34 @@ class TravelPlanController extends BaseController
     }
 
     public function saveCompletePlan()
-    {
-        try {
-            $userId = $this->session->getUserId();
-            $planData = json_decode($_POST['plan_data'], true);
-            
-            if ($this->travelPlanModel->saveMultiDestinationPlan($userId, $planData)) {
-                echo json_encode(['success' => true]);
-            } else {
-                throw new \Exception('Failed to save travel plan');
-            }
-        } catch (\Exception $e) {
-            error_log("Error in saveCompletePlan: " . $e->getMessage());
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+{
+    try {
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            throw new \Exception("Invalid CSRF token");
         }
-        exit();
+
+        $userId = $this->session->getUserId();
+        $planData = json_decode($_POST['plan_data'], true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception("Invalid plan data format");
+        }
+
+        if ($this->travelPlanModel->saveMultiDestinationPlan($userId, $planData)) {
+            echo json_encode(['success' => true]);
+        } else {
+            throw new \Exception('Failed to save travel plan');
+        }
+    } catch (\Exception $e) {
+        error_log("Error in saveCompletePlan: " . $e->getMessage());
+        http_response_code(400);
+        echo json_encode([
+            'success' => false, 
+            'error' => $e->getMessage()
+        ]);
     }
+    exit();
+}
 
     public function savePlan() {
         $input = json_decode(file_get_contents('php://input'), true);

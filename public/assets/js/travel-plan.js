@@ -82,63 +82,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Save plan
-    savePlanBtn.addEventListener('click', async function calculatePlan() {
-        const calculateBtn = document.getElementById('calculatePlanBtn');
-        if (!calculateBtn) return;
-    
+    savePlanBtn.addEventListener('click', async function() {
         try {
-            // UI feedback
-            calculateBtn.disabled = true;
-            calculateBtn.textContent = 'Calculating...';
-            
-            const response = await fetch('http://localhost/Medceylon/travelplan/calculate-travel-dates', {
+            // Get all the plan items from the displayed plan
+            const planItems = Array.from(document.querySelectorAll('.plan-item')).map(item => {
+                return {
+                    destination_id: item.querySelector('.edit-dates-btn').getAttribute('data-id'),
+                    start_date: item.querySelector('.edit-dates-btn').getAttribute('data-min-start'),
+                    end_date: item.querySelector('.edit-dates-btn').getAttribute('data-min-end'),
+                    travel_time_hours: parseFloat(item.querySelector('.edit-dates-btn').getAttribute('data-travel-hours')),
+                    time_spent_hours: parseFloat(item.querySelector('.edit-dates-btn').getAttribute('data-min-hours')),
+                    sequence: Array.from(document.querySelectorAll('.plan-item')).indexOf(item) + 1
+                };
+            });
+    
+            const response = await fetch('http://localhost/Medceylon/travelplan/save-complete-plan', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({
-                    destination_ids: selectedDestinations.map(d => d.id)
-                }),
-                credentials: 'include'
+                body: `plan_data=${encodeURIComponent(JSON.stringify({
+                    items: planItems
+                }))}`
             });
     
-            // Handle empty responses
-            if (response.status === 500) {
-                throw new Error('Server error occurred. Please try again later.');
+            if (!response.ok) {
+                throw new Error('Failed to save plan');
             }
     
-            // Check content type
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Non-JSON response:', text);
-                throw new Error('Invalid server response');
+            const result = await response.json();
+            if (result.success) {
+                alert('Travel plan saved successfully!');
+                window.location.reload();
+            } else {
+                throw new Error(result.error || 'Failed to save plan');
             }
-    
-            const data = await response.json();
-            
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || 'Calculation failed');
-            }
-            
-            // Success case
-            displayTravelPlan(data.plan, data.accommodation);
-            
         } catch (error) {
-            console.error('Error:', error);
-            // Replace showErrorAlert with standard alert
+            console.error('Error saving plan:', error);
             alert(`Error: ${error.message}`);
-            
-            // Optional: Show more details in console for debugging
-            console.debug('Error details:', {
-                error: error,
-                selectedDestinations: selectedDestinations
-            });
-        } finally {
-            // Reset UI
-            calculateBtn.disabled = false;
-            calculateBtn.textContent = 'Calculate Travel Plan';
         }
     });
     
@@ -198,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3>Travel Plan Summary</h3>
                 <p>Starting from: ${accommodation.name} (check-out: ${accommodation.check_out})</p>
                 <p>Total trip time: ${plan.total_trip_time_hours} hours</p>
+                <p>Time in Travel Days: ${plan.travel_days} days</p>
             </div>
             <div class="plan-details">
                 ${plan.items.map((item, index) => {
@@ -227,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         planContainer.innerHTML = planHTML;
+        savePlanBtn.style.display = 'block';
         
         // Add event listeners to edit buttons
         document.querySelectorAll('.edit-dates-btn').forEach(btn => {
