@@ -311,38 +311,33 @@ class Hospital
     {
         try {
             $this->db->begin_transaction();
-
-            // Update doctor record
+    
+            // 1. Update doctors table
             $query = "UPDATE doctors SET 
-                      specialization = ?,
-                      license_number = ?,
-                      department_id = ?,
-                      updated_at = NOW()
+                      license_number = ?, 
+                      department_id = ?, 
+                      updated_at = NOW() 
                       WHERE doctor_id = ?";
-
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
-                "ssii",
-                $data['specialization'],
+                "sii",
                 $data['license_number'],
                 $data['department_id'],
                 $doctorId
             );
-
             if (!$stmt->execute()) {
                 throw new \Exception($stmt->error);
             }
-
-            // Update user record
+    
+            // 2. Update users table
             $query = "UPDATE users SET 
-                      first_name = ?,
-                      last_name = ?,
-                      email = ?,
-                      phone_number = ?,
-                      updated_by = ?,
-                      updated_at = NOW()
+                      first_name = ?, 
+                      last_name = ?, 
+                      email = ?, 
+                      phone_number = ?, 
+                      updated_by = ?, 
+                      updated_at = NOW() 
                       WHERE user_id = (SELECT user_id FROM doctors WHERE doctor_id = ?)";
-
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
                 "ssssii",
@@ -353,11 +348,24 @@ class Hospital
                 $data['updated_by'],
                 $doctorId
             );
-
             if (!$stmt->execute()) {
                 throw new \Exception($stmt->error);
             }
-
+    
+            // 3. Update doctorspecializations table
+            $query = "UPDATE doctorspecializations SET 
+                      specialization_id = ? 
+                      WHERE doctor_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param(
+                "ii",
+                $data['specialization_id'],
+                $doctorId
+            );
+            if (!$stmt->execute()) {
+                throw new \Exception($stmt->error);
+            }
+    
             $this->db->commit();
             return true;
         } catch (\Exception $e) {

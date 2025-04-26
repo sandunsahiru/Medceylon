@@ -29,10 +29,6 @@
                     <?php endforeach;
                     endif; ?>
                 </select>
-                <button class="add-btn" id="addDoctorBtn">
-                    <i class="ri-add-line"></i>
-                    Add Doctor
-                </button>
             </div>
         </div>
 
@@ -103,7 +99,7 @@
 </main>
 </div>
 
-<!-- Add/Edit Doctor Modal -->
+<!-- Edit Doctor Modal -->
 <div id="doctorModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -220,119 +216,188 @@
     </div>
 </div>
 
+//View Doctor Details Modal
+<div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn">&times;</button>
+                <h2>Doctor Details</h2>
+            </div>
+            <div id="doctorDetails" class="patient-details">
+                <!-- Doctor details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
 <script>
+// In the doctors.php file, within the <script> section:
+
     const basePath = 'http://localhost/MedCeylon';
     document.addEventListener('DOMContentLoaded', function () {
-    // Modal Elements
-    const doctorModal = document.getElementById('doctorModal');
-    const scheduleModal = document.getElementById('scheduleModal');
+        // Modal Elements
+        const doctorModal = document.getElementById('doctorModal');
+        const scheduleModal = document.getElementById('scheduleModal');
+        const detailsModal = document.getElementById('detailsModal'); // Add this line
 
-    // Form Elements
-    const doctorForm = document.getElementById('doctorForm');
-    const scheduleForm = document.getElementById('scheduleForm');
-    const searchInput = document.getElementById('searchInput');
-    const departmentFilter = document.getElementById('departmentFilter');
+        // Form Elements
+        const doctorForm = document.getElementById('doctorForm');
+        const scheduleForm = document.getElementById('scheduleForm');
+        const searchInput = document.getElementById('searchInput');
+        const departmentFilter = document.getElementById('departmentFilter');
 
-    // Global functions for modal handling
-    window.closeModal = function() {
-        doctorModal.classList.remove('show');
-        doctorForm.reset();
-    };
+        // Global functions for modal handling
+        window.closeModal = function() {
+            doctorModal.classList.remove('show');
+            doctorForm.reset();
+        };
 
-    window.closeScheduleModal = function() {
-        scheduleModal.classList.remove('show');
-        scheduleForm.reset();
-    };
+        window.closeScheduleModal = function() {
+            scheduleModal.classList.remove('show');
+            scheduleForm.reset();
+        };
 
-    // Add Doctor Button
-    document.getElementById('addDoctorBtn')?.addEventListener('click', function() {
-        document.getElementById('modalTitle').textContent = 'Add Doctor';
-        doctorForm.reset();
-        document.getElementById('doctorId').value = '';
-        doctorModal.classList.add('show');
-    });
+        window.closeDetailsModal = function() { // Add this function
+            detailsModal.classList.remove('show');
+        };
 
-    // Edit Doctor Buttons
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const doctorId = this.dataset.id;
-            try {
-                const response = await fetch(`${basePath}/hospital/getDoctorDetails?id=${doctorId}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const data = await response.json();
-
-                document.getElementById('modalTitle').textContent = 'Edit Doctor';
-                document.getElementById('doctorId').value = data.doctor_id;
-                document.getElementById('firstName').value = data.first_name;
-                document.getElementById('lastName').value = data.last_name;
-                document.getElementById('email').value = data.email;
-                document.getElementById('phone').value = data.phone_number || '';
-                document.getElementById('specialization').value = data.specialization;
-                document.getElementById('licenseNumber').value = data.license_number;
-                document.getElementById('department').value = data.department_id;
-
-                doctorModal.classList.add('show');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to fetch doctor details: ' + error.message);
-            }
-        });
-    });
-
-    // Schedule Buttons
-    document.querySelectorAll('.schedule-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const doctorId = this.dataset.id;
-            document.getElementById('scheduleDoctor').value = doctorId;
-            
-            try {
-                // Clear previous schedule data
-                const dayInputs = scheduleForm.querySelectorAll('input[type="time"], input[type="checkbox"]');
-                dayInputs.forEach(input => {
-                    if (input.type === 'checkbox') {
-                        input.checked = false;
-                    } else {
-                        input.value = '';
+        // View Doctor Details
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const doctorId = this.dataset.id;
+                try {
+                    const response = await fetch(`${basePath}/hospital/get-doctor-details?id=${doctorId}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
                     }
-                });
-                
-                // Fetch doctor's schedule
-                const response = await fetch(`${basePath}/hospital/getDoctorSchedule?id=${doctorId}`);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                
-                const schedule = await response.json();
-                
-                // Populate schedule form
-                for (const day in schedule) {
-                    const startTime = scheduleForm.querySelector(`input[name="schedule[${day}][start]"]`);
-                    const endTime = scheduleForm.querySelector(`input[name="schedule[${day}][end]"]`);
-                    const available = scheduleForm.querySelector(`input[name="schedule[${day}][available]"]`);
+                    const data = await response.json();
                     
-                    if (startTime) startTime.value = schedule[day].start;
-                    if (endTime) endTime.value = schedule[day].end;
-                    if (available) available.checked = schedule[day].available == 1;
+                    // Populate the details modal
+                    document.getElementById('doctorDetails').innerHTML = `
+                        <div class="details-section">
+                            <h3>Dr. ${data.first_name} ${data.last_name}</h3>
+                            <p><i class="ri-mail-line"></i> ${data.email}</p>
+                            ${data.phone_number ? `<p><i class="ri-phone-line"></i> ${data.phone_number}</p>` : ''}
+                            <p><i class="ri-stethoscope-line"></i> ${data.specialization}</p>
+                            <p><i class="ri-hospital-line"></i> ${data.department_name}</p>
+                            ${data.license_number ? `<p><i class="ri-profile-line"></i> License: ${data.license_number}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    detailsModal.classList.add('show');
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to fetch doctor details: ' + error.message);
                 }
+            });
+        });
+
+        // Edit Doctor Buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const doctorId = this.dataset.id;
+                try {
+                    const response = await fetch(`${basePath}/hospital/get-doctor-details?id=${doctorId}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const data = await response.json();
+
+                    document.getElementById('modalTitle').textContent = 'Edit Doctor';
+                    document.getElementById('doctorId').value = data.doctor_id;
+                    document.getElementById('firstName').value = data.first_name;
+                    document.getElementById('lastName').value = data.last_name;
+                    document.getElementById('email').value = data.email;
+                    document.getElementById('phone').value = data.phone_number || '';
+                    document.getElementById('specialization').value = data.specialization;
+                    document.getElementById('licenseNumber').value = data.license_number;
+                    document.getElementById('department').value = data.department_id;
+
+                    doctorModal.classList.add('show');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to fetch doctor details: ' + error.message);
+                }
+            });
+        });
+
+        // Schedule Buttons
+        document.querySelectorAll('.schedule-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const doctorId = this.dataset.id;
+                document.getElementById('scheduleDoctor').value = doctorId;
                 
-                scheduleModal.classList.add('show');
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to fetch doctor schedule: ' + error.message);
+                try {
+                    // Clear previous schedule data
+                    const dayInputs = scheduleForm.querySelectorAll('input[type="time"], input[type="checkbox"]');
+                    dayInputs.forEach(input => {
+                        if (input.type === 'checkbox') {
+                            input.checked = false;
+                        } else {
+                            input.value = '';
+                        }
+                    });
+                    
+                    // Fetch doctor's schedule
+                    const response = await fetch(`${basePath}/hospital/get-doctor-schedule?id=${doctorId}`);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const schedule = await response.json();
+                    
+                    // Populate schedule form
+                    for (const day in schedule) {
+                        const startTime = scheduleForm.querySelector(`input[name="schedule[${day}][start]"]`);
+                        const endTime = scheduleForm.querySelector(`input[name="schedule[${day}][end]"]`);
+                        const available = scheduleForm.querySelector(`input[name="schedule[${day}][available]"]`);
+                        
+                        if (startTime) startTime.value = schedule[day].start;
+                        if (endTime) endTime.value = schedule[day].end;
+                        if (available) available.checked = schedule[day].available == 1;
+                    }
+                    
+                    scheduleModal.classList.add('show');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to fetch doctor schedule: ' + error.message);
+                }
+            });
+        });
+
+        // Close Modals - X buttons
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.modal');
+                if (modal === doctorModal) {
+                    window.closeModal();
+                } else if (modal === scheduleModal) {
+                    window.closeScheduleModal();
+                } else if (modal === detailsModal) {
+                    window.closeDetailsModal();
+                }
+            });
+        });
+
+        // Close Modals - Click outside
+        window.addEventListener('click', function(event) {
+            if (event.target === doctorModal) {
+                window.closeModal();
+            } else if (event.target === scheduleModal) {
+                window.closeScheduleModal();
+            } else if (event.target === detailsModal) {
+                window.closeDetailsModal();
             }
         });
-    });
 
     // Toggle Status Buttons
-    document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+    document.querySelectorAll('.action-btn.toggle-status-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
             const doctorId = this.dataset.id;
             const csrf_token = document.querySelector('input[name="csrf_token"]').value;
             
             try {
-                const response = await fetch(`${basePath}/hospital/toggleDoctorStatus`, {
+                const response = await fetch(`${basePath}/hospital/toggle-doctor-status`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -382,12 +447,9 @@
         }
         
         try {
-            const response = await fetch(`${basePath}/hospital/saveDoctor`, {
+            const response = await fetch(`${basePath}/hospital/save-doctor`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: params.toString()
+                body: formData
             });
             
             if (!response.ok) {
@@ -397,8 +459,7 @@
             const result = await response.json();
             
             if (result.success) {
-                alert(result.message);
-                window.location.reload();
+                location.reload();
             } else {
                 alert(result.error || 'An error occurred');
             }
@@ -462,27 +523,6 @@
         } catch (error) {
             console.error('Error:', error);
             alert('Failed to save schedule: ' + error.message);
-        }
-    });
-
-    // Close Modals - X buttons
-    document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            if (modal === doctorModal) {
-                window.closeModal();
-            } else if (modal === scheduleModal) {
-                window.closeScheduleModal();
-            }
-        });
-    });
-
-    // Close Modals - Click outside
-    window.addEventListener('click', function(event) {
-        if (event.target === doctorModal) {
-            window.closeModal();
-        } else if (event.target === scheduleModal) {
-            window.closeScheduleModal();
         }
     });
 
