@@ -342,10 +342,10 @@ class PatientController extends BaseController
     {
         try {
             $patientId = $this->session->getUserId();
-            // $paymentPlans = $this->patientModel->getPaymentPlans($patientId);
+            $paymentPlans = $this->patientModel->showPaymentPlans();
 
             $data = [
-                // 'paymentPlans' => $paymentPlans,
+                'paymentPlans' => $paymentPlans,
                 'basePath' => $this->basePath
             ];
 
@@ -356,4 +356,27 @@ class PatientController extends BaseController
             throw $e;
         }
     }
+
+
+    public function choosePlan()
+    {
+        try {
+            $patientId = $this->session->getUserId(); // get logged in patient id
+            $planId = $_POST['plan_id'] ?? null;
+
+            if (!$planId) {
+                echo json_encode(['success' => false, 'message' => 'No plan selected']);
+                return;
+            }
+
+            $this->patientModel->assignPaymentPlan($patientId, $planId);
+
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            error_log("Error in assignPaymentPlan: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Something went wrong']);
+        }
+    }
+
+
 }
