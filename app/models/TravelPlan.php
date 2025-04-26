@@ -27,91 +27,76 @@ class TravelPlan {
     }
 
     public function getFilteredDestinations($filters)
-    {
-        try {
-            $query = "SELECT 
-                        d.*, 
-                        p.province_name, 
-                        di.district_name, 
-                        t.town_name
-                    FROM traveldestinations d
-                    JOIN towns t ON d.town_id = t.town_id
-                    JOIN districts di ON t.district_id = di.district_id
-                    JOIN provinces p ON di.province_id = p.province_id
-                    WHERE 1=1";
+{
+    try {
+        $query = "SELECT 
+                    d.*, 
+                    p.province_name, 
+                    di.district_name, 
+                    t.town_name
+                FROM traveldestinations d
+                JOIN towns t ON d.town_id = t.town_id
+                JOIN districts di ON t.district_id = di.district_id
+                JOIN provinces p ON di.province_id = p.province_id
+                WHERE 1=1";
 
-            $params = [];
-            $types = '';
+        $params = [];
+        $types = '';
 
-            if (!empty($filters['province_id'])) {
-                $query .= " AND p.province_id = ?";
-                $params[] = $filters['province_id'];
-                $types .= 'i';
-            }
+        if (!empty($filters['province_id'])) {
+            $query .= " AND p.province_id = ?";
+            $params[] = $filters['province_id'];
+            $types .= 'i';
+        }
 
-            if (!empty($filters['district_id'])) {
-                $query .= " AND di.district_id = ?";
-                $params[] = $filters['district_id'];
-                $types .= 'i';
-            }
+        if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
+            $query .= " AND d.wheelchair_accessibility = ?";
+            $params[] = $filters['wheelchair'];
+            $types .= 'i';
+        }
 
-            if (!empty($filters['town_id'])) {
-                $query .= " AND t.town_id = ?";
-                $params[] = $filters['town_id'];
-                $types .= 'i';
-            }
+        if (!empty($filters['type_id'])) {
+            $query .= " AND d.type_id = ?";
+            $params[] = $filters['type_id'];
+            $types .= 'i';
+        }
 
-            if (!empty($filters['distance'])) {
-                $query .= " AND d.distance <= ?";
-                $params[] = $filters['distance'];
-                $types .= 'd'; // double (float)
-            }
-
-            if (isset($filters['wheelchair']) && ($filters['wheelchair'] === '0' || $filters['wheelchair'] === '1')) {
-                $query .= " AND d.wheelchair_accessibility = ?";
-                $params[] = $filters['wheelchair'];
-                $types .= 'i';
-            }
-
-            if (!empty($filters['type_id'])) {
-                $query .= " AND d.type_id = ?";
-                $params[] = $filters['type_id'];
-                $types .= 'i';
-            }
-
-            if (!empty($filters['budget'])) {
+        if (!empty($filters['budget'])) {
+            if ($filters['budget'] !== null) { // For Low and Medium categories
                 $query .= " AND d.entry_fee <= ?";
                 $params[] = $filters['budget'];
                 $types .= 'd';
             }
-
-            $stmt = $this->db->prepare($query);
-
-            if (!$stmt) {
-                throw new \Exception("Prepare failed: " . $this->db->error);
-            }
-
-            if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-            }
-
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if (!$result) {
-                throw new \Exception("Execute failed: " . $stmt->error);
-            }
-
-            $destinations = $result->fetch_all(MYSQLI_ASSOC);
-            $stmt->close();
-
-            return $destinations;
-
-        } catch (\Exception $e) {
-            error_log("Error in getFilteredDestinations: " . $e->getMessage());
-            throw new \Exception("Failed to filter destinations");
+            // High budget has no upper limit
         }
+
+        $stmt = $this->db->prepare($query);
+
+        if (!$stmt) {
+            throw new \Exception("Prepare failed: " . $this->db->error);
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            throw new \Exception("Execute failed: " . $stmt->error);
+        }
+
+        $destinations = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $destinations;
+
+    } catch (\Exception $e) {
+        error_log("Error in getFilteredDestinations: " . $e->getMessage());
+        throw new \Exception("Failed to filter destinations");
     }
+}
 
 
 
@@ -182,37 +167,6 @@ class TravelPlan {
         }
     }
 
-    public function getDistricts($provinceId)
-    {
-        try{
-            $sql = "SELECT * FROM districts WHERE province_id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("i", $provinceId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            return $result->fetch_all(MYSQLI_ASSOC);
-        } catch (\Exception $e) {
-            error_log("Error in getDistricts: " . $e->getMessage());
-            throw new \Exception("Failed to retrieve districts");
-        }
-    }
-
-    public function getTowns($districtId)
-    {
-        try{
-            $sql = "SELECT * FROM towns WHERE district_id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("i", $districtId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            return $result->fetch_all(MYSQLI_ASSOC);
-        } catch (\Exception $e) {
-            error_log("Error in getTowns: " . $e->getMessage());
-            throw new \Exception("Failed to retrieve Towns");
-        }
-    }
 
     public function markTravelPlanCompleted($travel_plan_id) {
         try {
@@ -519,7 +473,374 @@ class TravelPlan {
             return false;
         }
     }
-    
-    
 
+    public function saveCompletePlan($userId, $accommodationId, $planData)
+    {
+        try {
+            $this->db->begin_transaction();
+
+            // First delete any existing plan for this user
+            $this->db->query("DELETE FROM travel_plans WHERE user_id = $userId");
+
+            // Insert each destination in the plan
+            foreach ($planData['items'] as $item) {
+                $sql = "INSERT INTO travel_plans 
+                        (user_id, destination_id, check_in, check_out, travel_time_hours, time_spent_hours, sequence) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->bind_param(
+                    "iissddi",
+                    $userId,
+                    $item['destination_id'],
+                    $item['start_date'],
+                    $item['end_date'],
+                    $item['travel_time_hours'],
+                    $item['time_spent_hours'],
+                    $item['sequence']
+                );
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("Error in saveCompletePlan: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function createTrip($userId, $tripName, $startDate, $endDate, $totalDuration)
+    {
+        $sql = "INSERT INTO trips (user_id, name, start_date, end_date, total_duration_hours) 
+                VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("isssd", $userId, $tripName, $startDate, $endDate, $totalDuration);
+        $stmt->execute();
+        return $this->db->insert_id;
+    }
+
+    public function addDestinationToTrip($tripId, $destinationId, $checkIn, $checkOut, $sequence, $travelTime, $timeSpent)
+    {
+        $sql = "INSERT INTO travel_plans 
+                (trip_id, user_id, destination_id, check_in, check_out, sequence, travel_time_hours, time_spent_hours) 
+                VALUES (?, (SELECT user_id FROM trips WHERE trip_id = ?), ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iiissidd", $tripId, $tripId, $destinationId, $checkIn, $checkOut, $sequence, $travelTime, $timeSpent);
+        return $stmt->execute();
+    }
+    
+    public function getUserTrips($userId)
+    {
+        $sql = "SELECT t.*, 
+                    (SELECT COUNT(*) FROM travel_plans WHERE trip_id = t.trip_id) AS destination_count
+                FROM trips t
+                WHERE t.user_id = ?
+                ORDER BY t.start_date DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getTripDetails($tripId)
+    {
+        // Get trip header
+        $sql = "SELECT * FROM trips WHERE trip_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $tripId);
+        $stmt->execute();
+        $trip = $stmt->get_result()->fetch_assoc();
+        
+        // Get destinations
+        $sql = "SELECT tp.*, td.destination_name, td.image_path, td.description
+                FROM travel_plans tp
+                JOIN traveldestinations td ON tp.destination_id = td.destination_id
+                WHERE tp.trip_id = ?
+                ORDER BY tp.sequence";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $tripId);
+        $stmt->execute();
+        $destinations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        return [
+            'trip' => $trip,
+            'destinations' => $destinations
+        ];
+    }
+    
+    public function migrateExistingPlans()
+    {
+        // 1. Group existing plans by user and date ranges that likely belong together
+        $sql = "SELECT user_id, 
+                    DATE(MIN(check_in)) as start_date,
+                    DATE(MAX(check_out)) as end_date,
+                    GROUP_CONCAT(travel_plan_id) as plan_ids
+                FROM travel_plans
+                WHERE trip_id IS NULL
+                GROUP BY user_id, DATE(check_in)";
+        
+        $result = $this->db->query($sql);
+        $groups = $result->fetch_all(MYSQLI_ASSOC);
+        
+        foreach ($groups as $group) {
+            // 2. Create a trip for each group
+            $tripId = $this->createTrip(
+                $group['user_id'],
+                "Migrated Trip",
+                $group['start_date'],
+                $group['end_date'],
+                0 // We'll calculate this later
+            );
+            
+            // 3. Update the existing plans with trip_id
+            $planIds = explode(',', $group['plan_ids']);
+            $sequence = 1;
+            $totalHours = 0;
+            
+            foreach ($planIds as $planId) {
+                // Get the existing plan
+                $plan = $this->db->query("SELECT * FROM travel_plans WHERE travel_plan_id = $planId")->fetch_assoc();
+                
+                // Calculate duration if not exists
+                $hours = $plan['travel_time_hours'] ?? 0;
+                $hours += $plan['time_spent_hours'] ?? 
+                        (strtotime($plan['check_out']) - strtotime($plan['check_in'])) / 3600;
+                
+                $totalHours += $hours;
+                
+                // Update with trip_id and sequence
+                $this->db->query("UPDATE travel_plans 
+                                SET trip_id = $tripId, 
+                                    sequence = $sequence,
+                                    travel_time_hours = $hours
+                                WHERE travel_plan_id = $planId");
+                $sequence++;
+            }
+            
+            // Update trip with total duration
+            $this->db->query("UPDATE trips SET total_duration_hours = $totalHours WHERE trip_id = $tripId");
+        }
+    }
+
+    public function getDestinationById($destinationId)
+    {
+        try {
+            $sql = "SELECT * FROM traveldestinations WHERE destination_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $destinationId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            return $result->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in getDestinationById: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve destination");
+        }
+    }
+
+    public function calculateTravelPlan($accommodation, $destinationIds)
+    {
+        $averageSpeed = 40; // km/h
+        $maxDailyHours = 8; // Maximum hours per day
+        
+        $plan = [];
+        $currentDate = new \DateTime($accommodation['check_out']);
+        $previousLocation = [
+            'latitude' => $accommodation['latitude'],
+            'longitude' => $accommodation['longitude']
+        ];
+
+        foreach ($destinationIds as $index => $destinationId) {
+            $destination = $this->getDestinationById($destinationId);
+            if (!$destination) {
+                throw new \Exception("Destination not found: $destinationId");
+            }
+
+            // Calculate distance from previous location
+            $distance = DistanceHelper::calculateDistanceInKm(
+                $previousLocation['latitude'],
+                $previousLocation['longitude'],
+                $destination['latitude'],
+                $destination['longitude']
+            );
+
+            // Calculate travel time (hours)
+            $travelTime = $distance / $averageSpeed;
+            
+            // Total time needed (travel + visit)
+            $totalTime = $travelTime + $destination['minimum_hours_spent'];
+            
+            // Determine dates
+            $startDate = clone $currentDate;
+            $endDate = clone $startDate;
+            
+            if ($totalTime > $maxDailyHours) {
+                $endDate->modify('+1 day');
+            }
+            
+            // Add to plan
+            $plan[] = [
+                'destination_id' => $destination['destination_id'],
+                'destination_name' => $destination['destination_name'],
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'travel_time_hours' => round($travelTime, 2),
+                'time_spent_hours' => $destination['minimum_hours_spent'],
+                'sequence' => $index + 1
+            ];
+            
+            // Update for next iteration
+            $currentDate = $endDate;
+            $previousLocation = [
+                'latitude' => $destination['latitude'],
+                'longitude' => $destination['longitude']
+            ];
+        }
+
+        // Calculate total trip time
+        $totalTripTime = array_reduce($plan, function($carry, $item) {
+            return $carry + $item['travel_time_hours'] + $item['time_spent_hours'];
+        }, 0);
+
+        return [
+            'items' => $plan,
+            'total_trip_time_hours' => round($totalTripTime, 2)
+        ];
+    }
+
+    public function saveMultiDestinationPlan($userId, $planData)
+    {
+        try {
+            $this->db->begin_transaction();
+
+            // Clear any existing temporary plans for this user
+            $sql = "DELETE FROM travel_plans WHERE user_id = ? AND trip_id IS NULL";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+
+            // Insert each destination in the plan
+            foreach ($planData['items'] as $item) {
+                $sql = "INSERT INTO travel_plans 
+                        (user_id, destination_id, check_in, check_out, 
+                        travel_time_hours, time_spent_hours, sequence) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->bind_param(
+                    "iissddi",
+                    $userId,
+                    $item['destination_id'],
+                    $item['start_date'],
+                    $item['end_date'],
+                    $item['travel_time_hours'],
+                    $item['time_spent_hours'],
+                    $item['sequence']
+                );
+                $stmt->execute();
+                $stmt->close();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (\Exception $e) {
+            $this->db->rollback();
+            error_log("Error in saveMultiDestinationPlan: " . $e->getMessage());
+            throw new \Exception("Failed to save travel plan");
+        }
+    }
+
+    public function getMultiDestinationPlan($userId)
+    {
+        try {
+            $sql = "SELECT tp.*, td.destination_name, td.image_path, 
+                        td.description, td.opening_time, td.closing_time
+                    FROM travel_plans tp
+                    JOIN traveldestinations td ON tp.destination_id = td.destination_id
+                    WHERE tp.user_id = ? AND tp.trip_id IS NULL
+                    ORDER BY tp.sequence";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error in getMultiDestinationPlan: " . $e->getMessage());
+            throw new \Exception("Failed to retrieve travel plan");
+        }
+    }
+
+    public function getUserActiveAccommodation($userId)
+    {
+        try {
+            $sql = "SELECT 
+                        rb.booking_id,
+                        rb.patient_id as user_id,
+                        rb.room_id,
+                        rb.check_in_date as check_in,
+                        rb.check_out_date as check_out,
+                        r.provider_id,
+                        ap.name as provider_name,
+                        ap.latitude,
+                        ap.longitude
+                    FROM room_bookings rb
+                    JOIN rooms r ON rb.room_id = r.room_id
+                    JOIN accommodationproviders ap ON r.provider_id = ap.provider_id
+                    WHERE rb.patient_id = ? 
+                    AND rb.check_out_date >= CURDATE()
+                    AND rb.status = 'Successful'
+                    ORDER BY rb.check_in_date ASC
+                    LIMIT 1";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows === 0) {
+                return null; // Return null instead of throwing exception
+            }
+            
+            $booking = $result->fetch_assoc();
+            
+            return [
+                'name' => $booking['provider_name'] . " (Room Booking)",
+                'check_out' => $booking['check_out'],
+                'latitude' => $booking['latitude'],
+                'longitude' => $booking['longitude']
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Error in getUserActiveAccommodation: " . $e->getMessage());
+            return null; // Return null on error
+        }
+    }
+
+    public function createNewTravelPlan($userId) {
+        $this->db->query(
+            "INSERT INTO travel_plans (user_id) VALUES (:user_id)",
+            [':user_id' => $userId]
+        );
+        return $this->db->lastInsertId();
+    }
+    
+    public function addDestinationToPlan($travelId, $destinationId, $startDate, $endDate) {
+        return $this->db->query(
+            "INSERT INTO travel_plan_destinations 
+             (travel_id, destination_id, start_date, end_date)
+             VALUES (:travel_id, :dest_id, :start, :end)",
+            [
+                ':travel_id' => $travelId,
+                ':dest_id' => $destinationId,
+                ':start' => $startDate,
+                ':end' => $endDate
+            ]
+        );
+    }
 }

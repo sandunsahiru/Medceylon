@@ -13,12 +13,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let selectedRoomPrice = 0;
     let currentProviderId = null;
 
-    console.log("Modal element exists:", !!detailsModal);
 
     // Open Details Modal
     document.querySelectorAll('.view-details-button').forEach(button => {
         button.addEventListener('click', async function () {
-            console.log('View details button clicked');
+
             const providerId = this.dataset.id;
             currentProviderId = providerId;
 
@@ -33,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
                 const data = await response.json();
-                console.log("Data received:", data);
 
                 if (data.error) {
                     alert(data.error);
@@ -201,13 +199,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             
             const result = await response.json();
-            console.log("Server response:", result);
             
             if (result.success) {
                 alert('Booking successful!');
                 bookingModal.classList.remove('show');
                 // Redirect to booking details page on success
-                window.location.href = `${basePath}/accommodation/get-booking-details`;
+                console.log("Redirecting to:", `${basePath}/accommodation/accommodation-providers`);
+                window.location.href = `${basePath}/accommodation/accommodation-providers`;
             } else {
                 alert('Booking failed: ' + (result.error || 'Unknown error'));
             }
@@ -216,5 +214,36 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error submitting booking:', error);
             alert('An error occurred while processing your booking');
         }
+    });
+
+    document.querySelectorAll('.delete-booking').forEach(button => {
+        button.addEventListener('click', async function() {
+            const bookingId = this.dataset.bookingId;
+            const confirmed = confirm('Are you sure you want to cancel this booking?');
+            
+            if (!confirmed) return;
+            
+            try {
+                const response = await fetch(`${basePath}/accommodation/delete-booking`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `booking_id=${bookingId}&csrf_token=${document.querySelector('input[name="csrf_token"]').value}`
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Booking cancelled successfully');
+                    location.reload(); // Refresh the page to show updated list
+                } else {
+                    alert('Failed to cancel booking: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                alert('An error occurred while cancelling the booking');
+            }
+        });
     });
 });

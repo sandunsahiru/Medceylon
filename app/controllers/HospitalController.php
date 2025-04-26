@@ -274,7 +274,12 @@ class HospitalController extends BaseController
             $details = $this->hospitalModel->getDoctorDetails($doctorId);
             
             header('Content-Type: application/json');
-            echo json_encode($details);
+            if ($details) {
+                echo json_encode($details);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Doctor not found']);
+            }
         } catch (\Exception $e) {
             error_log("Error in getDoctorDetails: " . $e->getMessage());
             http_response_code(500);

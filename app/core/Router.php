@@ -94,7 +94,7 @@ class Router
                     }
                 }
 
-                // ✅ NEW — pass dynamic params like {id}
+                //  NEW — pass dynamic params like {id}
                 $params = $this->params;
                 unset($params['controller'], $params['action'], $params['middleware'], $params['route']);
 

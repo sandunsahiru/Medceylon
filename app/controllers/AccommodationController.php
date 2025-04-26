@@ -17,24 +17,33 @@ class AccommodationController extends BaseController
     public function accommodations()
     {
         try {
-            error_log("Accommodations method invoked");
-            $accommodations = $this->accommodationModel->getAllAccommodations();
-
-            if (!$accommodations || count($accommodations) === 0) {
-                error_log("No accommodations found");
-                $this->session->setFlash('error', 'No accommodations available');
+            $province_id = $_GET['province_id'] ?? null;
+            $budget = $_GET['budget'] ?? null;
+    
+            $accommodations = $this->accommodationModel->getAllAccommodations($province_id, $budget);
+            $bookings = [];
+    
+            if ($this->session->isLoggedIn()) {
+                $bookings = $this->accommodationModel->getAllBookings($this->session->getUserId());
             }
-
+    
+            if (!$accommodations || count($accommodations) === 0) {
+                $this->session->setFlash('error', 'No accommodations available with the selected filters');
+            }
+    
             $provinces = $this->accommodationModel->getAllProvinces();
-
+    
             $data = [
                 'provinces' => $provinces,
                 'accommodations' => $accommodations,
+                'bookings' => $bookings,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
-                'basePath' => $this->basePath
+                'basePath' => $this->basePath,
+                'selected_province' => $province_id,
+                'selected_budget' => $budget
             ];
-
+    
             echo $this->view('/accommodation/accommodation-providers', $data);
             exit();
         } catch (\Exception $e) {
@@ -120,16 +129,26 @@ class AccommodationController extends BaseController
                 exit();
             }
 
+            $patientId = $this->session->getUserId();
+        
+        // Check for existing active bookings
+            if ($this->accommodationModel->hasActiveBooking($patientId)) {
+                echo json_encode(['success' => false, 'error' => 'You already have an active booking. Please cancel it before making a new one.']);
+                exit();
+
+            }else {
+                $bookingId = $this->accommodationModel->createBooking(
+                    $patientId,
+                    $providerId,
+                    $roomType,
+                    $checkInDate,
+                    $checkOutDate,
+                    $totalPrice,
+                    $specialRequests
+                );
+            }
             // Call the updated booking method (for room_bookings table)
-            $bookingId = $this->accommodationModel->createBooking(
-                $patientId,
-                $providerId,
-                $roomType,
-                $checkInDate,
-                $checkOutDate,
-                $totalPrice,
-                $specialRequests
-            );
+            
 
             if ($bookingId) {
                 echo json_encode(['success' => true, 'message' => 'Booking created successfully', 'booking_id' => $bookingId]);
@@ -171,5 +190,35 @@ class AccommodationController extends BaseController
             header('Location: ' . $this->url('error/404'));
             exit();
         }
+    }
+
+    public function deleteBooking() {
+        header('Content-Type: application/json');
+        try {
+            if (!$this->session->isLoggedIn()) {
+                echo json_encode(['success' => false, 'error' => 'Not logged in']);
+                exit();
+            }
+    
+            $bookingId = $_POST['booking_id'] ?? null;
+            $patientId = $this->session->getUserId();
+    
+            if (!$bookingId) {
+                echo json_encode(['success' => false, 'error' => 'Booking ID required']);
+                exit();
+            }
+    
+            $success = $this->accommodationModel->deleteBooking($bookingId, $patientId);
+    
+            if ($success) {
+                echo json_encode(['success' => true, 'message' => 'Booking deleted']);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Failed to delete booking']);
+            }
+        } catch (\Exception $e) {
+            error_log("Error in deleteBooking: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit();
     }
 }
