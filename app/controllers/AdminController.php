@@ -3,10 +3,12 @@ namespace App\Controllers;
 
 use App\Models\Admin;
 use App\Models\Appointment;
+use App\Models\User;
 
 class AdminController extends BaseController
 {
     private $adminModel;
+    private $userModel;
     private $appointmentModel;
 
     public function __construct()
@@ -14,6 +16,7 @@ class AdminController extends BaseController
         parent::__construct();
         $this->adminModel = new Admin();
         $this->appointmentModel = new Appointment();
+        $this->userModel = new User();
 
     }
 
@@ -120,7 +123,7 @@ class AdminController extends BaseController
 
             // Update the user profile in the database
             $this->adminModel->updateUserProfile($user_id, $first_name, $last_name, $email, $phone_number, $address, $city_id);
-                                                
+
             // Redirect to the user management page or show a success message
             header("Location: " . $this->basePath . "/admin/user-management?success=Profile updated successfully.");
         } catch (\Exception $e) {
@@ -132,8 +135,74 @@ class AdminController extends BaseController
                 'trace' => $e->getTraceAsString(),
             ]);
         }
-
     }
+
+    public function addUser()
+    {
+        if ($_SERVER["REQUEST_METHOD"] === "POST") {
+            $userData = [
+                'user_type' => $_POST['user_type'] ?? '',
+                'name' => trim($_POST['name'] ?? ''),
+                'email' => trim($_POST['email'] ?? ''),
+                'password' => $_POST['password'] ?? '',
+                'country' => $_POST['country'] ?? null,
+                'contact_number' => $_POST['contact_number'] ?? null,
+                'slmc_registration_number' => $_POST['slmc_registration_number'] ?? null,
+                'age' => $_POST['age'] ?? null,
+                'experience_years' => $_POST['experience_years'] ?? null,
+                'formAction' => $this->basePath . '/admin/adduser'
+            ];
+
+            // 🔒 BACKEND VALIDATION
+            if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
+                $error = "Name can only contain letters and spaces.";
+            } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
+                $error = "Invalid email format.";
+            } elseif (!preg_match('/^(?=.*[A-Z])(?=.*\d).{8,}$/', $userData['password'])) {
+                $error = "Password must be at least 8 characters with 1 uppercase & 1 digit.";
+            } elseif ($userData['contact_number'] && !preg_match('/^\+?\d+$/', $userData['contact_number'])) {
+                $error = "Invalid phone number.";
+            } elseif ($userData['slmc_registration_number'] && !preg_match('/^SLMC\d+$/', $userData['slmc_registration_number'])) {
+                $error = "SLMC number must start with 'SLMC' followed by digits.";
+            } elseif ($userData['age'] && $userData['age'] < 18) {
+                $error = "Age must be 18 or older.";
+            } elseif ($userData['experience_years'] && $userData['experience_years'] < 0) {
+                $error = "Experience must be a positive number.";
+            }
+
+            if (isset($error)) {
+                echo $this->view('auth/register', [
+                    'error' => $error,
+                    'oldInput' => $userData,
+                    'basePath' => $this->basePath
+                ]);
+                return;
+            }
+
+            // Register logic
+            $result = $this->userModel->register($userData);
+
+            if ($result['success']) {
+                $_SESSION['registration_success'] = true;
+                header("Location: {$this->basePath}/admin/user-management?success=User registered successfully.");
+                exit();
+            }
+
+            echo $this->view('auth/register', [
+                'error' => $result['error'],
+                'oldInput' => $userData,
+                'basePath' => $this->basePath,
+                'formAction' => $this->basePath . '/admin/adduser'
+            ]);
+            return;
+        }
+
+        echo $this->view('auth/register', [
+            'basePath' => $this->basePath,
+            'formAction' => $this->basePath . '/admin/adduser'
+        ]);
+    }
+
 
     public function userProfiles($page)
     {
