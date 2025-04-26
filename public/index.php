@@ -71,7 +71,9 @@ try {
     $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
     $router->post('/admin/updateProfile', 'AdminController', 'updateProfile', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/hotelBookings', 'AdminController', 'hotelBookings', \App\Core\Middleware\AdminMiddleware::class);
-
+    $router->get('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
+    $router->post('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
+    
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->get('/doctor/appointments', 'DoctorController', 'appointments', \App\Core\Middleware\DoctorAuthMiddleware::class);

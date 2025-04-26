@@ -30,7 +30,7 @@
                     <div>
                         <!-- <span>All users <strong>44</strong></span> -->
 
-                        <button class="add-user-btn">+ Add user</button>
+                        <button class="add-user-btn"onclick="window.location.href='<?= $basePath ?>/admin/adduser'">+ Add user</button>
                     </div>
                 </div>
 

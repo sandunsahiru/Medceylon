@@ -30,7 +30,7 @@ class AuthController extends BaseController
                 'experience_years' => $_POST['experience_years'] ?? null
             ];
 
-            // 🔒 Validation
+            // 🔒 BACKEND VALIDATION
             if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
                 $error = "Name can only contain letters and spaces.";
             } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
@@ -56,7 +56,7 @@ class AuthController extends BaseController
                 return;
             }
 
-
+            // Register logic
             $result = $this->userModel->register($userData);
 
             if ($result['success']) {
@@ -68,13 +68,18 @@ class AuthController extends BaseController
             echo $this->view('auth/register', [
                 'error' => $result['error'],
                 'oldInput' => $userData,
-                'basePath' => $this->basePath
+                'basePath' => $this->basePath,
+                'formAction' => $this->basePath . '/register'
             ]);
             return;
         }
 
-        echo $this->view('auth/register', ['basePath' => $this->basePath]);
+        echo $this->view('auth/register', [
+            'basePath' => $this->basePath,
+            'formAction' => $this->basePath . '/register'
+        ]);
     }
+
 
     public function login()
     {
