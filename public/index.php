@@ -109,7 +109,7 @@ try {
     $router->post('/vpdoctor/update-specializations', 'VPDoctorController', 'updateSpecializations', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/vpdoctor/profile', 'VPDoctorController', 'profile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
-    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals');
 
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -167,6 +167,7 @@ try {
     $router->post('/travelplan/edit-plan', 'TravelPlanController','editDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/delete-destination', 'TravelPlanController','deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/provinces', 'TravelPlanController','provinces', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/edit-destination', 'TravelPlanController','editDestination');
     
     $router->get('/travelplan/travel-plans', 'TravelPlanController','TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
@@ -215,6 +216,7 @@ $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond'
     $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/accommodation/delete-booking', 'AccommodationController', 'deleteBooking', \App\Core\Middleware\AuthMiddleware::class);
 
 
     // Set 404 handler

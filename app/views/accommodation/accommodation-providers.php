@@ -23,33 +23,21 @@
             <select id="province" name="province_id">
                 <option value="">Select Province</option>
                 <?php foreach ($provinces as $province): ?>
-                    <option value="<?= $province['province_id'] ?>"><?= htmlspecialchars($province['province_name']) ?></option>
+                    <option value="<?= $province['province_id'] ?>" 
+                        <?= ($province['province_id'] == ($selected_province ?? '')) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($province['province_name']) ?>
+                    </option>
                 <?php endforeach; ?>
             </select>
         </div>
 
-        <div class="filter-item" id="district-container" style="display: none;">
-            <label for="district">District:</label>
-            <select name="district_id" id="district">
-                <option value="">Select District</option>
-            </select>
-        </div>
-
-        <div class="filter-item" id="town-container" style="display: none;">
-            <label for="town">Town:</label>
-            <select name="town_id" id="town">
-                <option value="">Select Town</option>
-            </select>
-        </div>
-
         <div class="filter-item">
-            <label for="distance">Max Distance (km):</label>
-            <input type="number" name="distance" id="distance" min="0">
-        </div>
-
-        <div class="filter-item">
-            <label for="budget">Budget per night (LKR):</label>
-            <input type="number" name="budget" id="budget" min="0" step="5000">
+            <label for="budget">Budget Category:</label>
+            <select id="budget" name="budget">
+                <option value="">Select Budget</option>
+                <option value="Affordable" <?= (($selected_budget ?? '') == 'Affordable') ? 'selected' : '' ?>>Low</option>
+                <option value="Luxury" <?= (($selected_budget ?? '') == 'Luxury') ? 'selected' : '' ?>>Medium</option>
+            </select>
         </div>
 
         <div class="filter-item">
@@ -82,11 +70,46 @@
         <p>No accommodations found. Try changing the filters.</p>
     <?php endif; ?>
 </div>
-<br>
+<hr class="divider">
 
-<button onclick="location.href='<?php echo $basePath; ?>/accommodation/get-booking-details';">View Booking Status</button>
-<br>
-<br>
+<div class="booking-status-section">
+    <h3>Your Bookings</h3>
+    <?php if (!empty($bookings)): ?>
+        <table class="booking-table">
+            <thead>
+                <tr>
+                    <th>Accommodation</th>
+                    <th>Room Type</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($bookings as $booking): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($booking['accommodation_name']) ?></td>
+                        <td><?= htmlspecialchars($booking['room_type']) ?></td>
+                        <td><?= date('M d, Y', strtotime($booking['check_in_date'])) ?></td>
+                        <td><?= date('M d, Y', strtotime($booking['check_out_date'])) ?></td>
+                        <td>LKR <?= number_format($booking['total_price'], 2) ?></td>
+                        <td class = "bookingStatus"><?= htmlspecialchars($booking['status']) ?><td>
+                        <td><?php if ($booking['status'] === 'Pending'): ?>
+                            <button class="delete-booking" data-booking-id="<?= $booking['booking_id'] ?>">
+                                Cancel Booking</button>
+                            <?php endif; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <br>
+        
+                                 
+    <?php else: ?>
+        <p>You don't have any bookings yet.</p>
+    <?php endif; ?>
+</div>
 
 <!-- Details Modal -->
 <div id="detailsModal" class="modal">

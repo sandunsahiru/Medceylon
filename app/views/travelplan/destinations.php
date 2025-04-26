@@ -116,8 +116,11 @@
     <br>
     <br>
     
-    <?php include('add-destination.php'); ?>  
+    <?php include('edit-destination.php'); ?>  
 
+    <script>
+    const travelPlanUrl = '<?= $this->url('travelplan/destinations') ?>';
+    </script>
     <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
     <script src="<?php echo $basePath; ?>/public/assets/js/travel-plan.js"></script>
       <!-- footer -->

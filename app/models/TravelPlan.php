@@ -818,4 +818,26 @@ class TravelPlan {
             return null; // Return null on error
         }
     }
+
+    public function createNewTravelPlan($userId) {
+        $this->db->query(
+            "INSERT INTO travel_plans (user_id) VALUES (:user_id)",
+            [':user_id' => $userId]
+        );
+        return $this->db->lastInsertId();
+    }
+    
+    public function addDestinationToPlan($travelId, $destinationId, $startDate, $endDate) {
+        return $this->db->query(
+            "INSERT INTO travel_plan_destinations 
+             (travel_id, destination_id, start_date, end_date)
+             VALUES (:travel_id, :dest_id, :start, :end)",
+            [
+                ':travel_id' => $travelId,
+                ':dest_id' => $destinationId,
+                ':start' => $startDate,
+                ':end' => $endDate
+            ]
+        );
+    }
 }
