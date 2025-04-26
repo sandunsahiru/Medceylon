@@ -105,7 +105,6 @@
                         </select>
                     </div>
 
-<<<<<<< Updated upstream
                    <button type="submit" class="submit-btn">Book Appointment</button>
 
 
@@ -114,13 +113,11 @@
            </section>
        </main>
    </div>
-=======
+
                     <div class="form-group">
                         <label for="reason">Reason for Visit:</label>
                         <textarea name="reason_for_visit" id="reason" required></textarea>
                     </div>
->>>>>>> Stashed changes
-
                     <div class="form-group">
                         <label for="medical_history">Medical History (Optional):</label>
                         <textarea name="medical_history" id="medical_history"></textarea>

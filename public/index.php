@@ -247,16 +247,6 @@ try {
     $router->get('/debug/test-conference-event', 'DebugController', 'testConferenceEvent');
     $router->get('/debug/test-auth', 'DebugController', 'testAuth');
 
-    $router->post('/travelplan/districts', 'TravelPlanController', 'districts', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/towns', 'TravelPlanController', 'towns', \App\Core\Middleware\AuthMiddleware::class);
-
-    $router->get('/accommodation/accommodation-providers','AccommodationController', 'accommodations', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/accommodation/delete-booking', 'AccommodationController', 'deleteBooking', \App\Core\Middleware\AuthMiddleware::class);
-
-
     // Set 404 handler
     $router->setNotFound(function () {
         header("HTTP/1.0 404 Not Found");
