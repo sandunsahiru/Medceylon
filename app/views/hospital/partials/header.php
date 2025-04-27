@@ -27,6 +27,10 @@
                     <i class="ri-file-list-3-line"></i>
                     <span>Treatment Requests</span>
                 </a>
+                <a href="<?php echo $basePath; ?>/hospital/rooms" class="nav-item <?php echo $currentPage === 'treatment-requests' ? 'active' : ''; ?>">
+                    <i class="ri-file-list-3-line"></i>
+                    <span>Rooms</span>
+                </a>
                 <a href="<?php echo $basePath; ?>/hospital/patients" class="nav-item <?php echo $currentPage === 'patients' ? 'active' : ''; ?>">
                     <i class="ri-user-line"></i>
                     <span>Patients</span>

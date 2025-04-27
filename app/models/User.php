@@ -77,7 +77,7 @@ class User {
         $roleId = $this->getRoleIdFromUserType($userType);
 
         $stmt = $this->db->prepare("
-            SELECT user_id, CONCAT(first_name, ' ', last_name) as name, email, password_hash, role_id 
+            SELECT user_id, CONCAT(first_name, ' ', last_name) as name, email, password_hash, role_id
             FROM users 
             WHERE email = ? AND role_id = ? AND is_active = 1
         ");

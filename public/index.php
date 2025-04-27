@@ -1,5 +1,7 @@
 <?php
 
+use App\Controllers\HospitalController;
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -29,6 +31,12 @@ try {
     $router->get('/about-us', 'HomeController', 'aboutUs');
     $router->get('/partner-hospitals', 'HomeController', 'partnerHospitals');
     $router->get('/pricing', 'HomeController', 'pricing');
+    $router->get('/contact-us', 'HomeController', 'contactUs');
+    $router->get('/legal-agreements', 'HomeController', 'legalAgreements');
+    $router->get('/faq', 'HomeController', 'faq');
+    $router->get('/visa-guidance', 'HomeController', 'visaGuidance');
+    $router->get('/about-us','HomeController','aboutUs');
+    $router->get('/partner-hospitals','HomeController','partnerHospitals');
 
     // Auth routes
     $router->get('/login', 'AuthController', 'login');
@@ -151,6 +159,7 @@ try {
     $router->get('/hospital/doctors', 'HospitalController', 'doctors', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/departments', 'HospitalController', 'departments', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/patients', 'HospitalController', 'patients', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->get('/hospital/rooms','HospitalController','rooms',\App\Core\Middleware\HospitalAuthMiddleware::class); 
 
     // Hospital API Routes
     $router->get('/hospital/get-request-details', 'HospitalController', 'getRequestDetails', \App\Core\Middleware\HospitalAuthMiddleware::class);

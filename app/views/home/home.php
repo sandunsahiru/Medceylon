@@ -3,7 +3,12 @@
 <div class="hero">
     <h1>Your Health, Your Journey, Your Choice</h1>
     <p>Explore world-class healthcare, affordable treatment plans, and unforgettable travel experiences.</p>
-    <a href="<?php echo $basePath; ?>/patient/paymentPlan/" class="cta-btn">Start Your Medical Journey!</a>
+    <?php if ($paymentPlan['payment_plan_id'] == NULL): ?>
+        <a href="<?= $basePath; ?>/patient/paymentPlan/" class="cta-btn">Start Your Medical Journey!</a>
+    <?php else: ?>
+        <p>Already a plan user</p>
+    <?php endif; ?>
+
 </div>
 
 <section class="services">
@@ -16,41 +21,49 @@
                 <h3>Check visa details</h3>
             </a>
         </div>
-        <div class="service">
+        <div
+            class="service <?= ($paymentPlan['plan_name'] != 'Platinum' && $paymentPlan['plan_name'] != 'Gold') ? 'disabled' : '' ?>">
             <a href="<?php echo $basePath; ?>/accommodation/accommodation-providers">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle211523.jpg" alt="Find your perfect stay">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle211523.jpg"
+                    alt="Find your perfect stay">
                 <h3>Find your perfect stay</h3>
             </a>
         </div>
-        <div class="service">
+        <div
+            class="service <?= ($paymentPlan['plan_name'] != 'Platinum' && $paymentPlan['plan_name'] != 'Gold') ? 'disabled' : '' ?>">
             <a href="<?php echo $basePath; ?>/transportation">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle221523.jpg" alt="Explore transport options">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle221523.jpg"
+                    alt="Explore transport options">
                 <h3>Explore transport options</h3>
             </a>
         </div>
-        <div class="service">
+        <div class="service <?= ($paymentPlan['plan_name'] != 'Platinum') ? 'disabled' : '' ?>">
             <a href="<?php echo $basePath; ?>/caregivers">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle231573.jpg" alt="Connect with caregivers">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle231573.jpg"
+                    alt="Connect with caregivers">
                 <h3>Connect with caregivers</h3>
             </a>
         </div>
 
         <!-- Second Row -->
-        <div class="service">
+        <div class="service <?= ($paymentPlan['plan_name'] != 'Platinum') ? 'disabled' : '' ?>">
             <a href="<?php echo $basePath; ?>/travelplan/destinations">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle241573.jpg" alt="Discover Sri Lanka's gems">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle241573.jpg"
+                    alt="Discover Sri Lanka's gems">
                 <h3>Discover Sri Lanka's gems</h3>
             </a>
         </div>
         <div class="service">
-            <a href="<?php echo $basePath; ?>/hospital/partner-hospitals">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle251573.jpg" alt="Get personalized hospital support">
+            <a href="<?php echo $basePath; ?>/partner-hospitals">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle251573.jpg"
+                    alt="Get personalized hospital support">
                 <h3>Get personalized hospital support</h3>
             </a>
         </div>
         <div class="service">
             <a href="<?php echo $basePath; ?>/followups">
-                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle261573.jpg" alt="Manage follow-ups effortlessly">
+                <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle261573.jpg"
+                    alt="Manage follow-ups effortlessly">
                 <h3>Manage follow-ups effortlessly</h3>
             </a>
         </div>
@@ -68,19 +81,22 @@
     <div class="testimonials-row">
         <div class="testimonial">
             <img src="<?php echo $basePath; ?>/public/assets/images/testimonial1.jpg" alt="Client 1">
-            <p>"The team at MedCeylon helped me find the best healthcare options and provided exceptional service throughout my stay in Sri Lanka. Highly recommended!"</p>
+            <p>"The team at MedCeylon helped me find the best healthcare options and provided exceptional service
+                throughout my stay in Sri Lanka. Highly recommended!"</p>
             <p class="name">Sarah W.</p>
         </div>
 
         <div class="testimonial">
             <img src="<?php echo $basePath; ?>/public/assets/images/testimonial2.jpg" alt="Client 2">
-            <p>"Thanks to MedCeylon, my treatment journey was seamless. They took care of all the details, and I felt completely supported the entire time."</p>
+            <p>"Thanks to MedCeylon, my treatment journey was seamless. They took care of all the details, and I felt
+                completely supported the entire time."</p>
             <p class="name">John P.</p>
         </div>
 
         <div class="testimonial">
             <img src="<?php echo $basePath; ?>/public/assets/images/testimonial3.jpg" alt="Client 3">
-            <p>"An unforgettable experience. From airport pick-up to medical services, everything was top-notch. I highly recommend MedCeylon for medical tourism."</p>
+            <p>"An unforgettable experience. From airport pick-up to medical services, everything was top-notch. I
+                highly recommend MedCeylon for medical tourism."</p>
             <p class="name">Emily T.</p>
         </div>
     </div>

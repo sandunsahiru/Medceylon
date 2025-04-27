@@ -1,26 +1,84 @@
-/* General Styles */
 body {
     font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
     margin: 0;
-    padding: 20px;
-    background: #f9f9f9;
-    color: #333;
+    padding: 0;
 }
 
-.container {
-    max-width: 100%;
-    margin: auto;
-    background: white;
-    padding: 20px;
+.section {
+    padding: 10px;
+    margin: 10px;
+    background-color: #F7F9FC;
     border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-    
+.request-card {
+    margin: 10px;
+    padding: 10px;
+    background-color: #F7F9FC;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
-header p {
-    margin: 5px 0 20px;
-    color: #666;
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.request-details {
+    margin: 10px;
+    flex-direction: row;
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    background-color: #047865;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #035d4a;
+}
+
+.request-status {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    margin: 0px 20px 0px 20px;
+}
+
+
+.modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* dark background */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 /* Toolbar */
@@ -31,11 +89,27 @@ header p {
     padding-bottom: 10px;
 }
 
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .search-box input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 150px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    width: 220px;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(90, 90, 90, 0.3);
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    box-shadow: 0 6px 10px rgba(0, 128, 0, 0.4);
+    transform: translateY(-2px);
+    border: 2px solid rgba(0, 153, 99, 1);
 }
 
 .filters-btn, .add-user-btn {
@@ -74,103 +148,4 @@ header p {
     background-color: #1b5e20;
     box-shadow: 0 6px 10px rgba(0, 128, 0, 0.4);
     transform: translateY(-2px);
-}
-
-/* Table */
-.user-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #f4f8f6;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 128, 0, 0.2);
-}
-
-.user-table th, .user-table td {
-    padding: 15px;
-    text-align: left;
-}
-
-.user-table th {
-    background-color: #e0f2e9;
-    color: #93b0ac;
-}
-
-
-tr:hover {
-    background-color: #a5d6a7;
-}
-
-.user-table tbody tr {
-    border-bottom: 1px solid #ddd;
-}
-
-.user-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.user-table input[type="checkbox"] {
-    cursor: pointer;
-}
-
-.view-profile {
-    background-color: #ace4cb;
-    padding: 8px 12px;
-    font-size: 14px;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-.view-profile:hover {
-    background-color: #145a14;
-}
-
-/* Badges */
-.badge {
-    display: inline-block;
-    padding: 5px 10px;
-    font-size: 12px;
-    border-radius: 15px;
-    font-weight: bold;
-}
-
-.badge-admin {
-    background: #a0e7a0;
-    color: green;
-}
-
-.badge-export {
-    background: #b3d4ff;
-    color: #007bff;
-}
-
-.badge-import {
-    background: #f8c5e5;
-    color: #d63384;
-}
-
-/* Pagination */
-.pagination {
-    margin-top: 20px;
-    text-align: center;
-}
-
-.page-btn {
-    background: white;
-    border: 1px solid #ddd;
-    padding: 5px 10px;
-    margin: 0 3px;
-    cursor: pointer;
-}
-
-/* Notification */
-.notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: black;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    display: none;
 }

@@ -17,7 +17,7 @@ class Admin
     {
         try {
             $query = "SELECT 
-                            users.first_name, users.last_name, roles.role_name, users.gender, FLOOR(DATEDIFF(CURDATE(), users.date_of_birth) / 365) AS age,
+                            users.first_name, users.last_name, roles.role_name, users.gender, users.registration_date, users.last_login, FLOOR(DATEDIFF(CURDATE(), users.date_of_birth) / 365) AS age,
                             COALESCE(specializations.name, 'No Specialization') AS specialization_name, 
                             users.user_id
                       FROM users 
@@ -46,7 +46,7 @@ class Admin
     {
         try {
             $query = "SELECT 
-                            users.first_name, users.last_name, users.gender, users.user_id, 
+                            users.first_name, users.last_name, users.gender, users.user_id, users.registration_date, users.last_login,
                             FLOOR(DATEDIFF(CURDATE(), users.date_of_birth) / 365) AS age
                       FROM users
                       JOIN roles ON users.role_id = roles.role_id
@@ -294,7 +294,7 @@ class Admin
 
     public function getHotelBookingsCount()
     {
-        try{
+        try {
             $query = "SELECT COUNT(*) AS totalPendingBookings FROM room_bookings WHERE status = 'Pending'";
             $stmt = $this->db->prepare($query);
             $stmt->execute();
@@ -304,8 +304,8 @@ class Admin
                 $pending_bookings = $row['totalPendingBookings'];
             }
             return $pending_bookings;
-        }catch(Exception $e) {
-            error_log("Error getting Hotel Booking Count". $e->getMessage());
+        } catch (Exception $e) {
+            error_log("Error getting Hotel Booking Count" . $e->getMessage());
             throw $e;
         }
     }
@@ -338,9 +338,10 @@ class Admin
             throw $e;
         }
     }
-        
 
-    public function confirmBookingById($bookingId){
+
+    public function confirmBookingById($bookingId)
+    {
         try {
             $query = "UPDATE room_bookings rb
                     JOIN rooms hr ON rb.room_id = hr.room_id
@@ -356,7 +357,8 @@ class Admin
         }
     }
 
-    public function rejectBookingById($bookingId){
+    public function rejectBookingById($bookingId)
+    {
         try {
             $query = "UPDATE room_bookings SET status = 'Unsuccesful' WHERE booking_id = ?;";
             $stmt = $this->db->prepare($query);
@@ -367,5 +369,17 @@ class Admin
             throw $e;
         }
     }
+    public function getPatientPlan($status)
+    {
+        $query = "SELECT p.plan_name, u.* FROM users u
+                  JOIN payment_plans p ON u.payment_plan_id = p.id
+                  WHERE u.payment_plan_id IS NOT NULL AND plan_name = ? AND u.is_active = 1;";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("s",$status);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC); 
+    }
+
 }
 ?>

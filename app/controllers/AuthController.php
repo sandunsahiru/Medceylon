@@ -110,6 +110,7 @@ class AuthController extends BaseController
                     $result['user']['user_id'],
                     $result['user']['name'],
                     $result['user']['role_id']
+                    
                 );
 
                 $this->redirectBasedOnRole($result['user']['role_id']);

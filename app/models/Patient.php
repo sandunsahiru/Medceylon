@@ -220,4 +220,15 @@ class Patient
 
     }
 
+    public function getPatientPaymentPlan($userId){
+        $query = "SELECT p.plan_name, u.payment_plan_id FROM users u
+                  JOIN payment_plans p ON u.payment_plan_id = p.id
+                  WHERE u.user_id = ?";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+
 }
