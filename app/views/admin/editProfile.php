@@ -53,7 +53,7 @@
                     </div>
                     <div>
                         <label for="city">City</label>
-                        <input type="text" id="city_id" name="city_id" value="<?php echo htmlspecialchars($user['city_id']); ?>">
+                        <input type="number" id="city_id" name="city_id" value="<?php echo htmlspecialchars($user['city_id']); ?>">
                     </div>
                     <div>
                         <label for="country">Country</label>
@@ -69,7 +69,7 @@
 
                     <div class="last-container">
                         <button type="submit" class="save-button">Update Profile</button>
-                        <button type="submit" name="delete_user" class="delete-button">Deactivate User</button>
+                        <button type="submit" name="delete_user" class="delete-button">Delete User</button>
                     </div>
                 </form>
             <?php endif; ?>

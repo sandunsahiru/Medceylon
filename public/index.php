@@ -23,7 +23,7 @@ $config = require_once ROOT_PATH . '/app/config/app.php';
 try {
     $router = new \App\Core\Router();
 
-    // Public routes (no authentication required)
+    // Public routes
     $router->get('/', 'HomeController', 'index');
     $router->get('/index.php', 'HomeController', 'index');
     $router->get('/about-us', 'HomeController', 'aboutUs');
@@ -37,11 +37,11 @@ try {
     $router->post('/register', 'AuthController', 'register');
     $router->get('/logout', 'AuthController', 'logout');
 
-    // Protected routes (require authentication)
+    // Home dashboard
     $router->get('/home', 'HomeController', 'home', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/ratedoctor', 'HomeController', 'rateDoctor');
 
-    // Patient Chat Routes
+    // Chat routes
     $router->get('/patient/chat', 'ChatController', 'index', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/send-message', 'ChatController', 'sendMessage', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/get-new-messages', 'ChatController', 'getNewMessages', \App\Core\Middleware\AuthMiddleware::class);
@@ -211,6 +211,7 @@ try {
     $router->get('/reset-password', 'ForgotPasswordController', 'showResetForm');
     $router->post('/reset-password', 'ForgotPasswordController', 'handleReset');
 
+    // Transportation
     $router->get('/patient/transport', 'TransportationRequestController', 'index', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/transport/create', 'TransportationRequestController', 'create', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/transport/save', 'TransportationRequestController', 'save', \App\Core\Middleware\AuthMiddleware::class);
@@ -251,15 +252,19 @@ try {
     $router->get('/debug/test-auth', 'DebugController', 'testAuth');
 
     // Set 404 handler
+    $router->post('/agent/transport/complete/{id}', 'AgentTransportationController', 'complete');
+
+    $router->get('/patient/transport/report', 'TransportationRequestController', 'downloadReport');
+
     $router->setNotFound(function () {
         header("HTTP/1.0 404 Not Found");
         require ROOT_PATH . '/app/views/errors/404.php';
         exit();
     });
 
-    // Get current URI and dispatch
     $uri = $_SERVER['REQUEST_URI'];
     $router->dispatch($uri);
+
 } catch (\Exception $e) {
     error_log($e->getMessage());
 

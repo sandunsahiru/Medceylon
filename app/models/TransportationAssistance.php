@@ -11,11 +11,20 @@ class TransportationAssistance {
     }
 
     public function getAllByPatient($patientId) {
-        $stmt = $this->db->prepare("SELECT * FROM transportationassistance WHERE patient_id = ?");
+        $stmt = $this->db->prepare(
+            "SELECT t.*, 
+                    v.vehicle_number, 
+                    v.driver_name, 
+                    v.contact_number 
+             FROM transportationassistance t
+             LEFT JOIN vehicles v ON t.vehicle_id = v.vehicle_id
+             WHERE t.patient_id = ?"
+        );
         $stmt->bind_param("i", $patientId);
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    
 
     public function getById($id) {
         $stmt = $this->db->prepare("SELECT * FROM transportationassistance WHERE transport_request_id = ?");
@@ -94,5 +103,51 @@ class TransportationAssistance {
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    
+    public function assignVehicleToRequest($requestId, $vehicleId) {
+        $stmt = $this->db->prepare("UPDATE transportationassistance SET vehicle_id = ? WHERE transport_request_id = ?");
+        $stmt->bind_param("ii", $vehicleId, $requestId);
+        return $stmt->execute();
+    }
+
+    public function markRequestCompleted($id) {
+        $stmt = $this->db->prepare("UPDATE transportationassistance SET status = 'Completed', last_updated = NOW() WHERE transport_request_id = ?");
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
+    }   
+    
+    public function getAllByPatientWithVehicle($patientId) {
+        $stmt = $this->db->prepare(
+            "SELECT t.*, v.vehicle_number 
+             FROM transportationassistance t
+             LEFT JOIN vehicles v ON t.vehicle_id = v.vehicle_id
+             WHERE t.patient_id = ?"
+        );
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    
+    public function respondToRequestWithVehicle($id, $data) {
+        $stmt = $this->db->prepare("UPDATE transportationassistance 
+            SET status = ?, transport_provider_id = ?, vehicle_id = ?, 
+                external_vehicle_number = ?, external_driver_name = ?, external_driver_contact = ?, 
+                last_updated = NOW() 
+            WHERE transport_request_id = ?");
+    
+        $stmt->bind_param(
+            "siisssi",
+            $data['status'],
+            $data['provider_id'],
+            $data['vehicle_id'],
+            $data['external_vehicle_number'],
+            $data['external_driver_name'],
+            $data['external_driver_contact'],
+            $id
+        );
+    
+        return $stmt->execute();
+    }
+
     
 }
