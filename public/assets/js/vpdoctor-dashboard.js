@@ -1,5 +1,13 @@
 // VPDoctor Dashboard JS File
 // Handles all interactive functionality for the specialist doctor dashboard
+// Enable error logging
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error('Error: ' + message + ' at ' + source + ':' + lineno + ':' + colno);
+    console.error(error);
+    return false;
+};
+
+
 
 // Global variables to store current IDs for modals
 window.currentAppointmentId = null;
@@ -17,217 +25,341 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle treatment plan creation
     const createTreatmentPlanBtns = document.querySelectorAll('.create-treatment-plan-btn');
     
-    // In vpdoctor-dashboard.js
+
+// Inside the click event handler for create-treatment-plan-btn
+// Updated button click event handler for treatment plan creation
 createTreatmentPlanBtns.forEach(btn => {
     btn.addEventListener('click', function(event) {
-        // Prevent default form submission if this is inside a form
+        // Prevent default form submission
         if (event.preventDefault) {
             event.preventDefault();
         }
         
         const appointmentId = this.dataset.appointmentId;
-        const sessionId = this.dataset.sessionId;
+        const sessionId = this.dataset.sessionId || ''; // Can be empty now
         
         console.log(`Creating treatment plan for appointment: ${appointmentId}, session: ${sessionId}`);
         
-        // Get base path properly
-        const basePath = window.basePath || '';
+        // Get patient ID from the session details
+        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
+        let patientId = '';
+        if (sessionDetails) {
+            const patientIdText = sessionDetails.querySelector('.doctor-info p:nth-child(2)')?.textContent || '';
+            patientId = patientIdText.replace(/[^0-9]/g, '');
+            console.log('Found patient ID:', patientId);
+        }
         
-        // Log all form values for debugging
+        // Get travel restrictions from checkboxes
         const travelRestrictionsGroup = document.getElementById('travel-restrictions-' + appointmentId);
-        const checkedRestriction = travelRestrictionsGroup.querySelector('input[type="checkbox"]:checked');
-        const travelRestrictions = checkedRestriction ? checkedRestriction.value : 'None';
+        const checkedRestrictions = travelRestrictionsGroup?.querySelectorAll('input[type="checkbox"]:checked') || [];
+        let travelRestrictions = 'None';
         
-        const vehicleType = document.getElementById('vehicle-type-' + appointmentId).value;
-        const arrivalDeadline = document.getElementById('arrival-deadline-' + appointmentId).value;
-        const treatmentDescription = document.getElementById('treatment-description-' + appointmentId).value;
-        const estimatedBudget = document.getElementById('estimated-budget-' + appointmentId).value;
-        const estimatedDuration = document.getElementById('estimated-duration-' + appointmentId).value;
+        if (checkedRestrictions.length > 0) {
+            // Convert NodeList to Array and map to get values
+            travelRestrictions = Array.from(checkedRestrictions).map(cb => cb.value).join(', ');
+        }
         
-        console.log('Form values:', {
-            travelRestrictions,
-            vehicleType,
-            arrivalDeadline,
-            treatmentDescription,
-            estimatedBudget,
-            estimatedDuration
+        // Get other form values
+        const vehicleType = document.getElementById('vehicle-type-' + appointmentId)?.value || 'Regular Vehicle';
+        const arrivalDeadline = document.getElementById('arrival-deadline-' + appointmentId)?.value || '';
+        const treatmentDescription = document.getElementById('treatment-description-' + appointmentId)?.value || '';
+        const estimatedBudget = document.getElementById('estimated-budget-' + appointmentId)?.value || '';
+        const estimatedDuration = document.getElementById('estimated-duration-' + appointmentId)?.value || '';
+        
+        // Basic validation
+        if (!treatmentDescription) {
+            window.showToast('Please provide a treatment description', 'error');
+            return;
+        }
+        
+        if (!estimatedBudget) {
+            window.showToast('Please provide an estimated budget', 'error');
+            return;
+        }
+        
+        if (!estimatedDuration) {
+            window.showToast('Please provide an estimated duration', 'error');
+            return;
+        }
+        
+        // Create a real form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${window.basePath || ''}/vpdoctor/createTreatmentPlan`;
+        form.style.display = 'none';
+        
+        // Add all form fields
+        const formFields = {
+            'csrf_token': document.querySelector('input[name="csrf_token"]').value,
+            'session_id': sessionId,
+            'appointment_id': appointmentId,
+            'patient_id': patientId,
+            'travel_restrictions': travelRestrictions,
+            'vehicle_type': vehicleType,
+            'arrival_deadline': arrivalDeadline,
+            'treatment_description': treatmentDescription,
+            'estimated_budget': estimatedBudget,
+            'estimated_duration': estimatedDuration
+        };
+        
+        console.log('Submitting form with data:', formFields);
+        
+        // Add all fields to the form
+        Object.entries(formFields).forEach(([name, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            form.appendChild(input);
         });
         
-        // Create form data
-        const formData = new FormData();
-        formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
-        formData.append('session_id', sessionId);
-        formData.append('appointment_id', appointmentId);
-        formData.append('travel_restrictions', travelRestrictions);
-        formData.append('vehicle_type', vehicleType);
-        formData.append('arrival_deadline', arrivalDeadline);
-        formData.append('treatment_description', treatmentDescription);
-        formData.append('estimated_budget', estimatedBudget);
-        formData.append('estimated_duration', estimatedDuration);
+        // Add the form to the document
+        document.body.appendChild(form);
         
-        // Send request to server with full URL including basePath
-        const url = `${basePath}/vpdoctor/createTreatmentPlan`;
-        console.log('Submitting to URL:', url);
+        // Show toast
+        window.showToast('Creating treatment plan...', 'info');
         
-        fetch(url, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Response data:', data);
-            if (data.success) {
-                window.showToast('Treatment plan created successfully!');
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error details:', error);
-            console.error('Error message:', error.message);
-            alert('An error occurred while creating the treatment plan: ' + error.message);
-        });
+        // Submit the form
+        form.submit();
     });
 });
 
-
-
-
-
-    // Add event listeners for view session buttons
-    document.querySelectorAll('.view-session-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const appointmentCard = this.closest('.appointment-card');
-            const appointmentId = appointmentCard.dataset.appointmentId;
-            const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
+// Alternative AJAX version if you prefer not to reload the page
+function createTreatmentPlanAjax(btn) {
+    const appointmentId = btn.dataset.appointmentId;
+    const sessionId = btn.dataset.sessionId || '';
+    
+    console.log(`Creating treatment plan via AJAX for appointment: ${appointmentId}, session: ${sessionId}`);
+    
+    // Get patient ID from the session details
+    const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
+    let patientId = '';
+    if (sessionDetails) {
+        const patientIdText = sessionDetails.querySelector('.doctor-info p:nth-child(2)')?.textContent || '';
+        patientId = patientIdText.replace(/[^0-9]/g, '');
+        console.log('Found patient ID:', patientId);
+    }
+    
+    // Get travel restrictions from checkboxes
+    const travelRestrictionsGroup = document.getElementById('travel-restrictions-' + appointmentId);
+    const checkedRestrictions = travelRestrictionsGroup?.querySelectorAll('input[type="checkbox"]:checked') || [];
+    let travelRestrictions = 'None';
+    
+    if (checkedRestrictions.length > 0) {
+        // Convert NodeList to Array and map to get values
+        travelRestrictions = Array.from(checkedRestrictions).map(cb => cb.value).join(', ');
+    }
+    
+    // Get other form values
+    const vehicleType = document.getElementById('vehicle-type-' + appointmentId)?.value || 'Regular Vehicle';
+    const arrivalDeadline = document.getElementById('arrival-deadline-' + appointmentId)?.value || '';
+    const treatmentDescription = document.getElementById('treatment-description-' + appointmentId)?.value || '';
+    const estimatedBudget = document.getElementById('estimated-budget-' + appointmentId)?.value || '';
+    const estimatedDuration = document.getElementById('estimated-duration-' + appointmentId)?.value || '';
+    
+    // Basic validation
+    if (!treatmentDescription) {
+        window.showToast('Please provide a treatment description', 'error');
+        return;
+    }
+    
+    if (!estimatedBudget) {
+        window.showToast('Please provide an estimated budget', 'error');
+        return;
+    }
+    
+    if (!estimatedDuration) {
+        window.showToast('Please provide an estimated duration', 'error');
+        return;
+    }
+    
+    // Prepare form data for AJAX
+    const formData = new FormData();
+    const formFields = {
+        'csrf_token': document.querySelector('input[name="csrf_token"]').value,
+        'session_id': sessionId,
+        'appointment_id': appointmentId,
+        'patient_id': patientId,
+        'travel_restrictions': travelRestrictions,
+        'vehicle_type': vehicleType,
+        'arrival_deadline': arrivalDeadline,
+        'treatment_description': treatmentDescription,
+        'estimated_budget': estimatedBudget,
+        'estimated_duration': estimatedDuration
+    };
+    
+    // Add fields to FormData
+    Object.entries(formFields).forEach(([name, value]) => {
+        formData.append(name, value);
+    });
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ri-loader-line ri-spin"></i> Processing...';
+    
+    // Send AJAX request
+    fetch(`${window.basePath || ''}/vpdoctor/createTreatmentPlan`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.showToast('Treatment plan created successfully', 'success');
             
-            if (!sessionDetails) {
-                console.error(`Session details container not found for appointment ${appointmentId}`);
-                return;
-            }
-            
-            // Close all other open sessions first
-            document.querySelectorAll('.medical-session').forEach(container => {
-                if (container.id !== `session-details-${appointmentId}` && container.style.display !== 'none') {
-                    container.style.display = 'none';
-                    
-                    // Find the associated appointment card and update button text
-                    const otherAppointmentId = container.id.replace('session-details-', '');
-                    const otherButton = document.querySelector(`.appointment-card[data-appointment-id="${otherAppointmentId}"] .view-session-btn`);
-                    if (otherButton) {
-                        otherButton.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
-                    }
+            // Update UI to show the created plan instead of the form
+            // This would need to be implemented based on your UI structure
+            // For example, reload the page or update the DOM
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            window.showToast('Error: ' + data.message, 'error');
+            // Reset button
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ri-file-list-3-line"></i> Create Treatment Plan';
+        }
+    })
+    .catch(error => {
+        console.error('Error creating treatment plan:', error);
+        window.showToast('Error creating treatment plan. Please try again.', 'error');
+        
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-file-list-3-line"></i> Create Treatment Plan';
+    });
+}
+
+
+
+
+   // Add event listeners for view session buttons
+   document.querySelectorAll('.view-session-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const appointmentCard = this.closest('.appointment-card');
+        const appointmentId = appointmentCard.dataset.appointmentId;
+        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
+        
+        if (!sessionDetails) {
+            console.error(`Session details container not found for appointment ${appointmentId}`);
+            return;
+        }
+        
+        // Close all other open sessions first
+        document.querySelectorAll('.medical-session').forEach(container => {
+            if (container.id !== `session-details-${appointmentId}` && container.style.display !== 'none') {
+                container.style.display = 'none';
+                
+                // Find the associated appointment card and update button text
+                const otherAppointmentId = container.id.replace('session-details-', '');
+                const otherButton = document.querySelector(`.appointment-card[data-appointment-id="${otherAppointmentId}"] .view-session-btn`);
+                if (otherButton) {
+                    otherButton.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
                 }
-            });
-            
-            // Toggle session details visibility
-            if (sessionDetails.style.display === 'none' || !sessionDetails.style.display) {
-                sessionDetails.style.display = 'block';
-                this.innerHTML = '<i class="ri-eye-off-line"></i> Hide Session';
-            } else {
-                sessionDetails.style.display = 'none';
-                this.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
             }
+        });
+        
+        // Toggle session details visibility
+        if (sessionDetails.style.display === 'none' || !sessionDetails.style.display) {
+            sessionDetails.style.display = 'block';
+            this.innerHTML = '<i class="ri-eye-off-line"></i> Hide Session';
+        } else {
+            sessionDetails.style.display = 'none';
+            this.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
+        }
+    });
+});
+
+// Initialize travel restriction checkboxes for all appointments
+function initTravelRestrictionCheckboxes() {
+    // Handle checkboxes in creation form
+    document.querySelectorAll('[id^="travel-restrictions-"]').forEach(container => {
+        const appointmentId = container.id.replace('travel-restrictions-', '');
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        
+        // Initialize selected restrictions for this appointment
+        if (!window.selectedTravelRestrictions[appointmentId]) {
+            window.selectedTravelRestrictions[appointmentId] = [];
+        }
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Handle "No Restrictions" checkbox special case
+                if (this.id.includes('no-restrictions') && this.checked) {
+                    // Uncheck all other checkboxes
+                    checkboxes.forEach(cb => {
+                        if (cb.id !== this.id) {
+                            cb.checked = false;
+                        }
+                    });
+                    window.selectedTravelRestrictions[appointmentId] = ['None'];
+                } else if (this.checked) {
+                    // If any other checkbox is checked, uncheck "No Restrictions"
+                    const noRestrictionsCheckbox = document.getElementById(`no-restrictions-${appointmentId}`);
+                    if (noRestrictionsCheckbox) {
+                        noRestrictionsCheckbox.checked = false;
+                    }
+                    
+                    // Add this restriction to the array if it's not already there
+                    if (!window.selectedTravelRestrictions[appointmentId].includes(this.value)) {
+                        window.selectedTravelRestrictions[appointmentId].push(this.value);
+                    }
+                } else {
+                    // Remove this restriction from the array if unchecked
+                    window.selectedTravelRestrictions[appointmentId] = window.selectedTravelRestrictions[appointmentId]
+                        .filter(r => r !== this.value);
+                }
+                
+                console.log(`Travel restrictions for appointment ${appointmentId}:`, window.selectedTravelRestrictions[appointmentId]);
+            });
         });
     });
     
-    // Initialize travel restriction checkboxes for all appointments
-    function initTravelRestrictionCheckboxes() {
-        // Handle checkboxes in creation form
-        document.querySelectorAll('[id^="travel-restrictions-"]').forEach(container => {
-            const appointmentId = container.id.replace('travel-restrictions-', '');
-            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-            
-            // Initialize selected restrictions for this appointment
-            if (!window.selectedTravelRestrictions[appointmentId]) {
-                window.selectedTravelRestrictions[appointmentId] = [];
-            }
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    // Handle "No Restrictions" checkbox special case
-                    if (this.id.includes('no-restrictions') && this.checked) {
-                        // Uncheck all other checkboxes
-                        checkboxes.forEach(cb => {
-                            if (cb.id !== this.id) {
-                                cb.checked = false;
-                            }
-                        });
-                        window.selectedTravelRestrictions[appointmentId] = ['None'];
-                    } else if (this.checked) {
-                        // If any other checkbox is checked, uncheck "No Restrictions"
-                        const noRestrictionsCheckbox = document.getElementById(`no-restrictions-${appointmentId}`);
-                        if (noRestrictionsCheckbox) {
-                            noRestrictionsCheckbox.checked = false;
+    // Handle checkboxes in edit form
+    const editTravelRestrictions = document.getElementById('editTravelRestrictions');
+    if (editTravelRestrictions) {
+        const editCheckboxes = editTravelRestrictions.querySelectorAll('input[type="checkbox"]');
+        
+        editCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Handle "No Restrictions" checkbox special case
+                if (this.id === 'edit-no-restrictions' && this.checked) {
+                    // Uncheck all other checkboxes
+                    editCheckboxes.forEach(cb => {
+                        if (cb.id !== this.id) {
+                            cb.checked = false;
                         }
-                        
-                        // Add this restriction to the array if it's not already there
-                        if (!window.selectedTravelRestrictions[appointmentId].includes(this.value)) {
-                            window.selectedTravelRestrictions[appointmentId].push(this.value);
-                        }
-                    } else {
-                        // Remove this restriction from the array if unchecked
-                        window.selectedTravelRestrictions[appointmentId] = window.selectedTravelRestrictions[appointmentId]
+                    });
+                    window.selectedTravelRestrictions.edit = ['None'];
+                } else if (this.checked) {
+                    // If any other checkbox is checked, uncheck "No Restrictions"
+                    const noRestrictionsCheckbox = document.getElementById('edit-no-restrictions');
+                    if (noRestrictionsCheckbox) {
+                        noRestrictionsCheckbox.checked = false;
+                    }
+                    
+                    // Initialize edit array if needed
+                    if (!window.selectedTravelRestrictions.edit) {
+                        window.selectedTravelRestrictions.edit = [];
+                    }
+                    
+                    // Add this restriction to the array if it's not already there
+                    if (!window.selectedTravelRestrictions.edit.includes(this.value)) {
+                        window.selectedTravelRestrictions.edit.push(this.value);
+                    }
+                } else {
+                    // Remove this restriction from the array if unchecked
+                    if (window.selectedTravelRestrictions.edit) {
+                        window.selectedTravelRestrictions.edit = window.selectedTravelRestrictions.edit
                             .filter(r => r !== this.value);
                     }
-                    
-                    console.log(`Travel restrictions for appointment ${appointmentId}:`, window.selectedTravelRestrictions[appointmentId]);
-                });
+                }
+                
+                console.log('Edit travel restrictions:', window.selectedTravelRestrictions.edit);
             });
         });
-        
-        // Handle checkboxes in edit form
-        const editTravelRestrictions = document.getElementById('editTravelRestrictions');
-        if (editTravelRestrictions) {
-            const editCheckboxes = editTravelRestrictions.querySelectorAll('input[type="checkbox"]');
-            
-            editCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    // Handle "No Restrictions" checkbox special case
-                    if (this.id === 'edit-no-restrictions' && this.checked) {
-                        // Uncheck all other checkboxes
-                        editCheckboxes.forEach(cb => {
-                            if (cb.id !== this.id) {
-                                cb.checked = false;
-                            }
-                        });
-                        window.selectedTravelRestrictions.edit = ['None'];
-                    } else if (this.checked) {
-                        // If any other checkbox is checked, uncheck "No Restrictions"
-                        const noRestrictionsCheckbox = document.getElementById('edit-no-restrictions');
-                        if (noRestrictionsCheckbox) {
-                            noRestrictionsCheckbox.checked = false;
-                        }
-                        
-                        // Initialize edit array if needed
-                        if (!window.selectedTravelRestrictions.edit) {
-                            window.selectedTravelRestrictions.edit = [];
-                        }
-                        
-                        // Add this restriction to the array if it's not already there
-                        if (!window.selectedTravelRestrictions.edit.includes(this.value)) {
-                            window.selectedTravelRestrictions.edit.push(this.value);
-                        }
-                    } else {
-                        // Remove this restriction from the array if unchecked
-                        if (window.selectedTravelRestrictions.edit) {
-                            window.selectedTravelRestrictions.edit = window.selectedTravelRestrictions.edit
-                                .filter(r => r !== this.value);
-                        }
-                    }
-                    
-                    console.log('Edit travel restrictions:', window.selectedTravelRestrictions.edit);
-                });
-            });
-        }
     }
+}
     
     // Add event listeners for various buttons
     document.querySelectorAll('.save-notes-btn').forEach(button => {
@@ -568,8 +700,16 @@ window.confirmCancelTreatment = function() {
     form.submit();
 };
 
-// Function for creating treatment plan
+// Global function for creating treatment plan
 window.createTreatmentPlan = function(appointmentId, sessionId) {
+    // Get patient ID from session details
+    const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
+    let patientId = '';
+    if (sessionDetails) {
+        const patientIdText = sessionDetails.querySelector('.doctor-info p:nth-child(2)')?.textContent || '';
+        patientId = patientIdText.match(/Patient ID: (\w+-\d+|\d+)/)?.[1] || '';
+    }
+    
     // Get travel restrictions
     const travelRestrictions = window.selectedTravelRestrictions[appointmentId] || [];
     if (travelRestrictions.length === 0) {
@@ -609,6 +749,7 @@ window.createTreatmentPlan = function(appointmentId, sessionId) {
         'csrf_token': document.querySelector('input[name="csrf_token"]')?.value || '',
         'session_id': sessionId,
         'appointment_id': appointmentId,
+        'patient_id': patientId, // Add patient ID to form data
         'travel_restrictions': travelRestrictions.join(', '),
         'vehicle_type': vehicleType,
         'arrival_deadline': arrivalDeadline,
@@ -634,6 +775,7 @@ window.createTreatmentPlan = function(appointmentId, sessionId) {
     // Submit the form
     form.submit();
 };
+
 
 // Helper function to close all modals
 window.closeAllModals = function() {
@@ -738,6 +880,14 @@ window.openEditTreatmentPlanModal = function(appointmentId) {
 
 // Function for updating treatment plan
 window.updateTreatmentPlan = function() {
+    // Get patient ID from session details
+    const sessionDetails = document.getElementById(`session-details-${window.currentAppointmentId}`);
+    let patientId = '';
+    if (sessionDetails) {
+        const patientIdText = sessionDetails.querySelector('.doctor-info p:nth-child(2)')?.textContent || '';
+        patientId = patientIdText.match(/Patient ID: (\w+-\d+|\d+)/)?.[1] || '';
+    }
+    
     // Get travel restrictions
     const travelRestrictions = window.selectedTravelRestrictions.edit || [];
     if (travelRestrictions.length === 0) {
@@ -777,6 +927,7 @@ window.updateTreatmentPlan = function() {
         'csrf_token': document.querySelector('input[name="csrf_token"]')?.value || '',
         'session_id': window.currentSessionId || '',
         'appointment_id': window.currentAppointmentId || '',
+        'patient_id': patientId, // Add patient ID to form data
         'travel_restrictions': travelRestrictions.join(', '),
         'vehicle_type': vehicleType,
         'arrival_deadline': arrivalDeadline,
