@@ -285,6 +285,17 @@ try {
     $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
+    // Navigate to specific medical session tab
+$router->get('/patient/session/tab/:tab', 'PatientController', 'navigateSessionTab', \App\Core\Middleware\AuthMiddleware::class);
+
+// Book hotel and transport routes
+$router->get('/patient/book-hotel-transport', 'PatientController', 'bookHotelTransport', \App\Core\Middleware\AuthMiddleware::class);
+
+// Select travel plan route
+$router->get('/patient/select-travel-plan', 'PatientController', 'selectTravelPlan', \App\Core\Middleware\AuthMiddleware::class);
+
+// View session summary route
+$router->get('/patient/session-summary', 'PatientController', 'sessionSummary', \App\Core\Middleware\AuthMiddleware::class);
 
 
     // Set 404 handler
