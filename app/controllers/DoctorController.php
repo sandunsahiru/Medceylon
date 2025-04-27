@@ -5,65 +5,73 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\Doctor;
 use App\Models\Appointment;
+use App\Models\MedicalSession;
+use App\Models\Specialization;
 
 class DoctorController extends BaseController
 {
     private $doctorModel;
     private $appointmentModel;
+    private $medicalSessionModel;
+    private $specializationModel;
+    private $patientModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->doctorModel = new Doctor();
         $this->appointmentModel = new Appointment();
+        $this->medicalSessionModel = new MedicalSession();
+        $this->patientModel = new \App\Models\Patient();
+        // $this->specializationModel = new Specialization();
     }
 
     public function dashboard()
-{
-    try {
-        // Get user_id from session
-        $userId = $this->validateDoctorSession();
-        error_log("Loading dashboard for user ID: " . $userId);
+    {
+        try {
+            // Get user_id from session
+            $userId = $this->validateDoctorSession();
+            error_log("Loading dashboard for user ID: " . $userId);
 
-        // Get doctor ID from the doctors table (IMPORTANT STEP)
-        $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $doctor = $result->fetch_assoc();
+            // Get doctor ID from the doctors table (IMPORTANT STEP)
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
 
-        if (!$doctor) {
-            error_log("No doctor record found for user ID: " . $userId);
-            throw new \Exception("Doctor not found");
+            if (!$doctor) {
+                error_log("No doctor record found for user ID: " . $userId);
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
+            error_log("Found doctor_id: " . $doctorId . " for user_id: " . $userId);
+
+            // Get dashboard statistics
+            $stats = $this->doctorModel->getDoctorDashboardStats($doctorId);
+            error_log("Dashboard stats: " . print_r($stats, true));
+
+            // Get recent appointments using the new method (includes all statuses and dates)
+            $appointments = $this->appointmentModel->getRecentAppointments($doctorId);
+            error_log("Found " . count($appointments) . " recent appointments for dashboard");
+
+            $data = [
+                'stats' => $stats,
+                'appointments' => $appointments,
+                'basePath' => $this->basePath,
+                'page_title' => 'Doctor Dashboard',
+                'current_page' => 'dashboard'
+            ];
+
+            echo $this->view('doctor/dashboard', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Dashboard error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            $this->handleError($e);
         }
-
-        $doctorId = $doctor['doctor_id'];
-        error_log("Found doctor_id: " . $doctorId . " for user_id: " . $userId);
-
-        // Get dashboard statistics
-        $stats = $this->doctorModel->getDoctorDashboardStats($doctorId);
-        error_log("Dashboard stats: " . print_r($stats, true));
-
-        // Get recent appointments using the new method (includes all statuses and dates)
-        $appointments = $this->appointmentModel->getRecentAppointments($doctorId);
-        error_log("Found " . count($appointments) . " recent appointments for dashboard");
-
-        $data = [
-            'stats' => $stats,
-            'appointments' => $appointments,
-            'basePath' => $this->basePath,
-            'page_title' => 'Doctor Dashboard',
-            'current_page' => 'dashboard'
-        ];
-
-        echo $this->view('doctor/dashboard', $data);
-        exit();
-    } catch (\Exception $e) {
-        error_log("Dashboard error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-        $this->handleError($e);
     }
-}
 
     public function appointments()
     {
@@ -845,4 +853,1166 @@ class DoctorController extends BaseController
             exit();
         }
     }
+
+
+    /**
+     * View patient session from appointment
+     * 
+     * @param int $appointmentId The appointment ID
+     * @return void
+     */
+    public function viewAppointment($appointmentId)
+    {
+        try {
+            $userId = $this->validateDoctorSession();
+
+            // Get doctor ID
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                error_log("No doctor record found for user ID: " . $userId);
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
+
+            // Check if appointment exists and belongs to this doctor
+            $query = "SELECT a.*, u.first_name, u.last_name, a.session_id
+                 FROM appointments a
+                 JOIN users u ON a.patient_id = u.user_id
+                 WHERE a.appointment_id = ? AND a.doctor_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("ii", $appointmentId, $doctorId);
+            $stmt->execute();
+            $appointment = $stmt->get_result()->fetch_assoc();
+
+            if (!$appointment) {
+                $this->session->setFlash('error', 'Appointment not found or does not belong to you');
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Get or create session
+            $sessionId = $appointment['session_id'];
+            if (!$sessionId) {
+                // If no session exists, create one
+                $sessionData = [
+                    'patient_id' => $appointment['patient_id'],
+                    'status' => 'Active',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+
+                $sessionId = $this->medicalSessionModel->create($sessionData);
+                if (!$sessionId) {
+                    $this->session->setFlash('error', 'Failed to create medical session');
+                    header('Location: ' . $this->url('doctor/dashboard'));
+                    exit();
+                }
+
+                // Update the appointment with the session ID
+                $this->appointmentModel->updateSessionId($appointmentId, $sessionId);
+            }
+
+            // Redirect to the patient session page
+            header('Location: ' . $this->url('doctor/patient-session/' . $sessionId));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in viewAppointment: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error viewing appointment: ' . $e->getMessage());
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+    }
+
+    
+
+    /**
+     * Send medical request
+     */
+    public function sendMedicalRequest()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $sessionId = $_POST['session_id'];
+            $patientId = $_POST['patient_id'];
+            $requestType = $_POST['request_type'];
+            $requestDetails = $_POST['request_details'];
+
+            // Verify the session exists
+            $session = $this->medicalSessionModel->getById($sessionId);
+            if (!$session || $session['patient_id'] != $patientId) {
+                throw new \Exception("Invalid session");
+            }
+
+            // Get current doctor's ID
+            $userId = $this->validateDoctorSession();
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
+
+            // Create medical request
+            $requestData = [
+                'session_id' => $sessionId,
+                'patient_id' => $patientId,
+                'doctor_id' => $doctorId,
+                'request_type' => $requestType,
+                'request_details' => $requestDetails,
+                'status' => 'Pending',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Insert into medical_requests table
+            $fields = implode(', ', array_keys($requestData));
+            $placeholders = implode(', ', array_fill(0, count($requestData), '?'));
+
+            $query = "INSERT INTO medical_requests ({$fields}) VALUES ({$placeholders})";
+            $stmt = $this->db->prepare($query);
+            $types = str_repeat('s', count($requestData));
+            $stmt->bind_param($types, ...array_values($requestData));
+
+            if (!$stmt->execute()) {
+                throw new \Exception("Failed to create medical request: " . $stmt->error);
+            }
+
+            $this->session->setFlash('success', 'Medical request sent successfully');
+            header('Location: ' . $this->url('doctor/patient-session/' . $sessionId));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in sendMedicalRequest: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error sending medical request: ' . $e->getMessage());
+
+            // Redirect back to the session page
+            if (isset($_POST['session_id'])) {
+                header('Location: ' . $this->url('doctor/patient-session/' . $_POST['session_id']));
+            } else {
+                header('Location: ' . $this->url('doctor/dashboard'));
+            }
+            exit();
+        }
+    }
+
+   
+
+    /**
+     * Add specialist notes
+     */
+    public function addSpecialistNotes()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $sessionId = $_POST['session_id'];
+            $notes = $_POST['specialist_notes'];
+
+            // Save notes
+            $query = "UPDATE medical_sessions SET specialist_notes = ? WHERE session_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("si", $notes, $sessionId);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0) {
+                throw new \Exception("Failed to save specialist notes");
+            }
+
+            $this->session->setFlash('success', 'Specialist notes saved successfully');
+            header('Location: ' . $this->url('doctor/patient-session/' . $sessionId));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in addSpecialistNotes: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error saving specialist notes: ' . $e->getMessage());
+
+            // Redirect back to the session page
+            if (isset($_POST['session_id'])) {
+                header('Location: ' . $this->url('doctor/patient-session/' . $_POST['session_id']));
+            } else {
+                header('Location: ' . $this->url('doctor/dashboard'));
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Save session notes (session.php form action route)
+     */
+    public function sessionSaveNotes()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $sessionId = $_POST['session_id'];
+            $doctorId = $_POST['doctor_id'];
+            $notes = $_POST['doctor_notes'];
+
+            // Save notes
+            $query = "UPDATE medical_sessions SET general_doctor_notes = ? WHERE session_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("si", $notes, $sessionId);
+            $stmt->execute();
+
+            if ($stmt->affected_rows === 0) {
+                throw new \Exception("Failed to save notes");
+            }
+
+            $this->session->setFlash('success', 'Medical notes saved successfully');
+            header('Location: ' . $this->url('doctor/patient-session/' . $sessionId));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in sessionSaveNotes: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error saving notes: ' . $e->getMessage());
+
+            // Redirect back to the session page
+            if (isset($_POST['session_id'])) {
+                header('Location: ' . $this->url('doctor/patient-session/' . $_POST['session_id']));
+            } else {
+                header('Location: ' . $this->url('doctor/dashboard'));
+            }
+            exit();
+        }
+    }
+
+    /**
+     * Complete session from the session view
+     */
+    public function sessionComplete()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Check CSRF token
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+                throw new \Exception("Invalid CSRF token");
+            }
+
+            $sessionId = $_POST['session_id'];
+
+            // Update session status to completed
+            $query = "UPDATE medical_sessions SET status = 'Completed', updated_at = ? WHERE session_id = ?";
+            $stmt = $this->db->prepare($query);
+            $updatedAt = date('Y-m-d H:i:s');
+            $stmt->bind_param("si", $updatedAt, $sessionId);
+
+            if (!$stmt->execute()) {
+                throw new \Exception("Failed to complete session: " . $stmt->error);
+            }
+
+            $this->session->setFlash('success', 'Medical session marked as completed');
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in sessionComplete: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error completing session: ' . $e->getMessage());
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+    }
+
+    /**
+     * Helper method to get medical requests for a session
+     */
+    private function getMedicalRequests($sessionId)
+    {
+        try {
+            $query = "SELECT mr.*, 
+                  CONCAT(d.first_name, ' ', d.last_name) as doctor_name
+                  FROM medical_requests mr
+                  JOIN users d ON mr.doctor_id = d.user_id
+                  WHERE mr.session_id = ?
+                  ORDER BY mr.created_at DESC";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $sessionId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            $requests = [];
+            while ($row = $result->fetch_assoc()) {
+                $requests[] = $row;
+            }
+
+            return $requests;
+        } catch (\Exception $e) {
+            error_log("Error getting medical requests: " . $e->getMessage());
+            return [];
+        }
+    }
+    /**
+     * Create a new session from an appointment
+     * 
+     * @param int $appointmentId The appointment ID
+     * @return void
+     */
+    public function createSessionFromAppointment($appointmentId)
+    {
+        try {
+            $userId = $this->validateDoctorSession();
+
+            // Get doctor ID
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+
+            if (!$doctor) {
+                error_log("No doctor record found for user ID: " . $userId);
+                throw new \Exception("Doctor not found");
+            }
+
+            $doctorId = $doctor['doctor_id'];
+
+            // Check if appointment exists and belongs to this doctor
+            $query = "SELECT a.*, u.first_name, u.last_name, a.session_id
+                 FROM appointments a
+                 JOIN users u ON a.patient_id = u.user_id
+                 WHERE a.appointment_id = ? AND a.doctor_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("ii", $appointmentId, $doctorId);
+            $stmt->execute();
+            $appointment = $stmt->get_result()->fetch_assoc();
+
+            if (!$appointment) {
+                $this->session->setFlash('error', 'Appointment not found or does not belong to you');
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Check if a session already exists
+            if (!empty($appointment['session_id'])) {
+                // If session exists, just redirect to it
+                header('Location: ' . $this->url('doctor/patient-session/' . $appointment['session_id']));
+                exit();
+            }
+
+            // Create a new session
+            $sessionData = [
+                'patient_id' => $appointment['patient_id'],
+                'status' => 'Active',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            $sessionId = $this->medicalSessionModel->create($sessionData);
+            if (!$sessionId) {
+                $this->session->setFlash('error', 'Failed to create medical session');
+                header('Location: ' . $this->url('doctor/dashboard'));
+                exit();
+            }
+
+            // Update the appointment with the session ID
+            $this->appointmentModel->updateSessionId($appointmentId, $sessionId);
+
+            // Redirect to the new session
+            $this->session->setFlash('success', 'Medical session created successfully');
+            header('Location: ' . $this->url('doctor/patient-session/' . $sessionId));
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in createSessionFromAppointment: " . $e->getMessage());
+            $this->session->setFlash('error', 'Error creating session: ' . $e->getMessage());
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+    }
+
+
+/**
+ * Save session notes
+ */
+public function saveSessionNotes()
+{
+    try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+        
+        // Check CSRF token
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+        
+        $sessionId = $_POST['session_id'];
+        $doctorId = $_POST['doctor_id'];
+        $notes = $_POST['doctor_notes'];
+        
+        // Save notes
+        $query = "UPDATE medical_sessions SET general_doctor_notes = ? WHERE session_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("si", $notes, $sessionId);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows === 0) {
+            throw new \Exception("Failed to save notes");
+        }
+        
+        $this->session->setFlash('success', 'Medical notes saved successfully');
+        header('Location: ' . $this->url('doctor/session/' . $sessionId));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in saveSessionNotes: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error saving notes: ' . $e->getMessage());
+        
+        // Redirect back to the session page
+        if (isset($_POST['session_id'])) {
+            header('Location: ' . $this->url('doctor/session/' . $_POST['session_id']));
+        } else {
+            header('Location: ' . $this->url('doctor/dashboard'));
+        }
+        exit();
+    }
+}
+
+private function getSessionAppointmentData($sessionId, $doctorId) 
+{
+    try {
+        $query = "SELECT * FROM appointments 
+                 WHERE session_id = ? AND doctor_id = ?
+                 ORDER BY appointment_date DESC
+                 LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $sessionId, $doctorId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+        
+        return [];
+    } catch (\Exception $e) {
+        error_log("Error in getSessionAppointmentData: " . $e->getMessage());
+        return [];
+    }
+}
+
+
+/**
+ * View a patient's medical session
+ * 
+ * @param int $sessionId The session ID
+ * @return void
+ */
+public function session($sessionId)
+{
+    try {
+        error_log("Loading session with ID: " . $sessionId);
+        
+        // Ensure sessionId is a valid integer
+        $sessionId = (int)$sessionId;
+        if ($sessionId <= 0) {
+            error_log("Invalid session ID: " . $sessionId);
+            throw new \Exception("Invalid session ID");
+        }
+        
+        $userId = $this->validateDoctorSession();
+        
+        // Get doctor ID
+        $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $doctor = $result->fetch_assoc();
+        
+        if (!$doctor) {
+            error_log("No doctor record found for user ID: " . $userId);
+            throw new \Exception("Doctor not found");
+        }
+        
+        $doctorId = $doctor['doctor_id'];
+        error_log("Found doctor_id: " . $doctorId . " for user_id: " . $userId);
+        
+        // Get doctor info using direct query instead of method call
+        $query = "SELECT 
+                d.doctor_id,
+                d.qualifications,
+                d.years_of_experience,
+                d.profile_description,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number,
+                h.name as hospital_name,
+                h.hospital_id
+                FROM doctors d
+                JOIN users u ON d.user_id = u.user_id
+                LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                WHERE d.doctor_id = ? AND d.is_active = 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $doctorId);
+        $stmt->execute();
+        $doctorInfo = $stmt->get_result()->fetch_assoc();
+        
+        // Check if session exists
+        $session = $this->medicalSessionModel->getById($sessionId);
+        if (!$session) {
+            error_log("Medical session not found: " . $sessionId);
+            $this->session->setFlash('error', 'Medical session not found');
+            header('Location: ' . $this->basePath . '/doctor/dashboard');
+            exit();
+        }
+        
+        // Get patient information
+        $patientId = $session['patient_id'];
+        error_log("Session associated with patient ID: " . $patientId);
+        
+        // Get patient details using direct query
+        $query = "SELECT 
+                u.user_id,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number,
+                u.gender,
+                u.date_of_birth as dob
+                FROM users u
+                WHERE u.user_id = ? AND u.is_active = 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            error_log("Patient not found for ID: " . $patientId);
+            $this->session->setFlash('error', 'Patient not found');
+            header('Location: ' . $this->basePath . '/doctor/dashboard');
+            exit();
+        }
+        
+        $patientInfo = $result->fetch_assoc();
+        
+        // Get all specializations for the referral dropdown
+        $query = "SELECT specialization_id, name FROM specializations WHERE is_active = 1 ORDER BY name";
+        $result = $this->db->query($query);
+        
+        if (!$result) {
+            error_log("Error fetching specializations: " . $this->db->error);
+            throw new \Exception("Failed to load specializations");
+        }
+        
+        $specializations = [];
+        while ($row = $result->fetch_assoc()) {
+            $specializations[] = $row;
+        }
+        
+        // Get session data for the view
+        $sessionData = $this->prepareSessionData($session, $patientId);
+        error_log("Prepared session data with " . ($sessionData['generalDoctorBooked'] ? "general doctor" : "no general doctor") . 
+                 " and " . ($sessionData['specialistBooked'] ? "specialist" : "no specialist"));
+        
+        // Get appointment data
+        $appointmentData = $this->getSessionAppointmentData($sessionId, $doctorId);
+        
+        // Get medical records
+        $medicalRecords = $this->patientModel->getMedicalReports($patientId);
+        $medicalRecordsArray = [];
+        if ($medicalRecords && $medicalRecords instanceof \mysqli_result) {
+            while ($row = $medicalRecords->fetch_assoc()) {
+                $medicalRecordsArray[] = $row;
+            }
+        }
+        error_log("Retrieved " . count($medicalRecordsArray) . " medical records for patient");
+        $medicalRecords = $medicalRecordsArray;
+        
+        // Check if current doctor is the general doctor for this session
+        $isGeneralDoctor = false;
+        if ($sessionData['generalDoctorBooked'] && isset($sessionData['generalDoctor'])) {
+            $isGeneralDoctor = ($sessionData['generalDoctor']['id'] == $doctorId);
+        }
+        
+        // Check if current doctor is the specialist doctor for this session
+        $isSpecialistDoctor = false;
+        if ($sessionData['specialistBooked'] && isset($sessionData['specialist'])) {
+            $isSpecialistDoctor = ($sessionData['specialist']['id'] == $doctorId);
+        }
+        
+        error_log("Doctor role in session: " . 
+                 ($isGeneralDoctor ? "General Doctor" : 
+                 ($isSpecialistDoctor ? "Specialist" : "Neither general nor specialist")));
+        
+        // Prepare data for the view
+        $data = [
+            'patientInfo' => $patientInfo,
+            'sessionData' => $sessionData,
+            'appointmentData' => $appointmentData,
+            'medicalRecords' => $medicalRecords,
+            'specializations' => $specializations,
+            'isGeneralDoctor' => $isGeneralDoctor,
+            'isSpecialistDoctor' => $isSpecialistDoctor,
+            'doctorInfo' => $doctorInfo,
+            'basePath' => $this->basePath,
+            'page_title' => 'Patient Session',
+            'current_page' => 'patients'
+        ];
+        
+        // Render the view
+        error_log("Rendering session view for session ID: " . $sessionId);
+        echo $this->view('doctor/session', $data);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in session method: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        $this->session->setFlash('error', 'Error loading patient session: ' . $e->getMessage());
+        header('Location: ' . $this->basePath . '/doctor/dashboard');
+        exit();
+    }
+}
+
+/**
+* Create a new session from an appointment
+* 
+* @param int $appointmentId The appointment ID
+* @return void
+*/
+public function createSession($appointmentId = null)
+{
+   try {
+       error_log("createSession method called with appointmentId: " . ($appointmentId ? $appointmentId : "null"));
+       
+       // If no appointmentId was passed, try to get it from the URL
+       if ($appointmentId === null || empty($appointmentId)) {
+           $uri = $_SERVER['REQUEST_URI'];
+           error_log("Extracting appointment ID from URI: " . $uri);
+           
+           if (preg_match('/\/doctor\/session\/create\/(\d+)/', $uri, $matches)) {
+               $appointmentId = (int)$matches[1];
+               error_log("Extracted appointment ID: " . $appointmentId);
+           } else {
+               error_log("Failed to extract appointment ID from URL: " . $uri);
+               throw new \Exception("Invalid appointment ID URL format");
+           }
+       }
+       
+       // Ensure appointmentId is a valid integer
+       $appointmentId = (int)$appointmentId;
+       if ($appointmentId <= 0) {
+           error_log("Invalid appointment ID value: " . $appointmentId);
+           throw new \Exception("Invalid appointment ID");
+       }
+
+       $userId = $this->validateDoctorSession();
+       
+       // Get doctor ID
+       $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+       $stmt = $this->db->prepare($query);
+       $stmt->bind_param("i", $userId);
+       $stmt->execute();
+       $result = $stmt->get_result();
+       $doctor = $result->fetch_assoc();
+       
+       if (!$doctor) {
+           error_log("No doctor record found for user ID: " . $userId);
+           throw new \Exception("Doctor not found");
+       }
+       
+       $doctorId = $doctor['doctor_id'];
+       error_log("Found doctor_id: " . $doctorId . " for user_id: " . $userId);
+       
+       // Check if appointment exists and belongs to this doctor
+       $query = "SELECT a.*, u.first_name, u.last_name, a.session_id
+                FROM appointments a
+                JOIN users u ON a.patient_id = u.user_id
+                WHERE a.appointment_id = ? AND a.doctor_id = ?";
+       $stmt = $this->db->prepare($query);
+       $stmt->bind_param("ii", $appointmentId, $doctorId);
+       $stmt->execute();
+       $result = $stmt->get_result();
+       
+       if ($result->num_rows === 0) {
+           error_log("Appointment not found or does not belong to doctor_id: " . $doctorId);
+           $this->session->setFlash('error', 'Appointment not found or does not belong to you');
+           header('Location: ' . $this->basePath . '/doctor/dashboard');
+           exit();
+       }
+       
+       $appointment = $result->fetch_assoc();
+       error_log("Found appointment with ID: " . $appointmentId);
+       
+       // Check if a session already exists
+       if (!empty($appointment['session_id'])) {
+           error_log("Session already exists with ID: " . $appointment['session_id']);
+           // If session exists, just redirect to it
+           $sessionUrl = $this->basePath . '/doctor/session/' . $appointment['session_id'];
+           error_log("Redirecting to existing session: " . $sessionUrl);
+           header('Location: ' . $sessionUrl);
+           exit();
+       }
+       
+       // Create a new session
+       $sessionData = [
+           'patient_id' => $appointment['patient_id'],
+           'status' => 'Active',
+           'created_at' => date('Y-m-d H:i:s')
+       ];
+       
+       error_log("Creating new medical session for patient_id: " . $appointment['patient_id']);
+       $sessionId = $this->medicalSessionModel->create($sessionData);
+       
+       if (!$sessionId) {
+           error_log("Failed to create medical session");
+           $this->session->setFlash('error', 'Failed to create medical session');
+           header('Location: ' . $this->basePath . '/doctor/dashboard');
+           exit();
+       }
+       
+       error_log("Created session with ID: " . $sessionId);
+       
+       // Update the appointment with the session ID
+       $updateQuery = "UPDATE appointments SET session_id = ? WHERE appointment_id = ?";
+       $updateStmt = $this->db->prepare($updateQuery);
+       $updateStmt->bind_param("ii", $sessionId, $appointmentId);
+       
+       if (!$updateStmt->execute()) {
+           error_log("Failed to update appointment with session ID: " . $this->db->error);
+           throw new \Exception("Failed to update appointment with session ID");
+       }
+       
+       error_log("Updated appointment " . $appointmentId . " with session_id " . $sessionId);
+       
+       // Redirect to the new session
+       $redirectUrl = $this->basePath . '/doctor/session/' . $sessionId;
+       error_log("Redirecting to: " . $redirectUrl);
+       
+       $this->session->setFlash('success', 'Medical session created successfully');
+       header("Location: " . $redirectUrl);
+       exit();
+   } catch (\Exception $e) {
+       error_log("Error in createSession: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+       $this->session->setFlash('error', 'Error creating session: ' . $e->getMessage());
+       header('Location: ' . $this->basePath . '/doctor/dashboard');
+       exit();
+   }
+}
+
+/**
+ * Prepare session data for view
+ * 
+ * @param array $session Session data from database
+ * @param int $patientId Patient ID
+ * @return array Formatted session data
+ */
+private function prepareSessionData($session, $patientId) 
+{
+    try {
+        // Default structure with placeholders
+        $sessionData = [
+            'id' => $session['session_id'],
+            'status' => $session['status'],
+            'treatment_plan_id' => $session['treatment_plan_id'] ?? null,
+            'generalDoctorBooked' => false,
+            'specialistBooked' => false,
+            'treatmentPlanCreated' => false,
+            'transportBooked' => false,
+            'travelPlanSelected' => false,
+            'generalDoctor' => null,
+            'specialist' => null,
+            'general_doctor_notes' => $session['general_doctor_notes'] ?? null,
+            'referral_reason' => $session['referral_reason'] ?? null,
+            'specialist_notes' => $session['specialist_notes'] ?? null
+        ];
+        
+        // If treatment plan exists, set flag and get details
+        if ($session['treatment_plan_id']) {
+            $sessionData['treatmentPlanCreated'] = true;
+            
+            // Get treatment plan details
+            $query = "SELECT * FROM treatment_plans WHERE plan_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $session['treatment_plan_id']);
+            $stmt->execute();
+            $treatmentPlan = $stmt->get_result()->fetch_assoc();
+            
+            if ($treatmentPlan) {
+                $sessionData['diagnosis'] = $treatmentPlan['diagnosis'] ?? null;
+                $sessionData['treatment_description'] = $treatmentPlan['treatment_description'] ?? null;
+                $sessionData['medications'] = $treatmentPlan['medications'] ?? null;
+                $sessionData['travelRestrictions'] = $treatmentPlan['travel_restrictions'] ?? null;
+                $sessionData['estimatedBudget'] = $treatmentPlan['estimated_budget'] ?? null;
+                $sessionData['treatment_duration'] = $treatmentPlan['treatment_duration'] ?? null;
+                $sessionData['follow_up'] = $treatmentPlan['follow_up'] ?? null;
+                $sessionData['specialist_notes'] = $treatmentPlan['specialist_notes'] ?? null;
+                
+                // Get treatment plan creator
+                $query = "SELECT 
+                          CONCAT(u.first_name, ' ', u.last_name) as doctor_name
+                          FROM treatment_plans tp
+                          JOIN doctors d ON tp.doctor_id = d.doctor_id
+                          JOIN users u ON d.user_id = u.user_id
+                          WHERE tp.plan_id = ?";
+                $stmt = $this->db->prepare($query);
+                $stmt->bind_param("i", $session['treatment_plan_id']);
+                $stmt->execute();
+                $doctor = $stmt->get_result()->fetch_assoc();
+                
+                if ($doctor) {
+                    $sessionData['treatmentPlanCreator'] = $doctor['doctor_name'];
+                }
+            }
+        }
+        
+        // Get appointments for this session
+        $query = "SELECT 
+                 a.*,
+                 d.doctor_id,
+                 u.first_name as doctor_first_name,
+                 u.last_name as doctor_last_name,
+                 s.name as specialization
+                 FROM appointments a
+                 JOIN doctors d ON a.doctor_id = d.doctor_id
+                 JOIN users u ON d.user_id = u.user_id
+                 LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
+                 LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
+                 WHERE a.session_id = ?
+                 ORDER BY a.appointment_date ASC";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $session['session_id']);
+        $stmt->execute();
+        $appointments = $stmt->get_result();
+        
+        while ($appointment = $appointments->fetch_assoc()) {
+            // Check if general doctor or specialist based on specialization
+            $isGeneral = ($appointment['specialization'] == 'General Medicine' || 
+                          $appointment['specialization'] == 'General Practitioner' ||
+                          !$appointment['specialization']);
+            
+            if ($isGeneral && !$sessionData['generalDoctorBooked']) {
+                $sessionData['generalDoctorBooked'] = true;
+                $sessionData['generalDoctor'] = [
+                    'id' => $appointment['doctor_id'],
+                    'name' => $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
+                    'specialty' => $appointment['specialization'] ?? 'General Practitioner',
+                    'appointmentDate' => $appointment['appointment_date'] . ' ' . $appointment['appointment_time'],
+                    'appointmentMode' => $appointment['consultation_type'],
+                    'meetLink' => $appointment['meet_link'] ?? ''
+                ];
+            } elseif (!$isGeneral) {
+                $sessionData['specialistBooked'] = true;
+                
+                // Get hospital name
+                $query = "SELECT h.name as hospital_name
+                         FROM doctors d
+                         LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                         WHERE d.doctor_id = ?";
+                $stmt2 = $this->db->prepare($query);
+                $stmt2->bind_param("i", $appointment['doctor_id']);
+                $stmt2->execute();
+                $hospital = $stmt2->get_result()->fetch_assoc();
+                
+                $sessionData['specialist'] = [
+                    'id' => $appointment['doctor_id'],
+                    'name' => $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
+                    'specialty' => $appointment['specialization'] ?? 'Specialist',
+                    'hospital' => $hospital['hospital_name'] ?? 'General Hospital',
+                    'appointmentDate' => $appointment['appointment_date'],
+                    'appointmentTime' => $appointment['appointment_time'],
+                    'appointmentMode' => $appointment['consultation_type'],
+                    'meetLink' => $appointment['meet_link'] ?? ''
+                ];
+            }
+        }
+        
+        return $sessionData;
+    } catch (\Exception $e) {
+        error_log("Error in prepareSessionData: " . $e->getMessage());
+        return [
+            'id' => $session['session_id'],
+            'status' => $session['status'],
+            'generalDoctorBooked' => false,
+            'specialistBooked' => false,
+            'treatmentPlanCreated' => false,
+            'transportBooked' => false,
+            'travelPlanSelected' => false
+        ];
+    }
+}
+/**
+ * Get recent appointments with specialist data for dashboard
+ * Updated method to include more information about specialist appointments
+ * 
+ * @param int $doctorId The doctor ID
+ * @param int $limit Maximum number of appointments to return
+ * @return array Array of appointment data
+ */
+public function getRecentAppointmentsWithSpecialists($doctorId, $limit = 10)
+{
+    try {
+        error_log("Getting recent appointments with specialists for doctor ID: " . $doctorId);
+
+        $query = "SELECT a.*, 
+                p.first_name AS patient_first_name, 
+                p.last_name AS patient_last_name,
+                p.email, 
+                p.phone_number,
+                a.session_id,
+                ms.general_doctor_notes,
+                ms.specialist_notes,
+                ms.status AS session_status,
+                
+                -- Include specialist appointment info if available
+                sa.appointment_id AS specialist_appointment_id,
+                sa.appointment_date AS specialist_date,
+                sa.appointment_time AS specialist_time,
+                sa.consultation_type AS specialist_mode,
+                sa.doctor_id AS specialist_id,
+                
+                -- Specialist doctor details
+                su.first_name AS specialist_first_name,
+                su.last_name AS specialist_last_name,
+                s.name AS specialist_specialty,
+                h.name AS specialist_hospital
+                
+                FROM appointments a
+                JOIN users p ON a.patient_id = p.user_id
+                LEFT JOIN medical_sessions ms ON a.session_id = ms.session_id
+                
+                -- Left join to find specialist appointment for the same session
+                LEFT JOIN appointments sa ON (
+                    a.session_id = sa.session_id 
+                    AND sa.doctor_id != a.doctor_id
+                    AND sa.appointment_id != a.appointment_id
+                )
+                
+                -- Join specialist doctor info if available
+                LEFT JOIN doctors sd ON sa.doctor_id = sd.doctor_id
+                LEFT JOIN users su ON sd.user_id = su.user_id
+                LEFT JOIN doctorspecializations ds ON sd.doctor_id = ds.doctor_id
+                LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
+                LEFT JOIN hospitals h ON sd.hospital_id = h.hospital_id
+                
+                WHERE a.doctor_id = ?
+                ORDER BY a.appointment_date DESC, a.appointment_time DESC
+                LIMIT ?";
+
+        $stmt = $this->db->prepare($query);
+        if (!$stmt) {
+            error_log("Query preparation failed: " . $this->db->error);
+            throw new \Exception("Failed to prepare query: " . $this->db->error);
+        }
+
+        $stmt->bind_param("ii", $doctorId, $limit);
+        if (!$stmt->execute()) {
+            error_log("Query execution failed: " . $stmt->error);
+            throw new \Exception("Failed to execute query: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        error_log("Found " . $result->num_rows . " recent appointments");
+
+        // Convert to array for easier handling in the view
+        $appointments = [];
+        while ($row = $result->fetch_assoc()) {
+            // Check if specialist is booked
+            $specialistBooked = !empty($row['specialist_id']);
+            
+            // Create formatted specialist name if available
+            $specialistName = null;
+            if ($specialistBooked) {
+                $specialistName = $row['specialist_first_name'] . ' ' . $row['specialist_last_name'];
+            }
+            
+            // Add the processed data to the appointment
+            $row['specialist_booked'] = $specialistBooked;
+            $row['specialist_name'] = $specialistName;
+            
+            // Add treatment plan status (simplified - you might need more checks for real data)
+            $row['treatment_plan_created'] = !empty($row['treatment_plan_id']);
+            
+            $appointments[] = $row;
+        }
+
+        return $appointments;
+    } catch (\Exception $e) {
+        error_log("Error getting recent appointments with specialists: " . $e->getMessage());
+        throw $e;
+    }
+}
+/**
+ * Save specialist notes
+ */
+public function saveSpecialistNotes()
+{
+    try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+        
+        // Check CSRF token
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+        
+        $sessionId = $_POST['session_id'];
+        $notes = $_POST['specialist_notes'];
+        
+        // Save notes to medical_sessions table
+        $query = "UPDATE medical_sessions SET specialist_notes = ? WHERE session_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("si", $notes, $sessionId);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows === 0) {
+            throw new \Exception("Failed to save specialist notes");
+        }
+        
+        $this->session->setFlash('success', 'Specialist notes saved successfully');
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in saveSpecialistNotes: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error saving specialist notes: ' . $e->getMessage());
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    }
+}
+
+/**
+ * Request medical tests
+ */
+public function requestMedicalTests()
+{
+    try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+        
+        // Check CSRF token
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+        
+        $sessionId = $_POST['session_id'];
+        $patientId = $_POST['patient_id'];
+        $testType = $_POST['test_type'];
+        $testDescription = $_POST['test_description'];
+        $requiresFasting = $_POST['requires_fasting'] === 'yes';
+        $urgency = $_POST['urgency'];
+        
+        // Get current doctor's ID
+        $userId = $this->validateDoctorSession();
+        $doctorId = $this->doctorModel->getDoctorIdByUserId($userId);
+        
+        if (!$doctorId) {
+            throw new \Exception("Doctor not found");
+        }
+        
+        // Insert into medical_tests table
+        $query = "INSERT INTO medical_tests (
+                    session_id, 
+                    patient_id, 
+                    doctor_id, 
+                    test_type, 
+                    test_description, 
+                    requires_fasting, 
+                    urgency,
+                    status,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', NOW())";
+        
+        $stmt = $this->db->prepare($query);
+        $fastingInt = $requiresFasting ? 1 : 0;
+        $stmt->bind_param("iiisssi", $sessionId, $patientId, $doctorId, $testType, $testDescription, $fastingInt, $urgency);
+        
+        if (!$stmt->execute()) {
+            throw new \Exception("Failed to request medical test: " . $stmt->error);
+        }
+        
+        $this->session->setFlash('success', 'Medical test requested successfully');
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in requestMedicalTests: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error requesting medical test: ' . $e->getMessage());
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    }
+}
+
+/**
+ * Cancel treatment
+ */
+public function cancelTreatment()
+{
+    try {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->url('doctor/dashboard'));
+            exit();
+        }
+        
+        // Check CSRF token
+        if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
+            throw new \Exception("Invalid CSRF token");
+        }
+        
+        $sessionId = $_POST['session_id'];
+        $cancelReason = $_POST['cancel_reason'] ?? 'Treatment no longer required';
+        
+        // Update session status to canceled
+        $query = "UPDATE medical_sessions SET status = 'Canceled', updated_at = ?, cancel_reason = ? WHERE session_id = ?";
+        $stmt = $this->db->prepare($query);
+        $updatedAt = date('Y-m-d H:i:s');
+        $stmt->bind_param("ssi", $updatedAt, $cancelReason, $sessionId);
+        
+        if (!$stmt->execute()) {
+            throw new \Exception("Failed to cancel treatment: " . $stmt->error);
+        }
+        
+        // Also update appointment statuses
+        $query = "UPDATE appointments SET appointment_status = 'Canceled' WHERE session_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $sessionId);
+        $stmt->execute();
+        
+        $this->session->setFlash('success', 'Treatment has been canceled successfully');
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in cancelTreatment: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error canceling treatment: ' . $e->getMessage());
+        header('Location: ' . $this->url('doctor/dashboard'));
+        exit();
+    }
+}
+
+
 }

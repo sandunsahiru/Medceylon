@@ -168,6 +168,53 @@ a:hover {
     font-size: 1.1em;
 }
 
+.service.disabled {
+    opacity: 0.7;
+    position: relative;
+}
+
+.service.disabled a {
+    pointer-events: none;  /* Disable interaction with the link */
+}
+
+.service.disabled {
+    opacity: 0.7;
+    position: relative;
+}
+
+.service.disabled a {
+    pointer-events: none;  /* Disable interaction with the link */
+}
+
+.service.disabled::before {
+    content: "Upgrade Your Plan";
+    position: absolute;
+    top: -30px;  /* Adjust position to appear above the item */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 0, 0, 0.8); /* Red background */
+    color: white;
+    font-weight: bold;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    z-index: 10;
+    opacity: 0;  /* Hide by default */
+    pointer-events: none; /* Keep tooltip non-interactive */
+    transition: opacity 0.3s ease;  /* Smooth transition when showing */
+}
+
+.service.disabled:hover::before {
+    opacity: 1;  /* Show tooltip on hover */
+}
+
+.service.disabled:hover {
+    background-color: rgba(255, 0, 0, 0.1); /* Add slight red tint on hover */
+}
+
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .testimonials-row {

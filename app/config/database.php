@@ -8,9 +8,15 @@ $db_name = 'medceylon';
 
 $db = new mysqli($db_host, $db_user, $db_pass, $db_name);
 
+// Check for connection error
 if ($db->connect_error) {
+    // If connection fails, throw an error message
     die("Connection failed: " . $db->connect_error);
 }
-define('DEBUG_MODE', true); // Set to false in production
-// Make the database connection available globally
-return $db;
+
+// Define debug mode if not already defined
+if (!defined('DEBUG_MODE')) {
+    define('DEBUG_MODE', true);
+}
+
+return $db;  // Return the mysqli connection object if successful

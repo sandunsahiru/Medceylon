@@ -11,25 +11,24 @@
 
 <body class="login-page">
 
-    <div class="form-container">
-        <form action="<?= $formAction ?>" method="POST" onsubmit="return validateForm()">
-            <h1>Join MedCeylon</h1>
+<div class="form-container">
+    <form action="<?= $basePath ?>/register" method="POST" onsubmit="return validateForm()">
+        <h1>Join MedCeylon</h1>
 
             <?php if (isset($error)): ?>
                 <div class="error-message"><?= $error ?></div>
             <?php endif; ?>
 
-            <!-- User Type FIRST -->
-            <div class="field">
-                <label>User Type</label>
-                <select name="user_type" id="user_type" onchange="toggleFields()" required>
-                    <option value="">Select</option>
-                    <option value="patient">Patient</option>
-                    <option value="general_doctor">General Doctor</option>
-                    <option value="special_doctor">Special Doctor</option>
-                    <option value="caretaker">Caretaker</option>
-                </select>
-            </div>
+        <!-- User Type FIRST -->
+        <div class="field">
+            <label>User Type</label>
+            <select name="user_type" id="user_type" onchange="toggleFields()" required>
+                <option value="">Select</option>
+                <option value="patient">Patient</option>
+                <option value="general_doctor">General Doctor</option>
+                <option value="special_doctor">Special Doctor</option>
+            </select>
+        </div>
 
             <div class="field">
                 <label>Full Name</label>

@@ -55,8 +55,6 @@
                                     <p>Status: <?= htmlspecialchars($appointment['appointment']['status']) ?></p>
                                 </div>
                             </div>
-                            <button>Reschedule</button>
-                            <button>Finish Consultation</button>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>

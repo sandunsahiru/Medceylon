@@ -11,113 +11,235 @@ class Doctor
         global $db;
         $this->db = $db;
     }
-
-    public function getAvailableDoctors()
-{
-    try {
-        error_log("Getting available doctors");
-        $query = "SELECT d.doctor_id, u.first_name, u.last_name, h.name as hospital_name 
-                FROM doctors d 
-                JOIN users u ON d.user_id = u.user_id 
-                LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
-                WHERE u.role_id = 2 
-                AND d.is_active = 1 
-                AND u.is_active = 1
-                AND d.is_verified = 1
-                ORDER BY u.first_name, u.last_name";
-
-        $result = $this->db->query($query);
-        if (!$result) {
-            error_log("Query error: " . $this->db->error);
-            throw new \Exception("Failed to fetch doctors");
+    
+    /**
+     * Get doctor ID by user ID
+     * 
+     * @param int $userId
+     * @return int|false
+     */
+    public function getDoctorIdByUserId($userId)
+    {
+        try {
+            $query = "SELECT doctor_id FROM doctors WHERE user_id = ? AND is_active = 1";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+            
+            return $doctor ? $doctor['doctor_id'] : false;
+        } catch (\Exception $e) {
+            error_log("Error getting doctor ID: " . $e->getMessage());
+            return false;
         }
-        error_log("Found " . $result->num_rows . " doctors");
-        return $result;
-    } catch (\Exception $e) {
-        error_log("Error in getAvailableDoctors: " . $e->getMessage());
-        throw $e;
     }
-}
+    
+    /**
+     * Get detailed doctor profile for a specific doctor ID
+     * 
+     * @param int $doctorId
+     * @return array|false
+     */
+    public function getDetailedDoctorProfile($doctorId)
+    {
+        try {
+            $query = "SELECT 
+                d.doctor_id,
+                d.qualifications,
+                d.years_of_experience,
+                d.profile_description,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number,
+                h.name as hospital_name,
+                GROUP_CONCAT(DISTINCT s.name) as specializations
+                FROM doctors d
+                JOIN users u ON d.user_id = u.user_id
+                LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
+                LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
+                WHERE d.doctor_id = ? 
+                AND d.is_active = 1
+                GROUP BY d.doctor_id, u.first_name, u.last_name, u.email, 
+                        u.phone_number, d.qualifications, d.years_of_experience, 
+                        h.name, d.profile_description";
+            
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                throw new \Exception($this->db->error);
+            }
 
-// Add this method to your Doctor model class if it doesn't exist,
-// or update it if it does to ensure time slots are returned as strings
+            $stmt->bind_param("i", $doctorId);
+            if (!$stmt->execute()) {
+                throw new \Exception($stmt->error);
+            }
 
-public function getAvailableTimeSlots($doctorId, $date) {
-    try {
-        // Convert numeric day of week to day name
-        $dayNumber = date('w', strtotime($date)); // Returns 0 (Sunday) to 6 (Saturday)
-        $dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        $dayName = $dayNames[$dayNumber];
-        
-        error_log("Checking time slots for doctor ID: $doctorId on $date ($dayName)");
-        
-        // Get the doctor's working hours for that day of week from doctor_availability
-        $query = "SELECT start_time, end_time 
-                 FROM doctor_availability 
-                 WHERE doctor_id = ? AND day_of_week = ? 
-                 AND is_active = 1";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param("is", $doctorId, $dayName);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        if ($result->num_rows === 0) {
-            error_log("No schedule found for doctor $doctorId on $dayName");
+            $result = $stmt->get_result();
+            return $result->fetch_assoc();
+        } catch (\Exception $e) {
+            error_log("Error in getDetailedDoctorProfile: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Get patients list with detailed information
+     * 
+     * @param int $doctorId
+     * @return \mysqli_result|array
+     */
+    public function getDoctorPatientsWithDetails($doctorId)
+    {
+        try {
+            $query = "SELECT DISTINCT
+                u.user_id,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number,
+                u.gender,
+                COUNT(DISTINCT a.appointment_id) as total_visits,
+                MAX(a.appointment_date) as last_visit,
+                COUNT(DISTINCT mr.report_id) as total_reports
+                FROM appointments a
+                JOIN users u ON a.patient_id = u.user_id
+                LEFT JOIN medical_reports mr ON u.user_id = mr.patient_id
+                WHERE a.doctor_id = ?
+                GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender
+                ORDER BY last_visit DESC";
+
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $doctorId);
+            $stmt->execute();
+            return $stmt->get_result();
+        } catch (\Exception $e) {
+            error_log("Error getting doctor's patients with details: " . $e->getMessage());
             return [];
         }
-        
-        $schedule = $result->fetch_assoc();
-        error_log("Found schedule: " . json_encode($schedule));
-        
-        // Get already booked appointments
-        $query = "SELECT appointment_time 
-                 FROM appointments 
-                 WHERE doctor_id = ? AND appointment_date = ? 
-                 AND appointment_status NOT IN ('Canceled', 'Rejected')";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param("is", $doctorId, $date);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        $bookedSlots = [];
-        while ($row = $result->fetch_assoc()) {
-            $bookedSlots[] = $row['appointment_time'];
+    }
+
+    /**
+     * Get available doctors
+     * 
+     * @return \mysqli_result|false
+     */
+    public function getAvailableDoctors()
+    {
+        try {
+            error_log("Getting available doctors");
+            $query = "SELECT d.doctor_id, u.first_name, u.last_name, h.name as hospital_name 
+                    FROM doctors d 
+                    JOIN users u ON d.user_id = u.user_id 
+                    LEFT JOIN hospitals h ON d.hospital_id = h.hospital_id
+                    WHERE u.role_id = 2 
+                    AND d.is_active = 1 
+                    AND u.is_active = 1
+                    AND d.is_verified = 1
+                    ORDER BY u.first_name, u.last_name";
+
+            $result = $this->db->query($query);
+            if (!$result) {
+                error_log("Query error: " . $this->db->error);
+                throw new \Exception("Failed to fetch doctors");
+            }
+            error_log("Found " . $result->num_rows . " doctors");
+            return $result;
+        } catch (\Exception $e) {
+            error_log("Error in getAvailableDoctors: " . $e->getMessage());
+            throw $e;
         }
-        
-        error_log("Booked slots: " . json_encode($bookedSlots));
-        
-        // Generate time slots (30 minute intervals)
-        $startTime = strtotime($schedule['start_time']);
-        $endTime = strtotime($schedule['end_time']);
-        
-        $slots = [];
-        $slotDuration = 30 * 60; // 30 minutes in seconds
-        
-        for ($time = $startTime; $time < $endTime; $time += $slotDuration) {
-            // Format as HH:MM:SS for database comparison
-            $formattedTime = date('H:i:s', $time);
+    }
+
+    /**
+     * Get available time slots for a doctor on a specified date
+     * 
+     * @param int $doctorId
+     * @param string $date
+     * @return array
+     */
+    public function getAvailableTimeSlots($doctorId, $date) {
+        try {
+            // Convert numeric day of week to day name
+            $dayNumber = date('w', strtotime($date)); // Returns 0 (Sunday) to 6 (Saturday)
+            $dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            $dayName = $dayNames[$dayNumber];
             
-            // Skip if already booked
-            if (in_array($formattedTime, $bookedSlots)) {
-                continue;
+            error_log("Checking time slots for doctor ID: $doctorId on $date ($dayName)");
+            
+            // Get the doctor's working hours for that day of week from doctor_availability
+            $query = "SELECT start_time, end_time 
+                    FROM doctor_availability 
+                    WHERE doctor_id = ? AND day_of_week = ? 
+                    AND is_active = 1";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("is", $doctorId, $dayName);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows === 0) {
+                error_log("No schedule found for doctor $doctorId on $dayName");
+                return [];
             }
             
-            // Add to available slots (formatted for display)
-            $displayTime = date('g:i A', $time);
-            $slots[] = $displayTime;
+            $schedule = $result->fetch_assoc();
+            error_log("Found schedule: " . json_encode($schedule));
+            
+            // Get already booked appointments
+            $query = "SELECT appointment_time 
+                    FROM appointments 
+                    WHERE doctor_id = ? AND appointment_date = ? 
+                    AND appointment_status NOT IN ('Canceled', 'Rejected')";
+            
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("is", $doctorId, $date);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $bookedSlots = [];
+            while ($row = $result->fetch_assoc()) {
+                $bookedSlots[] = $row['appointment_time'];
+            }
+            
+            error_log("Booked slots: " . json_encode($bookedSlots));
+            
+            // Generate time slots (30 minute intervals)
+            $startTime = strtotime($schedule['start_time']);
+            $endTime = strtotime($schedule['end_time']);
+            
+            $slots = [];
+            $slotDuration = 30 * 60; // 30 minutes in seconds
+            
+            for ($time = $startTime; $time < $endTime; $time += $slotDuration) {
+                // Format as HH:MM:SS for database comparison
+                $formattedTime = date('H:i:s', $time);
+                
+                // Skip if already booked
+                if (in_array($formattedTime, $bookedSlots)) {
+                    continue;
+                }
+                
+                // Add to available slots (formatted for display)
+                $displayTime = date('g:i A', $time);
+                $slots[] = $displayTime;
+            }
+            
+            error_log("Available slots: " . json_encode($slots));
+            return $slots;
+        } catch (\Exception $e) {
+            error_log("Error getting available time slots: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+            throw $e;
         }
-        
-        error_log("Available slots: " . json_encode($slots));
-        return $slots;
-    } catch (\Exception $e) {
-        error_log("Error getting available time slots: " . $e->getMessage() . "\n" . $e->getTraceAsString());
-        throw $e;
     }
-}
 
-    // Enhanced Dashboard Methods
+    /**
+     * Get dashboard statistics for a doctor
+     * 
+     * @param int $doctorId
+     * @return array
+     */
     public function getDoctorDashboardStats($doctorId)
     {
         try {
@@ -139,6 +261,12 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
+    /**
+     * Get doctor's availability schedule
+     * 
+     * @param int $doctorId
+     * @return array
+     */
     public function getDoctorAvailability($doctorId)
     {
         try {
@@ -157,6 +285,15 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
+    /**
+     * Add availability slot for a doctor
+     * 
+     * @param int $doctorId
+     * @param string $dayOfWeek
+     * @param string $startTime
+     * @param string $endTime
+     * @return bool
+     */
     public function addAvailability($doctorId, $dayOfWeek, $startTime, $endTime)
     {
         try {
@@ -173,6 +310,12 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
+    /**
+     * Get doctor profile by user ID
+     * 
+     * @param int $userId
+     * @return array
+     */
     public function getDoctorProfile($userId) {
         try {
             // First get the doctor_id for this user_id
@@ -248,20 +391,21 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
-    public function updateProfile($doctorId, $data)
+    /**
+     * Update doctor profile
+     * 
+     * @param int $userId User ID 
+     * @param array $data Profile data
+     * @return bool
+     */
+    public function updateProfile($userId, $data)
     {
         try {
             $this->db->begin_transaction();
 
-            // First, get the user_id for this doctor
-            $query = "SELECT user_id FROM doctors WHERE doctor_id = ? AND is_active = 1";
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $doctorId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $doctor = $result->fetch_assoc();
-
-            if (!$doctor) {
+            // First, get the doctor_id for this user_id
+            $doctorId = $this->getDoctorIdByUserId($userId);
+            if (!$doctorId) {
                 throw new \Exception("Doctor not found");
             }
 
@@ -296,7 +440,13 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
-    // Existing update methods
+    /**
+     * Update doctor availability schedule
+     * 
+     * @param int $doctorId
+     * @param array $availability
+     * @return bool
+     */
     public function updateAvailability($doctorId, $availability)
     {
         $this->db->begin_transaction();
@@ -331,7 +481,12 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
-
+    /**
+     * Get appointment history for a doctor
+     * 
+     * @param int $doctorId
+     * @return array
+     */
     public function getAppointmentHistory($doctorId)
     {
         try {
@@ -350,7 +505,12 @@ public function getAvailableTimeSlots($doctorId, $date) {
             throw $e;
         }
     }
-    // Get all specialist doctors
+    
+    /**
+     * Get all specialist doctors
+     * 
+     * @return \mysqli_result
+     */
     public function getAllSpecialists()
     {
         try {
@@ -384,7 +544,11 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
-    // Get specialist statistics
+    /**
+     * Get specialist statistics
+     * 
+     * @return array
+     */
     public function getSpecialistStats()
     {
         try {
@@ -410,50 +574,55 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
-    // Get doctor's patients for booking form
+    /**
+     * Get doctor's patients
+     * 
+     * @param int $doctorId
+     * @return array
+     */
     public function getDoctorPatients($doctorId)
-{
-    try {
-        error_log("Getting patients for doctor ID: " . $doctorId); // Debug log
-        
-        // Get all patients who have had appointments with this doctor
-        $query = "SELECT DISTINCT 
-            u.user_id, 
-            u.first_name, 
-            u.last_name,
-            u.email,
-            u.phone_number,
-            MAX(a.appointment_date) as last_visit,
-            COUNT(DISTINCT a.appointment_id) as total_visits
-            FROM appointments a
-            INNER JOIN users u ON a.patient_id = u.user_id 
-            WHERE a.doctor_id = ?
-            AND u.is_active = 1
-            AND a.appointment_status IN ('Completed', 'Scheduled', 'Asked')
-            GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number
-            ORDER BY last_visit DESC";
+    {
+        try {
+            error_log("Getting patients for doctor ID: " . $doctorId); // Debug log
+            
+            // Get all patients who have had appointments with this doctor
+            $query = "SELECT DISTINCT 
+                u.user_id, 
+                u.first_name, 
+                u.last_name,
+                u.email,
+                u.phone_number,
+                MAX(a.appointment_date) as last_visit,
+                COUNT(DISTINCT a.appointment_id) as total_visits
+                FROM appointments a
+                INNER JOIN users u ON a.patient_id = u.user_id 
+                WHERE a.doctor_id = ?
+                AND u.is_active = 1
+                AND a.appointment_status IN ('Completed', 'Scheduled', 'Asked')
+                GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number
+                ORDER BY last_visit DESC";
 
-        $stmt = $this->db->prepare($query);
-        if (!$stmt) {
-            throw new \Exception("Database error: " . $this->db->error);
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                throw new \Exception("Database error: " . $this->db->error);
+            }
+
+            $stmt->bind_param("i", $doctorId);
+            $stmt->execute();
+            
+            $result = $stmt->get_result();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (\Exception $e) {
+            error_log("Error getting doctor's patients: " . $e->getMessage());
+            throw $e;
         }
-
-        $stmt->bind_param("i", $doctorId);
-        $stmt->execute();
-        
-        $result = $stmt->get_result();
-        $patients = $result->fetch_all(MYSQLI_ASSOC);
-        
-        error_log("Found " . count($patients) . " patients for doctor ID: " . $doctorId);
-        return $patients;
-    } catch (\Exception $e) {
-        error_log("Error getting doctor's patients: " . $e->getMessage());
-        throw $e;
     }
 
-}
-
-
+    /**
+     * Get all hospitals
+     * 
+     * @return array
+     */
     public function getHospitals()
     {
         try {
@@ -473,12 +642,16 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
+    /**
+     * Get all specializations
+     * 
+     * @return array
+     */
     public function getSpecializations()
     {
         try {
             $query = "SELECT specialization_id, name 
                      FROM specializations 
-                     WHERE is_active = 1 
                      ORDER BY name";
 
             $result = $this->db->query($query);
@@ -492,6 +665,12 @@ public function getAvailableTimeSlots($doctorId, $date) {
         }
     }
 
+    /**
+     * Get doctor's specializations
+     * 
+     * @param int $doctorId
+     * @return array
+     */
     public function getDoctorSpecializations($doctorId)
     {
         try {
