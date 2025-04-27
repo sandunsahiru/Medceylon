@@ -3,12 +3,8 @@
 <!-- Main Content -->
 <main class="main-content">
     <header class="top-bar">
-        <h1>Rooms</h1>
+        <h1>Theatres and Beds Management</h1>
         <div class="header-right">
-            <div class="search-box">
-                <i class="ri-search-line"></i>
-                <input type="text" id="searchInput" placeholder="Search requests...">
-            </div>
             <div class="date">
                 <i class="ri-calendar-line"></i>
                 <?php echo date('l, d.m.Y'); ?>
@@ -16,10 +12,49 @@
         </div>
     </header>
 
+    <!-- New Section: Availability Overview -->
+    <section class="availability-section">
+        <div class="section-header">
+            <h2>Current Availability</h2>
+        </div>
+        <div class="availability-cards">
+            <div class="availability-card">
+                <h3>Theatres</h3>
+                <div class="availability-count" id="theatres-available">
+                    <span class="count"><?= $total_theatres - $booked_theatres ?></span>
+                    <span class="total">/ <?= $total_theatres ?></span>
+                </div>
+                <p>Available Today</p>
+                <div class="availability-progress">
+                    <div class="progress-bar" style="width: <?= ($total_theatres > 0) ? (($total_theatres - $booked_theatres) / $total_theatres * 100) : 0 ?>%"></div>
+                </div>
+            </div>
+            <div class="availability-card">
+                <h3>Beds</h3>
+                <div class="availability-count" id="beds-available">
+                    <span class="count"><?= $total_beds - $occupied_beds ?></span>
+                    <span class="total">/ <?= $total_beds ?></span>
+                </div>
+                <p>Available Today</p>
+                <div class="availability-progress">
+                    <div class="progress-bar" style="width: <?= ($total_beds > 0) ? (($total_beds - $occupied_beds) / $total_beds * 100) : 0 ?>%"></div>
+                </div>
+            </div>
+            <div class="availability-card upcoming-card">
+                <h3>Upcoming Surgeries</h3>
+                <div class="upcoming-count">
+                    <span class="count"><?= htmlspecialchars($upcomingSurgeries ?? 0) ?></span>
+                </div>
+                <p>For the Next 7 Days</p>
+            </div>
+        </div>
+    </section>
+
     <section class="requests-section">
         <div class="section-header">
-            <h2>Rooms</h2>
+            <h2>Approved Theatre Bookings</h2>
         </div>
+        
         <div class="calendar-container">
             <!-- Calender -->
             <div class="calendar">
@@ -38,7 +73,7 @@
 
         </html>
 
-        <!-- Calendar fetch data from DB -->
+        
         <?php
         $treatmentRequestsJsFormat = [];
         foreach ($requests as $req) {
@@ -48,8 +83,8 @@
             }
             $treatmentRequestsJsFormat[$date][] = [
                 'patient' => $req['first_name'] . " " . $req['last_name'],
-                'treatment' => $req['treatment_type'], // make sure treatment_type is selected in your DB query
-                'status' => $req['request_status'] // or any other time field you prefer
+                'treatment' => $req['treatment_type'],
+                'status' => $req['request_status'] 
             ];
         }
         ?>
@@ -108,3 +143,4 @@
 
             renderCalendar();
         </script>
+</main>

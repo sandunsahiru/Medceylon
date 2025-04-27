@@ -1,3 +1,9 @@
+<?php
+// Add at the top of your PHP file
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+?>
 <?php require_once ROOT_PATH . '/app/views/vpdoctor/partials/header.php'; ?>
 
 <head>
@@ -179,15 +185,15 @@
 
         <?php if (!empty($allAppointments)): ?>
             <div class="appointments-list">
-            <?php 
-        $displayedIds = []; // Track already displayed appointments
-        foreach ($allAppointments as $appointment): 
-            // Skip if already displayed
-            if (in_array($appointment['appointment_id'], $displayedIds)) {
-                continue;
-            }
-            $displayedIds[] = $appointment['appointment_id'];
-        ?>
+                <?php
+                $displayedIds = []; // Track already displayed appointments
+                foreach ($allAppointments as $appointment):
+                    // Skip if already displayed
+                    if (in_array($appointment['appointment_id'], $displayedIds)) {
+                        continue;
+                    }
+                    $displayedIds[] = $appointment['appointment_id'];
+                ?>
                     <div class="appointment-card" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                         <div class="appointment-time">
                             <?php echo date('H:i', strtotime($appointment['appointment_time'])); ?>
@@ -302,151 +308,167 @@
                                                 <i class="ri-user-location-line"></i>
                                                 <span>Mode: <?php echo htmlspecialchars($appointment['consultation_type'] ?? 'In-Person'); ?></span>
                                             </div>
+                                            <div class="meta-item">
+                                                <?php if (isset($appointment['consultation_type']) && $appointment['consultation_type'] === 'Online'): ?>
+                                                    <div class="meet-link-container">
+                                                        <p><strong>Online Meeting:</strong></p>
+                                                        <?php
+                                                        // Use default meet link if not provided
+                                                        $meetLink = !empty($appointment['meet_link'])
+                                                            ? $appointment['meet_link']
+                                                            : 'https://meet.google.com/dyt-pdtg-xmy'; // Default link
+                                                        ?>
+                                                        <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank" class="meet-link-btn">
+                                                            <i class="ri-video-chat-line"></i> Join Google Meet
+                                                        </a>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Referring Doctor Information - Only show if this is a referral appointment -->
-                            <?php if ($appointment['is_referral'] && isset($appointment['referring_doctor_id']) && $appointment['referring_doctor_id']): ?>
-                                <div class="session-details-container">
-                                    <h3>Referring Doctor Information</h3>
-                                    <div class="doctor-card">
-                                        <div class="doctor-avatar">
-                                            <i class="ri-user-star-line"></i>
+                                <!-- Referring Doctor Information - Only show if this is a referral appointment -->
+                                <?php if ($appointment['is_referral'] && isset($appointment['referring_doctor_id']) && $appointment['referring_doctor_id']): ?>
+                                    <div class="session-details-container">
+                                        <h3>Referring Doctor Information</h3>
+                                        <div class="doctor-card">
+                                            <div class="doctor-avatar">
+                                                <i class="ri-user-star-line"></i>
+                                            </div>
+                                            <div class="doctor-info">
+                                                <h3>Dr. <?php echo htmlspecialchars($appointment['referring_doctor_name'] ?? 'General Doctor'); ?></h3>
+                                                <p><strong>General Practitioner</strong></p>
+
+                                                <div class="form-group">
+                                                    <label for="referral-notes-<?php echo $appointment['appointment_id']; ?>">Referral Notes</label>
+                                                    <div class="referral-notes">
+                                                        <?php echo htmlspecialchars($appointment['referral_notes'] ?? 'No referral notes provided.'); ?>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="doctor-info">
-                                            <h3>Dr. <?php echo htmlspecialchars($appointment['referring_doctor_name'] ?? 'General Doctor'); ?></h3>
-                                            <p><strong>General Practitioner</strong></p>
+                                    </div>
+                                <?php endif; ?>
+
+                                <!-- Specialist Notes Section -->
+                                <div class="session-details-container">
+                                    <h3>Specialist Notes</h3>
+                                    <textarea id="specialist-notes-<?php echo $appointment['appointment_id']; ?>" class="doctor-notes" placeholder="Enter your specialist notes for this patient..."><?php echo htmlspecialchars($appointment['specialist_notes'] ?? ''); ?></textarea>
+                                    <button class="action-btn primary save-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                        <i class="ri-save-line"></i> Save Notes
+                                    </button>
+                                </div>
+
+                                <!-- Treatment Plan Section -->
+                                <?php if (!(isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created'])): ?>
+                                    <div class="session-details-container">
+                                        <h3>Create Treatment Plan</h3>
+                                        <div class="treatment-plan-form">
+                                            <div class="form-group">
+                                                <label>Travel Restrictions</label>
+                                                <div class="travel-restrictions-group" id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="no-restrictions-<?php echo $appointment['appointment_id']; ?>" value="None">
+                                                        <label for="no-restrictions-<?php echo $appointment['appointment_id']; ?>">No Restrictions</label>
+                                                    </div>
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="high-altitude-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but avoid high altitudes">
+                                                        <label for="high-altitude-<?php echo $appointment['appointment_id']; ?>">Can travel, but avoid high altitudes</label>
+                                                    </div>
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="wheelchair-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but need wheelchair assistance">
+                                                        <label for="wheelchair-<?php echo $appointment['appointment_id']; ?>">Can travel, but need wheelchair assistance</label>
+                                                    </div>
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="escort-<?php echo $appointment['appointment_id']; ?>" value="Can travel with medical escort only">
+                                                        <label for="escort-<?php echo $appointment['appointment_id']; ?>">Can travel with medical escort only</label>
+                                                    </div>
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="short-flights-<?php echo $appointment['appointment_id']; ?>" value="Limited to short flights only">
+                                                        <label for="short-flights-<?php echo $appointment['appointment_id']; ?>">Limited to short flights only</label>
+                                                    </div>
+                                                    <div class="checkbox-container">
+                                                        <input type="checkbox" id="no-air-travel-<?php echo $appointment['appointment_id']; ?>" value="Not fit for air travel at this time">
+                                                        <label for="no-air-travel-<?php echo $appointment['appointment_id']; ?>">Not fit for air travel at this time</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="additional-fields">
+                                                <div class="form-group">
+                                                    <label for="vehicle-type-<?php echo $appointment['appointment_id']; ?>">Required Vehicle Type</label>
+                                                    <select id="vehicle-type-<?php echo $appointment['appointment_id']; ?>" class="form-control">
+                                                        <option value="Regular Vehicle">Regular Vehicle</option>
+                                                        <option value="Wheelchair Accessible">Wheelchair Accessible</option>
+                                                        <option value="Ambulance">Ambulance</option>
+                                                        <option value="Medical Transport with Bed">Medical Transport with Bed</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="arrival-deadline-<?php echo $appointment['appointment_id']; ?>">Arrival Deadline in Sri Lanka</label>
+                                                    <input type="date" id="arrival-deadline-<?php echo $appointment['appointment_id']; ?>" class="form-control">
+                                                </div>
+                                            </div>
 
                                             <div class="form-group">
-                                                <label for="referral-notes-<?php echo $appointment['appointment_id']; ?>">Referral Notes</label>
-                                                <div class="referral-notes">
-                                                    <?php echo htmlspecialchars($appointment['referral_notes'] ?? 'No referral notes provided.'); ?>
-                                                </div>
+                                                <label for="treatment-description-<?php echo $appointment['appointment_id']; ?>">Treatment Description</label>
+                                                <textarea id="treatment-description-<?php echo $appointment['appointment_id']; ?>" class="treatment-description form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Specialist Notes Section -->
-                            <div class="session-details-container">
-                                <h3>Specialist Notes</h3>
-                                <textarea id="specialist-notes-<?php echo $appointment['appointment_id']; ?>" class="doctor-notes" placeholder="Enter your specialist notes for this patient..."><?php echo htmlspecialchars($appointment['specialist_notes'] ?? ''); ?></textarea>
-                                <button class="action-btn primary save-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
-                                    <i class="ri-save-line"></i> Save Notes
-                                </button>
-                            </div>
-
-                            <!-- Treatment Plan Section -->
-                            <?php if (!(isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created'])): ?>
-                                <div class="session-details-container">
-                                    <h3>Create Treatment Plan</h3>
-                                    <div class="treatment-plan-form">
-                                        <div class="form-group">
-                                            <label>Travel Restrictions</label>
-                                            <div class="travel-restrictions-group" id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="no-restrictions-<?php echo $appointment['appointment_id']; ?>" value="None">
-                                                    <label for="no-restrictions-<?php echo $appointment['appointment_id']; ?>">No Restrictions</label>
-                                                </div>
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="high-altitude-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but avoid high altitudes">
-                                                    <label for="high-altitude-<?php echo $appointment['appointment_id']; ?>">Can travel, but avoid high altitudes</label>
-                                                </div>
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="wheelchair-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but need wheelchair assistance">
-                                                    <label for="wheelchair-<?php echo $appointment['appointment_id']; ?>">Can travel, but need wheelchair assistance</label>
-                                                </div>
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="escort-<?php echo $appointment['appointment_id']; ?>" value="Can travel with medical escort only">
-                                                    <label for="escort-<?php echo $appointment['appointment_id']; ?>">Can travel with medical escort only</label>
-                                                </div>
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="short-flights-<?php echo $appointment['appointment_id']; ?>" value="Limited to short flights only">
-                                                    <label for="short-flights-<?php echo $appointment['appointment_id']; ?>">Limited to short flights only</label>
-                                                </div>
-                                                <div class="checkbox-container">
-                                                    <input type="checkbox" id="no-air-travel-<?php echo $appointment['appointment_id']; ?>" value="Not fit for air travel at this time">
-                                                    <label for="no-air-travel-<?php echo $appointment['appointment_id']; ?>">Not fit for air travel at this time</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="additional-fields">
                                             <div class="form-group">
-                                                <label for="vehicle-type-<?php echo $appointment['appointment_id']; ?>">Required Vehicle Type</label>
-                                                <select id="vehicle-type-<?php echo $appointment['appointment_id']; ?>" class="form-control">
-                                                    <option value="Regular Vehicle">Regular Vehicle</option>
-                                                    <option value="Wheelchair Accessible">Wheelchair Accessible</option>
-                                                    <option value="Ambulance">Ambulance</option>
-                                                    <option value="Medical Transport with Bed">Medical Transport with Bed</option>
-                                                </select>
+                                                <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated Budget (LKR)</label>
+                                                <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>" class="estimated-budget form-control" placeholder="Enter estimated cost in Sri Lankan Rupees">
                                             </div>
-
                                             <div class="form-group">
-                                                <label for="arrival-deadline-<?php echo $appointment['appointment_id']; ?>">Arrival Deadline in Sri Lanka</label>
-                                                <input type="date" id="arrival-deadline-<?php echo $appointment['appointment_id']; ?>" class="form-control">
+                                                <label for="estimated-duration-<?php echo $appointment['appointment_id']; ?>">Estimated Duration (Days)</label>
+                                                <input type="number" id="estimated-duration-<?php echo $appointment['appointment_id']; ?>" class="estimated-duration form-control" placeholder="Enter estimated duration">
                                             </div>
+                                            <button class="full-width-button create-treatment-plan-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                                <i class="ri-file-list-3-line"></i> Create Treatment Plan
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php else: ?>
+                                    <!-- Treatment Plan Info (if already created) -->
+                                    <div class="session-details-container">
+                                        <h3>Treatment Information</h3>
+                                        <div class="treatment-details">
+                                            <p><strong>Travel Restrictions:</strong> <?php echo htmlspecialchars($appointment['travel_restrictions'] ?? 'None'); ?></p>
+                                            <p><strong>Vehicle Type:</strong> <?php echo htmlspecialchars($appointment['vehicle_type'] ?? 'Regular Vehicle'); ?></p>
+                                            <p><strong>Arrival Deadline:</strong> <?php echo !empty($appointment['arrival_deadline']) ? date('d/m/Y', strtotime($appointment['arrival_deadline'])) : 'Not specified'; ?></p>
+                                            <p><strong>Treatment Description:</strong> <?php echo htmlspecialchars($appointment['treatment_description'] ?? 'No description provided.'); ?></p>
+                                            <p><strong>Estimated Budget:</strong> LKR <?php echo htmlspecialchars(number_format($appointment['estimated_budget'] ?? 0)); ?></p>
+                                            <p><strong>Estimated Duration:</strong> <?php echo htmlspecialchars($appointment['estimated_duration'] ?? '0'); ?> days</p>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label for="treatment-description-<?php echo $appointment['appointment_id']; ?>">Treatment Description</label>
-                                            <textarea id="treatment-description-<?php echo $appointment['appointment_id']; ?>" class="treatment-description form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
+                                        <div class="action-buttons">
+                                            <button class="action-btn secondary" id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                                <i class="ri-edit-line"></i> Edit Treatment Plan
+                                            </button>
                                         </div>
-                                        <div class="form-group">
-                                            <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated Budget (LKR)</label>
-                                            <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>" class="estimated-budget form-control" placeholder="Enter estimated cost in Sri Lankan Rupees">
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="estimated-duration-<?php echo $appointment['appointment_id']; ?>">Estimated Duration (Days)</label>
-                                            <input type="number" id="estimated-duration-<?php echo $appointment['appointment_id']; ?>" class="estimated-duration form-control" placeholder="Enter estimated duration">
-                                        </div>
-                                        <button class="full-width-button create-treatment-plan-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
-                                            <i class="ri-file-list-3-line"></i> Create Treatment Plan
-                                        </button>
                                     </div>
+                                <?php endif; ?>
+
+                                <!-- Medical Request & Cancel Buttons -->
+                                <div class="session-actions">
+                                    <button class="action-btn primary request-medical-btn" id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                        <i class="ri-test-tube-line"></i> Request Medical Tests
+                                    </button>
+                                    <button class="action-btn secondary cancel-treatment-btn" id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                        <i class="ri-close-circle-line"></i> Cancel Treatment
+                                    </button>
                                 </div>
-                            <?php else: ?>
-                                <!-- Treatment Plan Info (if already created) -->
-                                <div class="session-details-container">
-                                    <h3>Treatment Information</h3>
-                                    <div class="treatment-details">
-                                        <p><strong>Travel Restrictions:</strong> <?php echo htmlspecialchars($appointment['travel_restrictions'] ?? 'None'); ?></p>
-                                        <p><strong>Vehicle Type:</strong> <?php echo htmlspecialchars($appointment['vehicle_type'] ?? 'Regular Vehicle'); ?></p>
-                                        <p><strong>Arrival Deadline:</strong> <?php echo !empty($appointment['arrival_deadline']) ? date('d/m/Y', strtotime($appointment['arrival_deadline'])) : 'Not specified'; ?></p>
-                                        <p><strong>Treatment Description:</strong> <?php echo htmlspecialchars($appointment['treatment_description'] ?? 'No description provided.'); ?></p>
-                                        <p><strong>Estimated Budget:</strong> LKR <?php echo htmlspecialchars(number_format($appointment['estimated_budget'] ?? 0)); ?></p>
-                                        <p><strong>Estimated Duration:</strong> <?php echo htmlspecialchars($appointment['estimated_duration'] ?? '0'); ?> days</p>
-                                    </div>
-
-                                    <div class="action-buttons">
-                                        <button class="action-btn secondary" id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
-                                            <i class="ri-edit-line"></i> Edit Treatment Plan
-                                        </button>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Medical Request & Cancel Buttons -->
-                            <div class="session-actions">
-                                <button class="action-btn primary request-medical-btn" id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
-                                    <i class="ri-test-tube-line"></i> Request Medical Tests
-                                </button>
-                                <button class="action-btn secondary cancel-treatment-btn" id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
-                                    <i class="ri-close-circle-line"></i> Cancel Treatment
-                                </button>
                             </div>
                         </div>
+                    <?php endforeach; ?>
                     </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <div class="no-appointments">
-                <p>No appointments scheduled</p>
-            </div>
-        <?php endif; ?>
+                <?php else: ?>
+                    <div class="no-appointments">
+                        <p>No appointments scheduled</p>
+                    </div>
+                <?php endif; ?>
     </section>
 </main>
 
@@ -592,5 +614,5 @@
 </div>
 
 <!-- Make sure the script order in the footer is: -->
-<script src="<?php echo $basePath; ?>/public/assets/js/view-details-fix.js"></script>
+<!-- <script src="<?php echo $basePath; ?>/public/assets/js/view-details-fix.js"></script> -->
 <script src="<?php echo $basePath; ?>/public/assets/js/vpdoctor-dashboard.js"></script>

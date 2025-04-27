@@ -35,9 +35,9 @@
                     <i class="ri-user-line"></i>
                     <span>Patients</span>
                 </a>
-                <a href="<?php echo $basePath; ?>/hospital/departments" class="nav-item <?php echo $currentPage === 'departments' ? 'active' : ''; ?>">
+                <a href="<?php echo $basePath; ?>/hospital/rooms" class="nav-item <?php echo $currentPage === 'rooms' ? 'active' : ''; ?>">
                     <i class="ri-hospital-line"></i>
-                    <span>Departments</span>
+                    <span>Units and Theatres</span>
                 </a>
                 <a href="<?php echo $basePath; ?>/hospital/doctors" class="nav-item <?php echo $currentPage === 'doctors' ? 'active' : ''; ?>">
                     <i class="ri-nurse-line"></i>

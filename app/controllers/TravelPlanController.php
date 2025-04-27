@@ -593,57 +593,54 @@ class TravelPlanController extends BaseController
         }
     }
 
-    public function saveCompletePlan()
-    {
-        try {
-            $userId = $this->session->getUserId();
-            $planData = json_decode($_POST['plan_data'], true);
-            
-            if ($this->travelPlanModel->saveMultiDestinationPlan($userId, $planData)) {
-                echo json_encode(['success' => true]);
-            } else {
-                throw new \Exception('Failed to save travel plan');
-            }
-        } catch (\Exception $e) {
-            error_log("Error in saveCompletePlan: " . $e->getMessage());
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-        }
-        exit();
-    }
-
-    public function savePlan() {
-        $input = json_decode(file_get_contents('php://input'), true);
+    
+    public function savePlan()
+{
+    // Start with clean output
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        // Get raw input and log it
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
         
-        // For new plans (temp ID)
-        if (str_starts_with($input['travel_id'] ?? '', 'temp-')) {
-            $newTravelId = $this->travelPlanModel->createNewTravelPlan(
-                $this->session->getUserId()
-            );
-            
-            foreach ($input['destinations'] as $destination) {
-                $this->travelPlanModel->addDestinationToPlan(
-                    $newTravelId,
-                    $destination['id'],
-                    $destination['start_date'],
-                    $destination['end_date']
-                );
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'new_travel_id' => $newTravelId
-            ]);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception("Invalid JSON: " . json_last_error_msg());
         }
-        // For existing plans
-        else {
-            $this->travelPlanModel->updateTravelPlan(
-                $input['travel_id'],
-                $input['destinations']
-            );
-            
-            echo json_encode(['success' => true]);
+        
+        // Validate CSRF
+        if (!$this->session->verifyCSRFToken($data['csrf_token'] ?? '')) {
+            throw new \Exception("Invalid CSRF token");
         }
+
+        // Validate items
+        if (empty($data['items']) || !is_array($data['items'])) {
+            throw new \Exception("No items provided");
+        }
+        
+        // Process through model
+        $tripId = $this->travelPlanModel->saveMultiDestinationPlan(
+            $this->session->getUserId(), 
+            $data
+        );
+        
+        echo json_encode([
+            'success' => true,
+            'trip_id' => $tripId,
+            'redirect' => $this->url('travelplan/view-trip/' . $tripId)
+        ]);
+
+    } catch (\Exception $e) {
+        http_response_code(400);
+        error_log("Controller error: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
     }
+    exit();
+}
 
     public function viewMultiDestinationPlan()
     {
@@ -664,5 +661,30 @@ class TravelPlanController extends BaseController
         exit();
     }
 
+    public function viewTrip($tripId)
+    {
+        try {
+            $userId = $this->session->getUserId();
+            $tripDetails = $this->travelPlanModel->getTripDetails($tripId);
+            
+            // Verify the trip belongs to the current user
+            if ($tripDetails['trip']['user_id'] != $userId) {
+                throw new \Exception("You don't have permission to view this trip");
+            }
+            
+            $data = [
+                'trip' => $tripDetails['trip'],
+                'destinations' => $tripDetails['destinations'],
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('travelplan/trip-view', $data);
+            
+        } catch (\Exception $e) {
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+        }
+        exit();
+    }
 
 }

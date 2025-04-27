@@ -626,24 +626,43 @@ public function getMedicalHistory()
         }
     }
 
-    public function rooms(){
+    public function rooms() {
         try {
-            $requests = $this->hospitalModel->getAllTreatmentRequests();
+            $requests = $this->hospitalModel->getApprovedRequests();
+            $userId = $this->session->getUserId();
+            $currentAvailability = $this->hospitalModel->getCurrentAvailability($userId);
+            $startDate = date('Y-m-01', strtotime('-1 month'));
+            $endDate = date('Y-m-t', strtotime('+1 month'));
+            $availabilityData = $this->hospitalModel->getDailyAvailability($startDate, $endDate, $userId);
+            $hospitalId = $this->hospitalModel->getHospitalID($userId);
+            $tomorrow = date('Y-m-d', strtotime('+1 day'));
+            $nextWeek = date('Y-m-d', strtotime('+7 days'));
+
+            $upcomingSurgeries = $this->hospitalModel->getUpcomingSurgeries($hospitalId, $tomorrow, $nextWeek);
             
             $data = [
-                'pageTitle' => 'Rooms',
+                'pageTitle' => 'Theatres and Beds',
                 'currentPage' => 'rooms',
                 'basePath' => $this->basePath,
                 'error' => $this->session->getFlash('error'),
                 'success' => $this->session->getFlash('success'),
                 'requests' => $requests,
+                'total_theatres' => $currentAvailability['theatres']['total'],
+                'booked_theatres' => $currentAvailability['theatres']['booked'],
+                'total_beds' => $currentAvailability['beds']['total'],
+                'occupied_beds' => $currentAvailability['beds']['occupied'],
+                'availabilityData' => $availabilityData,
+                'upcomingSurgeries' => $upcomingSurgeries
             ];
             
             echo $this->view('hospital/rooms', $data);
         } catch (\Exception $e) {
             error_log("Error in rooms: " . $e->getMessage());
-            $this->session->setFlash('error', 'An error occurred while loading rooms');
+            $this->session->setFlash('error', 'An error occurred while loading room availability');
             throw $e;
         }
     }
+
+    
+    
 }

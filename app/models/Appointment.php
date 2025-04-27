@@ -641,111 +641,143 @@ class Appointment
     }
 
     /**
-     * Create a Google Meet link for an appointment
-     * 
-     * @param int $appointmentId
-     * @param int $patientId
-     * @param int $doctorId
-     * @param string $date
-     * @param string $time
-     * @param string $reason
-     * @return string|false
-     */
-    private function createGoogleMeetLink($appointmentId, $patientId, $doctorId, $date, $time, $reason)
-    {
-        try {
-            error_log("Creating Google Meet link for appointment ID: {$appointmentId}");
-            error_log("Raw input date: {$date}, Raw input time: {$time}");
+ * Create a Google Meet link for an appointment
+ * 
+ * @param int $appointmentId
+ * @param int $patientId
+ * @param int $doctorId
+ * @param string $date
+ * @param string $time
+ * @param string $reason
+ * @return string|false
+ */
+private function createGoogleMeetLink($appointmentId, $patientId, $doctorId, $date, $time, $reason)
+{
+    try {
+        error_log("Creating Google Meet link for appointment ID: {$appointmentId}");
+        error_log("Raw input date: {$date}, Raw input time: {$time}");
 
-            // Get doctor and patient details
-            $query = "SELECT 
-                    CONCAT(d_user.first_name, ' ', d_user.last_name) AS doctor_name,
-                    CONCAT(p_user.first_name, ' ', p_user.last_name) AS patient_name,
-                    d_user.email AS doctor_email,
-                    p_user.email AS patient_email
-                    FROM doctors d 
-                    JOIN users d_user ON d.user_id = d_user.user_id
-                    JOIN users p_user ON p_user.user_id = ?
-                    WHERE d.doctor_id = ?";
+        // Get doctor and patient details
+        $query = "SELECT 
+                CONCAT(d_user.first_name, ' ', d_user.last_name) AS doctor_name,
+                CONCAT(p_user.first_name, ' ', p_user.last_name) AS patient_name,
+                d_user.email AS doctor_email,
+                p_user.email AS patient_email
+                FROM doctors d 
+                JOIN users d_user ON d.user_id = d_user.user_id
+                JOIN users p_user ON p_user.user_id = ?
+                WHERE d.doctor_id = ?";
 
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("ii", $patientId, $doctorId);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $patientId, $doctorId);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
 
-            if (!$result) {
-                error_log("Failed to get doctor and patient details for Meet link creation");
-                error_log("Patient ID: {$patientId}, Doctor ID: {$doctorId}");
-                return false;
-            }
-
-            error_log("Doctor and patient details retrieved: " . json_encode($result));
-
-            // Ensure date is in YYYY-MM-DD format
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                $date = date('Y-m-d', strtotime($date));
-            }
-            
-            // Now properly handle the time format - this is critical
-            // Check if time is in 12-hour format (with AM/PM)
-            if (stripos($time, 'am') !== false || stripos($time, 'pm') !== false) {
-                // Convert to 24-hour format
-                $time = date('H:i:s', strtotime($time));
-            } 
-            // Check if time is missing seconds
-            else if (preg_match('/^\d{1,2}:\d{2}$/', $time)) {
-                $time = $time . ':00';
-            }
-            // If it's not in HH:MM:SS format, try to convert it
-            else if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
-                $time = date('H:i:s', strtotime($time));
-            }
-            
-            error_log("Formatted date: {$date}, Formatted time: {$time}");
-            
-            // Format date and time for Google Calendar
-            $startDateTime = $date . ' ' . $time;
-            error_log("Combined start date/time: {$startDateTime}");
-            
-            // Default appointment duration is 30 minutes
-            $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime) + 30 * 60);
-            error_log("Calculated end date/time: {$endDateTime}");
-
-            // Create event summary and description
-            $summary = "Medical Appointment: Dr. {$result['doctor_name']} with {$result['patient_name']}";
-            $description = "Appointment ID: {$appointmentId}\nReason for visit: {$reason}";
-
-            // Attendee emails
-            $attendees = [
-                $result['doctor_email'],
-                $result['patient_email']
-            ];
-
-            error_log("Creating Google Meet with attendees: " . json_encode($attendees));
-
-            // Create Google Meet event
-            $googleMeetService = new GoogleMeetService();
-            $eventData = $googleMeetService->createMeetEvent(
-                $summary,
-                $description,
-                $startDateTime,
-                $endDateTime,
-                $attendees
-            );
-
-            if ($eventData && isset($eventData['meet_link'])) {
-                error_log("Meet link created successfully: " . $eventData['meet_link']);
-                return $eventData['meet_link'];
-            } else {
-                error_log("No meet link returned from GoogleMeetService");
-                return false;
-            }
-        } catch (\Exception $e) {
-            error_log("Error creating Google Meet link: " . $e->getMessage());
-            error_log("Error stack trace: " . $e->getTraceAsString());
+        if (!$result) {
+            error_log("Failed to get doctor and patient details for Meet link creation");
+            error_log("Patient ID: {$patientId}, Doctor ID: {$doctorId}");
             return false;
         }
+
+        error_log("Doctor and patient details retrieved: " . json_encode($result));
+
+        // Standardize date format (ensure it's YYYY-MM-DD)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $originalDate = $date;
+            $date = date('Y-m-d', strtotime($date));
+            error_log("Standardized date format from: {$originalDate} to: {$date}");
+        }
+        
+        // Standardize time format (ensure it's HH:MM:SS)
+        $originalTime = $time;
+        // Check if time is in 12-hour format (with AM/PM)
+        if (stripos($time, 'am') !== false || stripos($time, 'pm') !== false) {
+            // Convert to 24-hour format
+            $time = date('H:i:s', strtotime($time));
+        } 
+        // Check if time is missing seconds
+        else if (preg_match('/^\d{1,2}:\d{2}$/', $time)) {
+            $time = $time . ':00';
+        }
+        // Check if time is HH:MM without leading zeros
+        else if (preg_match('/^\d{1}:\d{2}(:\d{2})?$/', $time)) {
+            $timeParts = explode(':', $time);
+            $time = sprintf('%02d:%02d:%02d', 
+                $timeParts[0], 
+                $timeParts[1], 
+                isset($timeParts[2]) ? $timeParts[2] : 0
+            );
+        }
+        // If it's not in HH:MM:SS format, try to convert it
+        else if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
+            $time = date('H:i:s', strtotime($time));
+        }
+        
+        error_log("Standardized time format from: {$originalTime} to: {$time}");
+        
+        // Combine date and time
+        $startDateTime = $date . ' ' . $time;
+        error_log("Combined formatted start date/time: {$startDateTime}");
+        
+        // Validate the combined datetime
+        $startDateObj = \DateTime::createFromFormat('Y-m-d H:i:s', $startDateTime);
+        if (!$startDateObj) {
+            error_log("CRITICAL ERROR: Invalid datetime format after standardization");
+            error_log("Parse errors: " . print_r(\DateTime::getLastErrors(), true));
+            
+            // Try one more time with a different approach
+            try {
+                $startDateObj = new \DateTime($startDateTime);
+                $startDateTime = $startDateObj->format('Y-m-d H:i:s');
+                error_log("Recovery attempt successful, new datetime: {$startDateTime}");
+            } catch (\Exception $dateEx) {
+                error_log("Recovery attempt failed: " . $dateEx->getMessage());
+                return false;
+            }
+        } else {
+            // Reformat to ensure correct format
+            $startDateTime = $startDateObj->format('Y-m-d H:i:s');
+        }
+        
+        // Default appointment duration is 30 minutes
+        $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime) + 30 * 60);
+        error_log("Calculated end date/time: {$endDateTime}");
+
+        // Create event summary and description
+        $summary = "Medical Appointment: Dr. {$result['doctor_name']} with {$result['patient_name']}";
+        $description = "Appointment ID: {$appointmentId}\nReason for visit: {$reason}";
+
+        // Attendee emails
+        $attendees = [
+            $result['doctor_email'],
+            $result['patient_email']
+        ];
+
+        error_log("Creating Google Meet with attendees: " . json_encode($attendees));
+
+        // Create Google Meet event
+        $googleMeetService = new \App\Services\GoogleMeetService();
+        $eventData = $googleMeetService->createMeetEvent(
+            $summary,
+            $description,
+            $startDateTime,
+            $endDateTime,
+            $attendees
+        );
+
+        if ($eventData && isset($eventData['meet_link'])) {
+            error_log("Meet link created successfully: " . $eventData['meet_link']);
+            return $eventData['meet_link'];
+        } else {
+            error_log("No meet link returned from GoogleMeetService");
+            return false;
+        }
+    } catch (\Exception $e) {
+        error_log("Error creating Google Meet link: " . $e->getMessage());
+        error_log("Error stack trace: " . $e->getTraceAsString());
+        return false;
     }
+}
 
     /**
  * Update appointment with treatment plan information
@@ -765,25 +797,24 @@ public function updateWithTreatmentPlan($appointmentId, $planId)
 {
     try {
         $query = "UPDATE appointments 
-                SET treatment_plan_id = ?,
-                    updated_at = NOW() 
-                WHERE appointment_id = ?";
-
+                 SET treatment_plan_id = ?, 
+                 updated_at = NOW() 
+                 WHERE appointment_id = ?";
+        
         $stmt = $this->db->prepare($query);
         $stmt->bind_param("ii", $planId, $appointmentId);
-
+        
         if (!$stmt->execute()) {
             error_log("Failed to update appointment with treatment plan: " . $stmt->error);
             return false;
         }
-
+        
         return $stmt->affected_rows > 0;
     } catch (\Exception $e) {
         error_log("Error in updateWithTreatmentPlan: " . $e->getMessage());
         return false;
     }
 }
-
     /**
      * Update Google Meet link for an appointment
      * 

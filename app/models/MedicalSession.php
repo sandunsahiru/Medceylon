@@ -16,24 +16,36 @@ class MedicalSession {
      * @param int $patientId
      * @return array|false
      */
-    public function getActiveSessionByPatient($patientId) {
-        try {
-            $query = "SELECT * FROM medical_sessions WHERE patient_id = ? AND status = 'Active'";
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $patientId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-                return $result->fetch_assoc();
-            }
-            
-            return false;
-        } catch (\Exception $e) {
-            error_log("Error getting active session: " . $e->getMessage());
-            return false;
+    /**
+ * Get the active medical session for a patient
+ * 
+ * @param int $patientId Patient ID
+ * @return array|false Session data or false if not found
+ */
+public function getActiveSessionByPatient($patientId)
+{
+    try {
+        $query = "SELECT * FROM medical_sessions 
+                 WHERE patient_id = ? 
+                 AND status = 'Active'
+                 ORDER BY created_at DESC 
+                 LIMIT 1";
+                 
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc();
         }
+        
+        return false;
+    } catch (\Exception $e) {
+        error_log("Error in getActiveSessionByPatient: " . $e->getMessage());
+        return false;
     }
+}
     
     /**
      * Create a new medical session
@@ -235,6 +247,41 @@ class MedicalSession {
         }
     }
 
+    /**
+ * Get treatment plan by patient ID
+ * 
+ * @param int $patientId
+ * @return array|false
+ */
+public function getTreatmentPlanByPatient($patientId) {
+    try {
+        $query = "SELECT * FROM treatment_plans WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc();
+        }
+        
+        return false;
+    } catch (\Exception $e) {
+        error_log("Error getting treatment plan by patient ID: " . $e->getMessage());
+        return false;
+    }
+}
+    /**
+ * Return the full treatment-plan row that belongs to a session
+ */
+public function getTreatmentPlanBySession(int $sessionId)
+{
+    $sql = "SELECT * FROM treatment_plans WHERE session_id = ? LIMIT 1";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $sessionId);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();   // false if nothing yet
+}
     /**
      * Get formatted session data for view
      * 
