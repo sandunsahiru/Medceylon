@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const BASE_URL = window.location.origin + '/Medceylon';
-    // Check if we're on the correct page
     const planContainer = document.getElementById('travelPlanContainer');
     const calculateBtn = document.getElementById('calculatePlanBtn');
     const savePlanBtn = document.getElementById('savePlanBtn');
@@ -91,49 +90,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Save plan
-    savePlanBtn?.addEventListener('click', async function() {
+    savePlanBtn?.addEventListener('click', async function () {
         try {
             console.log("Save button clicked - starting save process");
-            console.log("Raw plan items:", 
-                Array.from(document.querySelectorAll('.plan-item')).map(item => ({
-                    id: item.querySelector('.edit-dates-btn').getAttribute('data-id'),
-                    start: item.querySelector('.edit-dates-btn').getAttribute('data-min-start'),
-                    end: item.querySelector('.edit-dates-btn').getAttribute('data-min-end'),
-                    travel: item.querySelector('.edit-dates-btn').getAttribute('data-travel-hours'),
-                    hours: item.querySelector('.edit-dates-btn').getAttribute('data-min-hours')
-                }))
-            );
     
-            // Process items
             const planItems = Array.from(document.querySelectorAll('.plan-item')).map((item, index) => {
                 const btn = item.querySelector('.edit-dates-btn');
-                
-                // Simple date validation
-                const validateDate = (dateStr) => {
-                    if (!dateStr) return null;
-                    // Basic check for YYYY-MM-DD format
-                    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                        console.warn("Invalid date format:", dateStr);
-                        return null;
-                    }
-                    return dateStr;
-                };
-    
                 return {
                     destination_id: btn.getAttribute('data-id'),
-                    start_date: btn.getAttribute('data-min-start'), // Changed from check_in
-                    end_date: btn.getAttribute('data-min-end'),    // Changed from check_out
+                    start_date: btn.getAttribute('data-min-start'),
+                    end_date: btn.getAttribute('data-min-end'),
                     travel_time_hours: parseFloat(btn.getAttribute('data-travel-hours')) || 0,
                     time_spent_hours: parseFloat(btn.getAttribute('data-min-hours')) || 2,
                     sequence: index + 1
                 };
             });
     
-            // Debug: Show processed data
             console.log("Processed data to send:", planItems);
     
             const csrfToken = document.getElementById('csrf_token')?.value;
-            
+    
             const response = await fetch('/Medceylon/travelplan/save-plan', {
                 method: 'POST',
                 headers: {
@@ -146,11 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
     
-            // Debug: Show full response
             console.log("Response status:", response.status);
             const responseBody = await response.text();
             console.log("Response body:", responseBody);
-            
+    
             if (!response.ok) {
                 throw new Error(`Server error: ${response.status} - ${responseBody}`);
             }
@@ -179,8 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
-                </li>`
-            ).join('');
+                </li>`).join('');
             
             document.querySelectorAll('.remove-dest').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -252,9 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         data-min-start="${formatDate(dates.minStartDate)}"
                                         data-min-end="${formatDate(dates.minEndDate)}"
                                         data-min-hours="${item.time_spent_hours}"
-                                        data-travel-hours="${item.travel_time_hours}"
-                                        data-travel-id="${plan.travel_id || 'NEW'}">
-                                    Edit Dates
+                                        data-travel-hours="${item.travel_time_hours}">Edit Dates
                                 </button>
                             </div>
                             <div class="plan-item-details">
@@ -271,119 +243,68 @@ document.addEventListener('DOMContentLoaded', () => {
         planContainer.innerHTML = planHTML;
         if (savePlanBtn) savePlanBtn.style.display = 'block';
         
-        // Add event listeners to edit buttons
-        document.querySelectorAll('.edit-dates-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const destId = this.getAttribute('data-id');
-                const destName = this.getAttribute('data-name');
-                const minStart = this.getAttribute('data-min-start');
-                const minEnd = this.getAttribute('data-min-end');
-                const minHours = this.getAttribute('data-min-hours');
-                const travelHours = this.getAttribute('data-travel-hours');
-                const travelId = this.getAttribute('data-travel-id');
-
-                openEditDatesModal(destId, destName, minStart, minEnd, minHours, travelHours, travelId);
+        // Now add event listeners to new edit buttons
+        const editButtons = document.querySelectorAll('.edit-dates-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const travelData = {
+                    travel_id: button.getAttribute('data-travel-id'),
+                    destination_id: button.getAttribute('data-id'),
+                    destination_name: button.getAttribute('data-name'),
+                    start_date: button.getAttribute('data-min-start'),
+                    end_date: button.getAttribute('data-min-end'),
+                    min_hours: button.getAttribute('data-min-hours'),
+                    travel_time: button.getAttribute('data-travel-hours')
+                };
+                openEditModal(travelData);
             });
         });
     }
+    
+    // Modal elements
+    const modal = document.getElementById('editPlanModal');
+    const closeModalButton = document.getElementById('closeEditModal');
 
-    function openEditDatesModal(destId, destName, minStart, minEnd, minHours, travelHours, travelId) {
-        // 1. First check if modal exists
-        const modal = document.getElementById('editPlanModal');
-        if (!modal) {
-          console.error('Error: Modal element (#editPlanModal) not found in DOM');
-          return;
-        }
-      
-        // 2. Safely get all elements with null checks
-        const elements = {
-          travelId: document.getElementById('modalTravelID'),
-          destId: document.getElementById('modalDestinationID'),
-          destName: document.getElementById('modalDestinationName'),
-          checkIn: document.getElementById('check_in'),
-          checkOut: document.getElementById('check_out'),
-          travelTime: document.getElementById('travel_time'),
-          minHours: document.getElementById('min_hours')
-        };
-      
-        // 3. Verify all required elements exist
-        for (const [key, element] of Object.entries(elements)) {
-          if (!element && key !== 'travelTime' && key !== 'minHours') { // Some might be optional
-            console.error(`Error: Element #${key} not found in DOM`);
+    // Function to open the modal
+    function openEditModal(travelData) {
+        // Check if travelData has the expected fields
+        if (!travelData) {
+            console.error("No travel data available");
             return;
-          }
         }
-      
-        // 4. Now safely set values
-        elements.travelId.value = travelId || '';
-        elements.destId.value = destId;
-        elements.destName.textContent = destName;
-        elements.checkIn.value = minStart;
-        elements.checkOut.value = minEnd;
+    
+        console.log("Opening modal with data:", travelData);
+    
+        // Ensure travel_id is not null or undefined
+        if (travelData.travel_id) {
+            document.getElementById('modalTravelID').value = travelData.travel_id;
+        } else {
+            // Handle the case where travel_id is missing or null
+            console.warn("Travel ID is missing or null");
+        }
+
+        document.getElementById('modalTravelID').value = travelData.travel_id;
+        document.getElementById('modalDestinationID').value = travelData.destination_id;
+        document.getElementById('check_in').value = travelData.start_date;
+        document.getElementById('check_out').value = travelData.end_date;
+        document.getElementById('travel_time').value = travelData.travel_time;
+        document.getElementById('min_hours').value = travelData.min_hours;
         
-        if (elements.travelTime) elements.travelTime.value = travelHours;
-        if (elements.minHours) elements.minHours.value = minHours;
-      
-        // 5. Show modal
+        document.getElementById('modalDestinationName').textContent = travelData.destination_name;
         modal.classList.add('active');
-      }
+    }
 
-      document.getElementById('editPlanForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const form = e.target;
-        const submitBtn = form.querySelector('button[type="submit"]');
-        
-        try {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Saving...';
-            
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-    
-            const formData = new FormData(form);
+    // Function to close the modal
+    function closeEditModal() {
+        modal.classList.remove('active');
+    }
 
-            const jsonData = {};
-            formData.forEach((value, key) => {
-                jsonData[key] = value;
-            });
-            const response = await fetch('/Medceylon/travelplan/save-plan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    items: [jsonData], // Wrap in items array to match savePlan format
-                    csrf_token: document.getElementById('csrf_token')?.value
-                })
-            });
-    
-            // ... rest of your existing error handling ...
-        } catch (error) {
-            console.error('Save failed:', error);
-            alert(`Save failed: ${error.message}`);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Changes';
-        }
-    });
-    // Modal close handlers
-    document.getElementById('closeEditModal')?.addEventListener('click', () => {
-        document.getElementById('editPlanModal')?.classList.remove('active');
-    });
+    // Attach event listener for the close button
+    closeModalButton.addEventListener('click', closeEditModal);
 
+    // Close modal when clicking outside
     window.addEventListener('click', (event) => {
-        if (event.target === document.getElementById('editPlanModal')) {
-            document.getElementById('editPlanModal')?.classList.remove('active');
-        }
+        if (event.target === modal) closeEditModal();
     });
 
-    // Escape key to close modal
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            document.getElementById('editPlanModal')?.classList.remove('active');
-        }
-    });
 });

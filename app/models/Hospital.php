@@ -589,6 +589,25 @@ class Hospital
         }
     }
 
+    public function getApprovedRequests(){
+        try {
+            $query = "SELECT 
+                tr.*,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number
+                FROM treatment_requests tr
+                JOIN users u ON tr.patient_id = u.user_id
+                WHERE tr.is_active = 1 AND tr.request_status = 'Approved'
+                ORDER BY tr.request_date DESC";
+            return $this->db->query($query);
+        } catch (\Exception $e) {
+            error_log("Error in getApprovedRequests: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public function updateRequest($requestId, $data)
     {
         try {

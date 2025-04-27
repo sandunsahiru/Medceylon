@@ -11,7 +11,7 @@
             <form id="editPlanForm">
             <input type="hidden" id="modalTravelID" name="travel_id">
             <input type="hidden" id="modalDestinationID" name="destination_id">
-            <input type="date" id="check_in" name="check_in" required>
+            <input type="date" id="check_in" name="check_in" readonly>
             <input type="date" id="check_out" name="check_out" required>
             <input type="hidden" id="travel_time" name="travel_time">
             <input type="hidden" id="min_hours" name="min_hours">
