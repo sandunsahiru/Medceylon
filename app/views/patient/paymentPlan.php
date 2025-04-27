@@ -11,6 +11,7 @@
                 <uL>
                     <li>Physical Specialist Appointment</li>
                     <li>Hospital Stay</li>
+                    <li>$50</li>
                 </uL>
                 </p>
                 <p class="name">Silver</p>
@@ -24,6 +25,7 @@
                     <li>Hospital Stay</li>
                     <li>Accomodation</li>
                     <li>Transportation</li>
+                    <li>$100</li>
                 </ul>
                 </p>
                 <p class="name">Gold</p>
@@ -40,6 +42,7 @@
                     <li>transportation (taxi)</li>
                     <li>caregiver</li>
                     <li>Travel (site seeing)</li>
+                    <li>$150</li>
                 </ul>
                 </p>
                 <p class="name">Platinum</p>

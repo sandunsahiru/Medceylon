@@ -217,7 +217,8 @@ class AdminController extends BaseController
     public function hotelBookings()
     {
         try {
-            $hotelBooking = $this->adminModel->getPendingHotelBookings();
+            $status = $_GET['status'] ?? 'Pending';
+            $hotelBooking = $this->adminModel->getStatusHotelBookings($status);
             $data = [
                 'hotelBooking' => $hotelBooking,
                 'basePath' => $this->basePath
@@ -228,6 +229,52 @@ class AdminController extends BaseController
             echo $this->view('admin/error', ['message' => 'An error occurred while loading the hotel booking page.']);
         }
 
+    }
+
+    public function confirmBooking()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $bookingId = $_POST['booking_id'] ?? null;
+
+            if ($bookingId) {
+                // Call your model method to confirm the booking
+                $success = $this->adminModel->confirmBookingById($bookingId);
+
+                // Return a JSON response to the frontend
+                if ($success) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false]);
+                }
+            } else {
+                echo json_encode(['success' => false]);
+            }
+
+            exit(); // Make sure the script stops after sending the response
+        }
+    }
+
+    public function rejectBooking()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $bookingId = $_POST['booking_id'] ?? null;
+
+            if ($bookingId) {
+                // Call your model method to reject the booking
+                $success = $this->adminModel->rejectBookingById($bookingId);
+
+                // Return a JSON response to the frontend
+                if ($success) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false]);
+                }
+            } else {
+                echo json_encode(['success' => false]);
+            }
+
+            exit(); // Make sure the script stops after sending the response
+        }
     }
 
 }

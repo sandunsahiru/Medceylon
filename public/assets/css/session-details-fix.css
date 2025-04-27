@@ -1,0 +1,296 @@
+/* Critical fix for session details display */
+.session-details-container,
+.medical-session {
+    display: none; /* Initially hidden until toggled */
+    overflow: visible !important;
+    height: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+/* Force container to open correctly when visible */
+.session-details-container.show,
+.medical-session.show {
+    display: block !important;
+}
+
+/* Important: When explicitly set to be visible */
+.session-details-container[style*="display: block"],
+.medical-session[style*="display: block"] {
+    display: block !important;
+}
+
+/* Ensure the session details container is properly positioned */
+.appointment-card + .session-details-container,
+.appointment-card + .medical-session {
+    margin-top: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-height: none !important;
+}
+
+/* Ensure loading indicator is visible */
+.loading {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #666;
+    display: block;
+}
+
+/* Ensure session header is styled properly */
+.session-header {
+    background-color: var(--primary-color, #4AB1A8);
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Ensure session body content is visible */
+.session-body {
+    padding: 20px;
+    background-color: #fff;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Fix for buttons */
+.view-details-btn,
+.view-session-btn {
+    cursor: pointer !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    color: white;
+    background-color: var(--primary-color, #4AB1A8);
+    border: none;
+}
+
+.view-details-btn:hover,
+.view-session-btn:hover {
+    background-color: #3a9a92;
+}
+
+.view-details-btn i,
+.view-session-btn i {
+    margin-right: 5px;
+}
+
+/* Important reset for any conflicting styles */
+#session-details-container {
+    max-height: none !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+/* Doctor card styles */
+.doctor-card {
+    display: flex;
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.doctor-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #4AB1A8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.doctor-avatar i {
+    font-size: 24px;
+    color: white;
+}
+
+.doctor-info {
+    flex: 1;
+}
+
+.doctor-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Fix for modals */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 0;
+    width: 50%;
+    max-width: 600px;
+    min-width: 300px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    position: relative;
+}
+
+/* Error message styling */
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+    border-left: 4px solid #f44336;
+}
+
+/* Toast notification */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast-notification {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    min-width: 250px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Fix for appointment card spacing */
+.appointment-card {
+    margin-bottom: 5px;
+}
+
+/* Fix for any collapsed elements */
+.session-details-container *,
+.medical-session * {
+    box-sizing: border-box;
+}
+
+/* Fix for nested containers */
+.session-details-container .session-details-container {
+    margin: 10px 0;
+    background-color: #fff;
+}
+
+/* Add additional z-index to ensure proper display */
+.session-details-container {
+    position: relative;
+    z-index: 5;
+}
+
+/* Action buttons styling */
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    background-color: #f0f0f0;
+    text-decoration: none;
+    color: #333;
+}
+
+.action-btn i {
+    margin-right: 5px;
+}
+
+.action-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.action-btn.primary {
+    background-color: var(--primary-color, #4AB1A8);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background-color: #3a9a92;
+}
+
+/* For any transitions needed */
+.medical-session,
+.session-details-container {
+    transition: display 0.3s ease;
+}
+
+/* Additional overrides for specificity issues */
+[id^="session-details-"][style*="display: block"] {
+    display: block !important;
+}
+
+/* Additional fixes for nested containers and visibility */
+.session-details-container .session-details-container {
+    display: block;
+}
+
+/* Fix any potential conflicts with parent styles */
+.appointment-card + .medical-session[style*="display: block"],
+.appointment-card + .session-details-container[style*="display: block"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Fix textarea inside session details */
+.doctor-notes {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+}
+
+/* Force show any elements inside session that should always be visible */
+.session-header,
+.session-body,
+.session-actions {
+    display: block !important;
+}
+
+/* Additional debug styles to visually identify when containers are active */
+.medical-session.show,
+.session-details-container.show {
+    border-left: 3px solid #4AB1A8 !important;
+}

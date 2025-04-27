@@ -310,14 +310,23 @@ class Admin
         }
     }
 
-    public function getPendingHotelBookings()
+    public function getStatusHotelBookings($status)
     {
         try {
-            $query = "SELECT * FROM room_bookings WHERE status = 'Pending'";
+            $query = "SELECT rb.*, p.first_name, p.last_name, hr.room_type,
+             ap.name, ap.contact_info, ap.image_path, hr.available_room_count as room_availability 
+             FROM room_bookings rb 
+             JOIN rooms hr ON rb.room_id = hr.room_id 
+             JOIN users p ON rb.patient_id = p.user_id 
+             JOIN accommodationproviders ap ON hr.provider_id = ap.provider_id 
+             WHERE status = ? ORDER BY rb.check_in_date DESC;";
+
             $stmt = $this->db->prepare($query);
+            $stmt->bind_param("s", $status);
             $stmt->execute();
             $result = $stmt->get_result();
             $Hotelbookings = [];
+
             // Check if results exist
             if ($result->num_rows > 0) {
                 return $result;
@@ -325,7 +334,36 @@ class Admin
                 return [];  // Return empty array if no results found
             }
         } catch (\Exception $e) {
-            error_log("Error getting pending hotel bookings: " . $e->getMessage());
+            error_log("Error getting hotel bookings: " . $e->getMessage());
+            throw $e;
+        }
+    }
+        
+
+    public function confirmBookingById($bookingId){
+        try {
+            $query = "UPDATE room_bookings rb
+                    JOIN rooms hr ON rb.room_id = hr.room_id
+                    SET rb.status = 'Successful',
+                    hr.available_room_count = hr.available_room_count - 1
+                    WHERE rb.booking_id = ?;";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $bookingId);
+            return $stmt->execute();
+        } catch (\Exception $e) {
+            error_log("Error confirming booking: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function rejectBookingById($bookingId){
+        try {
+            $query = "UPDATE room_bookings SET status = 'Unsuccesful' WHERE booking_id = ?;";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $bookingId);
+            return $stmt->execute();
+        } catch (\Exception $e) {
+            error_log("Error rejecting booking: " . $e->getMessage());
             throw $e;
         }
     }
