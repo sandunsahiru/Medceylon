@@ -17,6 +17,7 @@ class PatientController extends BaseController
     private $patientModel;
     private $medicalSessionModel;
     private $hospitalModel;
+    private array $treatmentPlanFields;
 
     public function __construct()
     {
@@ -27,49 +28,58 @@ class PatientController extends BaseController
         $this->patientModel = new Patient();
         $this->medicalSessionModel = new MedicalSession();
         $this->hospitalModel = new Hospital();
+        $this->treatmentPlanFields = [
+            'treatment_description', 'diagnosis', 'medications',
+            'treatment_duration', 'follow_up', 'travel_restrictions',
+            'estimated_budget', 'specialist_notes', 'estimated_duration',
+            'vehicle_type'
+        ];
+
     }
 
     public function dashboard()
-    {
+{
+    try {
+        $patientId = $this->session->getUserId();
+        $appointments = $this->appointmentModel->getPatientAppointments($patientId);
+        
+        // Get active medical session if exists
+        $activeMedicalSession = false;
+        $sessionData = null;
+        
         try {
-            error_log("Entering dashboard method");
-            $patientId = $this->session->getUserId();
-            $appointments = $this->appointmentModel->getPatientAppointments($patientId);
-
-            error_log("Patient ID: " . $patientId);
-            error_log("Appointments: " . print_r($appointments, true));
-            
-            // Get active medical session if exists
-            $activeMedicalSession = false;
-            $sessionData = null;
-            
-            try {
-                // Check if there's an active medical session
-                $activeSession = $this->medicalSessionModel->getActiveSessionByPatient($patientId);
-                if ($activeSession) {
-                    $activeMedicalSession = true;
-                    // Set session data based on what we have in the database
-                    $sessionData = $this->prepareSessionData($activeSession, $patientId);
-                }
-            } catch (\Exception $e) {
-                error_log("Error getting active medical session: " . $e->getMessage());
-                // Continue even if there's an error with session data
+            // Check if there's an active medical session
+            $activeSession = $this->medicalSessionModel->getActiveSessionByPatient($patientId);
+            if ($activeSession) {
+                $activeMedicalSession = true;
+                // Set session data based on what we have in the database
+                $sessionData = $this->prepareSessionData($activeSession, $patientId);
             }
-            
-            $data = [
-                'appointments' => $appointments,
-                'activeMedicalSession' => $activeMedicalSession,
-                'sessionData' => $sessionData,
-                'basePath' => $this->basePath
-            ];
-
-            echo $this->view('patient/dashboard', $data);
-            exit();
         } catch (\Exception $e) {
-            error_log("Error in dashboard: " . $e->getMessage());
-            throw $e;
+            error_log("Error getting active medical session: " . $e->getMessage());
+            // Continue even if there's an error with session data
         }
+        
+        // Check if tab parameter exists in URL
+        $currentTab = $_GET['tab'] ?? 'general-doctor';
+        
+        $data = [
+            'appointments' => $appointments,
+            'activeMedicalSession' => $activeMedicalSession,
+            'sessionData' => $sessionData,
+            'currentTab' => $currentTab,
+            'basePath' => $this->basePath
+        ];
+
+        echo $this->view('patient/dashboard', $data);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in dashboard: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error loading dashboard: ' . $e->getMessage());
+        header('Location: ' . $this->url('home'));
+        exit();
     }
+}
 
     public function bookAppointment()
     {
@@ -698,345 +708,691 @@ class PatientController extends BaseController
         }
     }
     
-    /**
-     * Prepare session data for dashboard
-     * 
-     * @param array $activeSession
-     * @param int $patientId
-     * @return array
-     */
-    private function prepareSessionData($activeSession, $patientId)
-    {
-        // Default structure with placeholders
-        $sessionData = [
-            'id' => $activeSession['session_id'],
-            'status' => $activeSession['status'],
-            'generalDoctorBooked' => false,
-            'specialistBooked' => false,
-            'treatmentPlanCreated' => false,
-            'transportBooked' => false,
-            'travelPlanSelected' => false,
-            'generalDoctor' => null,
-            'specialist' => null,
-            'travelRestrictions' => null,
-            'estimatedBudget' => null
+ /**
+ * Update the prepareSessionData method to include travel plan data
+ * 
+ * @param array $activeSession
+ * @param int $patientId
+ * @return array
+ */
+private function prepareSessionData($activeSession, $patientId)
+{
+    // Get the existing session data structure
+    $sessionData = [
+        'id' => $activeSession['session_id'],
+        'status' => $activeSession['status'],
+        'generalDoctorBooked' => false,
+        'specialistBooked' => false,
+        'treatmentPlanCreated' => false,
+        'transportBooked' => false,
+        'travelPlanSelected' => false,
+        'generalDoctor' => null,
+        'specialist' => null,
+        'treatmentPlan' => [
+            'diagnosis' => null,
+            'treatment_description' => null,
+            'medications' => null,
+            'treatment_duration' => null,
+            'follow_up' => null,
+            'travel_restrictions' => 'None', // Default value
+            'estimated_budget' => 0,         // Default value
+            'estimated_duration' => 0,       // Default value
+            'vehicle_type' => null,
+            'arrival_deadline' => null,
+            'specialist_notes' => null
+        ],
+        'travelPlan' => null  // Add this line to include travel plan data
+    ];
+    
+    // Fill treatment plan data
+    try {
+        $query = "SELECT * FROM treatment_plans WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            $plan = $result->fetch_assoc();
+            $sessionData['treatmentPlanCreated'] = true;
+            error_log("Treatment plan found for patient ID: $patientId");
+            
+            // Map the fields we want to display
+            $treatmentPlanFields = [
+                'treatment_description', 'diagnosis', 'medications',
+                'treatment_duration', 'follow_up', 'travel_restrictions',
+                'estimated_budget', 'specialist_notes', 'vehicle_type',
+                'estimated_duration', 'arrival_deadline'
+            ];
+            
+            foreach ($treatmentPlanFields as $field) {
+                if (isset($plan[$field]) && $plan[$field] !== null) {
+                    $sessionData['treatmentPlan'][$field] = $plan[$field];
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        error_log("Error getting treatment plan: " . $e->getMessage());
+    }
+    
+    // Get most recent appointment for the patient to use as general doctor booking
+    try {
+        $patientAppointments = $this->appointmentModel->getPatientAppointments($patientId, 5);
+        if ($patientAppointments && $patientAppointments->num_rows > 0) {
+            $sessionData['generalDoctorBooked'] = true;
+            
+            // Get the first appointment
+            $appointment = $patientAppointments->fetch_assoc();
+            
+            $sessionData['generalDoctor'] = [
+                'id' => $appointment['doctor_id'],
+                'name' => $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
+                'specialty' => $appointment['specialization'] ?? 'General Practitioner',
+                'appointmentDate' => $appointment['appointment_date'] . ' ' . $appointment['appointment_time'],
+                'appointmentMode' => $appointment['consultation_type'],
+                'meetLink' => $appointment['meet_link'] ?? '',
+                'hospital' => $appointment['hospital_name'] ?? 'General Hospital'
+            ];
+            
+            // Check if we have other appointments to use as the specialist
+            if ($patientAppointments->num_rows > 1) {
+                $specialistAppointment = $patientAppointments->fetch_assoc();
+                $sessionData['specialistBooked'] = true;
+                $sessionData['specialist'] = [
+                    'id' => $specialistAppointment['doctor_id'],
+                    'name' => $specialistAppointment['doctor_first_name'] . ' ' . $specialistAppointment['doctor_last_name'],
+                    'specialty' => $specialistAppointment['specialization'] ?? 'Specialist',
+                    'hospital' => $specialistAppointment['hospital_name'] ?? 'General Hospital',
+                    'appointmentDate' => $specialistAppointment['appointment_date'] . ' ' . $specialistAppointment['appointment_time'],
+                    'appointmentMode' => $specialistAppointment['consultation_type'],
+                    'meetLink' => $specialistAppointment['meet_link'] ?? ''
+                ];
+            } else {
+                // Add a placeholder for waiting for specialist state
+                $sessionData['waitingForSpecialist'] = true;
+            }
+        }
+    } catch (\Exception $e) {
+        error_log("Error getting patient appointments for session data: " . $e->getMessage());
+    }
+    
+    // Check for transportation assistance bookings
+    try {
+        $query = "SELECT COUNT(*) as count FROM transportationassistance 
+                WHERE patient_id = ? AND status != 'Canceled'";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $transportResult = $stmt->get_result()->fetch_assoc();
+        $sessionData['transportBooked'] = ($transportResult['count'] > 0);
+    } catch (\Exception $e) {
+        error_log("Error checking transportation bookings: " . $e->getMessage());
+        $sessionData['transportBooked'] = false;
+    }
+
+    // Check for travel plans and get the travel plan data 
+    try {
+        // Check if any travel plans exist first
+        $query = "SELECT COUNT(*) as count FROM travel_plans WHERE user_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $travelResult = $stmt->get_result()->fetch_assoc();
+        $sessionData['travelPlanSelected'] = ($travelResult['count'] > 0);
+        
+        // If travel plans exist, get the details
+        if ($sessionData['travelPlanSelected']) {
+            $travelPlanData = $this->getTravelPlanData();
+            $sessionData['travelPlan'] = $travelPlanData;
+        }
+    } catch (\Exception $e) {
+        error_log("Error checking travel plans: " . $e->getMessage());
+        $sessionData['travelPlanSelected'] = false;
+    }
+    
+    // Get patient name for summary
+    try {
+        $query = "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE user_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $patientId);
+        $stmt->execute();
+        $patientResult = $stmt->get_result()->fetch_assoc();
+        if ($patientResult) {
+            $sessionData['patientName'] = $patientResult['full_name'];
+        }
+    } catch (\Exception $e) {
+        error_log("Error getting patient name: " . $e->getMessage());
+    }
+    
+    return $sessionData;
+}
+
+
+/**
+ * Get travel plan data for the patient's dashboard
+ * 
+ * @return array Travel plan data
+ */
+public function getTravelPlanData()
+{
+    try {
+        $patientId = $this->session->getUserId();
+        
+        // Get the patient's most recent trip
+        $trip = $this->patientModel->getLatestTrip($patientId);
+        
+        if (!$trip) {
+            // No trip found
+            return [
+                'hasTrip' => false
+            ];
+        }
+        
+        // Get all destinations in this trip
+        $tripId = $trip['trip_id'];
+        $destinations = $this->patientModel->getTripDestinations($tripId);
+        
+        if (!$destinations || count($destinations) === 0) {
+            // Trip exists but no destinations
+            return [
+                'hasTrip' => true,
+                'trip' => $trip,
+                'hasDestinations' => false
+            ];
+        }
+        
+        // Format the data for display
+        $travelPlanData = [
+            'hasTrip' => true,
+            'trip' => $trip,
+            'hasDestinations' => true,
+            'destinations' => $destinations,
+            'totalDuration' => $trip['total_duration_hours'],
+            'startDate' => $trip['start_date'],
+            'endDate' => $trip['end_date'],
+            'travelDays' => $trip['travel_days']
         ];
         
-        // Placeholder for checking basic session progress status
-        // These would need to be replaced with actual database queries
-        
-        // For now using basic session properties
-        if ($activeSession['treatment_plan_id']) {
-            $sessionData['treatmentPlanCreated'] = true;
-            // Get treatment plan details if you have a method for this
-            // For now, adding placeholder data
-            $sessionData['travelRestrictions'] = "Can travel with caution";
-            $sessionData['estimatedBudget'] = "$2,000 - $3,500";
-        }
-        
-        // In real implementation, you would query the appointments table to get 
-        // appointments associated with this session for both general and specialist doctors
-        
-        // Get most recent appointment for the patient to use as general doctor booking
-        // This is a temporary solution and should be replaced with proper session-appointment linking
-        try {
-            $patientAppointments = $this->appointmentModel->getPatientAppointments($patientId, 5);
-            if ($patientAppointments && $patientAppointments->num_rows > 0) {
-                $sessionData['generalDoctorBooked'] = true;
-                
-                // Get the first appointment
-                $appointment = $patientAppointments->fetch_assoc();
-                
-                $sessionData['generalDoctor'] = [
-                    'id' => $appointment['doctor_id'],
-                    'name' => $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
-                    'specialty' => $appointment['specialization'] ?? 'General Practitioner',
-                    'appointmentDate' => $appointment['appointment_date'] . ' ' . $appointment['appointment_time'],
-                    'appointmentMode' => $appointment['consultation_type'],
-                    'meetLink' => $appointment['meet_link'] ?? '' // Get meet_link from appointment
-                ];
-                
-                // Check if we have other appointments to use as the specialist
-                if ($patientAppointments->num_rows > 1) {
-                    $specialistAppointment = $patientAppointments->fetch_assoc();
-                    $sessionData['specialistBooked'] = true;
-                    $sessionData['specialist'] = [
-                        'id' => $specialistAppointment['doctor_id'],
-                        'name' => $specialistAppointment['doctor_first_name'] . ' ' . $specialistAppointment['doctor_last_name'],
-                        'specialty' => $specialistAppointment['specialization'] ?? 'Specialist',
-                        'hospital' => $specialistAppointment['hospital_name'] ?? 'General Hospital',
-                        'appointmentDate' => $specialistAppointment['appointment_date'] . ' ' . $specialistAppointment['appointment_time'],
-                        'appointmentMode' => $specialistAppointment['consultation_type'],
-                        'meetLink' => $specialistAppointment['meet_link'] ?? '' // Get meet_link from appointment
-                    ];
-                }
-            }
-        } catch (\Exception $e) {
-            error_log("Error getting patient appointments for session data: " . $e->getMessage());
-        }
-        
-        // Placeholder for transport and travel plan status
-        // In real implementation, you would query the transportation and travel plan tables
-        // For MVP, setting these to false by default
-        $sessionData['transportBooked'] = false;
-        $sessionData['travelPlanSelected'] = false;
-        
-        return $sessionData;
+        return $travelPlanData;
+    } catch (\Exception $e) {
+        error_log("Error getting travel plan data: " . $e->getMessage());
+        return [
+            'hasTrip' => false,
+            'error' => $e->getMessage()
+        ];
     }
+}
 
+/**
+ * Navigate to a specific treatment session tab
+ * 
+ * @param string $tab The tab identifier
+ * @return void
+ */
+public function navigateSessionTab($tab = 'general-doctor')
+{
+    try {
+        $validTabs = [
+            'general-doctor', 'specialist', 'treatment-plan', 
+            'hotel-transport', 'travel-plan', 'summary'
+        ];
+        
+        if (!in_array($tab, $validTabs)) {
+            $tab = 'general-doctor';
+        }
+        
+        header('Location: ' . $this->url('patient/dashboard') . '?tab=' . $tab);
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in navigateSessionTab: " . $e->getMessage());
+        header('Location: ' . $this->url('patient/dashboard'));
+        exit();
+    }
+}
 
-    private function createMeetLinkForAppointment($appointmentId, $patientId, $doctorId, $date, $time, $reason) {
-        try {
-            error_log("Starting createMeetLinkForAppointment for appointment ID: " . $appointmentId);
-            error_log("Date: {$date}, Time: {$time}");
-            
-            // Get doctor and patient details
-            $query = "SELECT 
-                    CONCAT(d_user.first_name, ' ', d_user.last_name) AS doctor_name,
-                    CONCAT(p_user.first_name, ' ', p_user.last_name) AS patient_name,
-                    d_user.email AS doctor_email,
-                    p_user.email AS patient_email
-                    FROM doctors d 
-                    JOIN users d_user ON d.user_id = d_user.user_id
-                    JOIN users p_user ON p_user.user_id = ?
-                    WHERE d.doctor_id = ?";
-    
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("ii", $patientId, $doctorId);
-            $stmt->execute();
-            $result = $stmt->get_result()->fetch_assoc();
-    
-            if (!$result) {
-                error_log("Failed to get doctor and patient details for Meet link creation");
-                error_log("Patient ID: " . $patientId . ", Doctor ID: " . $doctorId);
-                return false;
-            }
-    
-            error_log("Doctor and patient details retrieved: " . json_encode($result));
-    
-            // Format date and time for Google Calendar
-            // Ensure date is in YYYY-MM-DD format
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-                $date = date('Y-m-d', strtotime($date));
-            }
-            
-            // Now properly handle the time format
-            // Check if time is in 12-hour format (with AM/PM)
-            if (stripos($time, 'am') !== false || stripos($time, 'pm') !== false) {
-                // Convert to 24-hour format
-                $time = date('H:i:s', strtotime($time));
-            } 
-            // Check if time is missing seconds
-            else if (preg_match('/^\d{1,2}:\d{2}$/', $time)) {
-                $time = $time . ':00';
-            }
-            // If it's not in HH:MM:SS format, try to convert it
-            else if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
-                $time = date('H:i:s', strtotime($time));
-            }
-            
-            error_log("Formatted date: {$date}, Formatted time: {$time}");
-            
-            $startDateTime = $date . ' ' . $time;
-            // Default appointment duration is 30 minutes
-            $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime) + 30 * 60);
-    
-            error_log("Start time: " . $startDateTime . ", End time: " . $endDateTime);
-    
-            // Create event summary and description
-            $summary = "Medical Appointment: Dr. " . $result['doctor_name'] . " with " . $result['patient_name'];
-            $description = "Appointment ID: " . $appointmentId . "\nReason for visit: " . $reason;
-    
-            // Attendee emails
-            $attendees = [
-                $result['doctor_email'],
-                $result['patient_email']
-            ];
-    
-            error_log("Creating Google Meet with attendees: " . json_encode($attendees));
-    
-            // Create Google Meet event
-            $googleMeetService = new \App\Services\GoogleMeetService();
-            $eventData = $googleMeetService->createMeetEvent(
-                $summary,
-                $description,
-                $startDateTime,
-                $endDateTime,
-                $attendees
-            );
-    
-            if ($eventData && isset($eventData['meet_link'])) {
-                error_log("Meet link created successfully: " . $eventData['meet_link']);
-                
-                // Update the appointment with the Meet link
-                $appointmentModel = new \App\Models\Appointment();
-                $updateResult = $appointmentModel->updateMeetLink($appointmentId, $eventData['meet_link']);
-                error_log("Appointment update result: " . ($updateResult ? "Success" : "Failed"));
-                
-                return $eventData['meet_link'];
-            } else {
-                error_log("No meet link returned from GoogleMeetService");
-                return false;
-            }
-        } catch (\Exception $e) {
-            error_log("Error in createMeetLinkForAppointment: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
+/**
+ * Book hotel and transport
+ * 
+ * @return void
+ */
+public function bookHotelTransport()
+{
+    try {
+        $patientId = $this->session->getUserId();
+        $activeSession = $this->medicalSessionModel->getActiveSessionByPatient($patientId);
+        
+        if (!$activeSession) {
+            $this->session->setFlash('error', 'No active medical session found');
+            header('Location: ' . $this->url('patient/dashboard'));
+            exit();
+        }
+        
+        // Redirect to accommodation providers page
+        header('Location: ' . $this->url('accommodation/accommodation-providers'));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in bookHotelTransport: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error accessing hotel and transport booking');
+        header('Location: ' . $this->url('patient/dashboard'));
+        exit();
+    }
+}
+
+/**
+ * Select travel plan
+ * 
+ * @return void
+ */
+public function selectTravelPlan()
+{
+    try {
+        $patientId = $this->session->getUserId();
+        $activeSession = $this->medicalSessionModel->getActiveSessionByPatient($patientId);
+        
+        if (!$activeSession) {
+            $this->session->setFlash('error', 'No active medical session found');
+            header('Location: ' . $this->url('patient/dashboard'));
+            exit();
+        }
+        
+        // Redirect to transport page
+        header('Location: ' . $this->url('patient/transport'));
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in selectTravelPlan: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error accessing travel plan selection');
+        header('Location: ' . $this->url('patient/dashboard'));
+        exit();
+    }
+}
+
+/**
+ * View medical session summary
+ * 
+ * @return void
+ */
+public function sessionSummary()
+{
+    try {
+        $patientId = $this->session->getUserId();
+        $activeSession = $this->medicalSessionModel->getActiveSessionByPatient($patientId);
+        
+        if (!$activeSession) {
+            $this->session->setFlash('error', 'No active medical session found');
+            header('Location: ' . $this->url('patient/dashboard'));
+            exit();
+        }
+        
+        // Prepare complete session data for summary
+        $sessionData = $this->prepareSessionData($activeSession, $patientId);
+        
+        // Store session data in session for access in the view
+        $this->session->set('medical_session_data', $sessionData);
+        
+        // Navigate to summary tab
+        header('Location: ' . $this->url('patient/dashboard') . '?tab=summary');
+        exit();
+    } catch (\Exception $e) {
+        error_log("Error in sessionSummary: " . $e->getMessage());
+        $this->session->setFlash('error', 'Error accessing session summary');
+        header('Location: ' . $this->url('patient/dashboard'));
+        exit();
+    }
+}
+
+    /**
+ * Create a Google Meet link for an appointment
+ * Helper method to standardize the process of creating meet links
+ * 
+ * @param int $appointmentId The ID of the appointment
+ * @param int $patientId The ID of the patient
+ * @param int $doctorId The ID of the doctor
+ * @param string $date The appointment date
+ * @param string $time The appointment time
+ * @param string $reason The reason for the appointment
+ * @return string|false The Meet link URL or false on failure
+ */
+private function createMeetLinkForAppointment($appointmentId, $patientId, $doctorId, $date, $time, $reason) {
+    try {
+        error_log("Starting createMeetLinkForAppointment for appointment ID: " . $appointmentId);
+        error_log("Date: {$date}, Time: {$time}");
+        
+        // Get doctor and patient details
+        $query = "SELECT 
+                CONCAT(d_user.first_name, ' ', d_user.last_name) AS doctor_name,
+                CONCAT(p_user.first_name, ' ', p_user.last_name) AS patient_name,
+                d_user.email AS doctor_email,
+                p_user.email AS patient_email
+                FROM doctors d 
+                JOIN users d_user ON d.user_id = d_user.user_id
+                JOIN users p_user ON p_user.user_id = ?
+                WHERE d.doctor_id = ?";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $patientId, $doctorId);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        if (!$result) {
+            error_log("Failed to get doctor and patient details for Meet link creation");
+            error_log("Patient ID: " . $patientId . ", Doctor ID: " . $doctorId);
             return false;
         }
+
+        error_log("Doctor and patient details retrieved: " . json_encode($result));
+
+        // Standardize the date format (ensure it's YYYY-MM-DD)
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            $originalDate = $date;
+            $date = date('Y-m-d', strtotime($date));
+            error_log("Standardized date format from: {$originalDate} to: {$date}");
+        }
+        
+        // Standardize the time format (ensure it's HH:MM:SS)
+        $originalTime = $time; 
+        // Check if time is in 12-hour format (with AM/PM)
+        if (stripos($time, 'am') !== false || stripos($time, 'pm') !== false) {
+            $time = date('H:i:s', strtotime($time));
+            error_log("Converted 12-hour time to 24-hour: {$originalTime} to {$time}");
+        } 
+        // Check if time is missing seconds
+        else if (preg_match('/^\d{1,2}:\d{2}$/', $time)) {
+            $time = $time . ':00';
+            error_log("Added seconds to time: {$originalTime} to {$time}");
+        }
+        // If time format is HH:MM without leading zeros
+        else if (preg_match('/^\d{1}:\d{2}(:\d{2})?$/', $time)) {
+            $timeParts = explode(':', $time);
+            $time = sprintf('%02d:%02d:%02d', 
+                $timeParts[0], 
+                $timeParts[1], 
+                isset($timeParts[2]) ? $timeParts[2] : 0
+            );
+            error_log("Added leading zeros to time: {$originalTime} to {$time}");
+        }
+        // If it's not in HH:MM:SS format, try to convert it
+        else if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
+            $time = date('H:i:s', strtotime($time));
+            error_log("Converted time to standard format: {$originalTime} to {$time}");
+        }
+        
+        // Combine date and time
+        $startDateTime = $date . ' ' . $time;
+        error_log("Combined formatted start date/time: {$startDateTime}");
+        
+        // Validate the combined datetime
+        $startDateObj = \DateTime::createFromFormat('Y-m-d H:i:s', $startDateTime);
+        if (!$startDateObj) {
+            error_log("CRITICAL ERROR: Invalid datetime format after standardization");
+            $errors = \DateTime::getLastErrors();
+            error_log("DateTime parse errors: " . print_r($errors, true));
+            
+            // Try one more time with a different approach
+            try {
+                $startDateObj = new \DateTime($startDateTime);
+                $startDateTime = $startDateObj->format('Y-m-d H:i:s');
+                error_log("Recovery attempt successful, new datetime: {$startDateTime}");
+            } catch (\Exception $dateEx) {
+                error_log("Recovery attempt failed: " . $dateEx->getMessage());
+                return false;
+            }
+        } else {
+            // Reformat to ensure correct format
+            $startDateTime = $startDateObj->format('Y-m-d H:i:s');
+        }
+        
+        // Default appointment duration is 30 minutes
+        $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime) + 30 * 60);
+        error_log("Calculated end date/time: {$endDateTime}");
+
+        // Create event summary and description
+        $summary = "Medical Appointment: Dr. " . $result['doctor_name'] . " with " . $result['patient_name'];
+        $description = "Appointment ID: " . $appointmentId . "\nReason for visit: " . $reason;
+
+        // Attendee emails
+        $attendees = [
+            $result['doctor_email'],
+            $result['patient_email']
+        ];
+
+        error_log("Creating Google Meet with attendees: " . json_encode($attendees));
+
+        // Create Google Meet event
+        $googleMeetService = new \App\Services\GoogleMeetService();
+        $eventData = $googleMeetService->createMeetEvent(
+            $summary,
+            $description,
+            $startDateTime,
+            $endDateTime,
+            $attendees
+        );
+
+        if ($eventData && isset($eventData['meet_link'])) {
+            error_log("Meet link created successfully: " . $eventData['meet_link']);
+            
+            // Update the appointment with the Meet link
+            $appointmentModel = new \App\Models\Appointment();
+            $updateResult = $appointmentModel->updateMeetLink($appointmentId, $eventData['meet_link']);
+            error_log("Appointment update result: " . ($updateResult ? "Success" : "Failed"));
+            
+            return $eventData['meet_link'];
+        } else {
+            error_log("No meet link returned from GoogleMeetService");
+            return false;
+        }
+    } catch (\Exception $e) {
+        error_log("Error in createMeetLinkForAppointment: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        return false;
     }
+}
 
 
     
-    public function processAppointmentWithMeetLink() {
-        // Set JSON content type immediately
-        header('Content-Type: application/json');
-        
-        // Buffer all output to prevent warnings from being directly sent to the client
-        ob_start();
-        
-        try {
-            if (!isset($_POST['csrf_token']) || !$this->session->verifyCSRFToken($_POST['csrf_token'])) {
-                ob_end_clean();
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid CSRF token'
-                ]);
-                exit();
-            }
-            
-            error_log("### PROCESSING APPOINTMENT WITH MEET LINK ###");
-            error_log("Raw POST data: " . print_r($_POST, true));
-            
-            $appointmentData = [
-                'patient_id' => $this->session->getUserId(),
-                'doctor_id' => $_POST['doctor_id'],
-                'preferred_date' => $_POST['preferred_date'],
-                'appointment_time' => $_POST['appointment_time'],
-                'consultation_type' => $_POST['consultation_type'],
-                'reason_for_visit' => $_POST['reason_for_visit'],
-                'medical_history' => $_POST['medical_history'] ?? null,
-                'documents' => $_FILES['documents'] ?? []
-            ];
-            
-            error_log("Processed appointment data: " . print_r($appointmentData, true));
-            
-            // Start by creating the appointment without the Meet link
-            $appointmentModel = new \App\Models\Appointment();
-            $appointmentId = $appointmentModel->bookAppointment($appointmentData);
-            
-            error_log("Appointment created with ID: " . $appointmentId);
-            
-            // Flag to track if Meet link generation was attempted
-            $meetLinkAttempted = false;
-            $meetLinkSuccess = false;
-            $meetLink = null;
-            
-            // Try to generate Meet link only for online appointments
-            if ($appointmentData['consultation_type'] === 'Online') {
-                $meetLinkAttempted = true;
-                
-                try {
-                    error_log("Attempting to create Google Meet link");
-                    
-                    // Get the appointment details
-                    $appointment = $appointmentModel->getById($appointmentId);
-                    
-                    if ($appointment) {
-                        // Log the retrieved appointment details
-                        error_log("Retrieved appointment details: " . print_r($appointment, true));
-                        
-                        // Get doctor and patient details
-                        $patientId = $appointment['patient_id'];
-                        $doctorId = $appointment['doctor_id'];
-                        $date = $appointment['appointment_date'];
-                        $time = $appointment['appointment_time'];
-                        $reason = $appointment['reason_for_visit'];
-                        
-                        error_log("Sending to createMeetLinkForAppointment - Date: {$date}, Time: {$time}");
-                        
-                        // Create separate function call to isolate any errors
-                        $meetLinkResult = $this->createMeetLinkForAppointment(
-                            $appointmentId, 
-                            $patientId, 
-                            $doctorId, 
-                            $date, 
-                            $time, 
-                            $reason
-                        );
-                        
-                        if ($meetLinkResult) {
-                            $meetLink = $meetLinkResult;
-                            $meetLinkSuccess = true;
-                            error_log("Meet link created successfully: " . $meetLink);
-                        } else {
-                            error_log("Failed to create Meet link, but appointment was created");
-                        }
-                    } else {
-                        error_log("Could not retrieve appointment details for Meet link creation");
-                    }
-                } catch (\Exception $e) {
-                    error_log("Error creating Meet link (appointment will still be created): " . $e->getMessage());
-                    error_log("Stack trace: " . $e->getTraceAsString());
-                    // Don't rethrow - we want to continue even if Meet link fails
-                }
-            }
-            
-            // Get the full appointment details including the Meet link if it was created
-            $appointmentDetails = $appointmentModel->getById($appointmentId);
-            
-            // Check if this is a general doctor booking for a new medical session
-            if (isset($_POST['start_medical_session']) && $_POST['start_medical_session'] == 1) {
-                // Create a new medical session
-                $this->startNewMedicalSession($appointmentId);
-            }
-            
-            // Prepare response data
-            $response = [
-                'success' => true,
-                'appointment_id' => $appointmentId,
-                'message' => 'Appointment booked successfully!'
-            ];
-            
-            // Add Meet link info if it's an online appointment
-            if ($appointmentData['consultation_type'] === 'Online') {
-                // Check if Meet link is in appointment details first (might have been updated already)
-                if ($appointmentDetails && !empty($appointmentDetails['meet_link'])) {
-                    $response['meet_link'] = $appointmentDetails['meet_link'];
-                    $response['message'] .= ' Your Google Meet link is: ' . $appointmentDetails['meet_link'];
-                } 
-                // Or use the one we just created
-                else if ($meetLinkSuccess && $meetLink) {
-                    $response['meet_link'] = $meetLink;
-                    $response['message'] .= ' Your Google Meet link is: ' . $meetLink;
-                } 
-                // Otherwise indicate failure
-                else if ($meetLinkAttempted) {
-                    $response['meet_link_failed'] = true;
-                    $response['message'] .= ' However, we could not generate a Google Meet link at this time. Please check back later.';
-                }
-            }
-            
-            // Clear any buffered output before sending JSON response
+    /**
+ * Process an appointment booking with Google Meet link generation
+ * Handles form submission, creates appointment and generates Meet link for online consultations
+ * 
+ * @return void
+ */
+public function processAppointmentWithMeetLink() {
+    // Set JSON content type immediately
+    header('Content-Type: application/json');
+    
+    // Buffer all output to prevent warnings from being directly sent to the client
+    ob_start();
+    
+    try {
+        if (!isset($_POST['csrf_token']) || !$this->session->verifyCSRFToken($_POST['csrf_token'])) {
             ob_end_clean();
-            
-            echo json_encode($response);
-            exit();
-            
-        } catch (\Exception $e) {
-            // Clear any buffered output
-            ob_end_clean();
-            
-            error_log("Error in processAppointmentWithMeetLink: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            
-            http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Error booking appointment: ' . $e->getMessage()
+                'message' => 'Invalid CSRF token'
             ]);
             exit();
         }
+        
+        error_log("### PROCESSING APPOINTMENT WITH MEET LINK ###");
+        error_log("Raw POST data: " . print_r($_POST, true));
+        
+        $appointmentData = [
+            'patient_id' => $this->session->getUserId(),
+            'doctor_id' => $_POST['doctor_id'],
+            'preferred_date' => $_POST['preferred_date'],
+            'appointment_time' => $_POST['appointment_time'],
+            'consultation_type' => $_POST['consultation_type'],
+            'reason_for_visit' => $_POST['reason_for_visit'],
+            'medical_history' => $_POST['medical_history'] ?? null,
+            'documents' => $_FILES['documents'] ?? []
+        ];
+        
+        error_log("Processed appointment data: " . print_r($appointmentData, true));
+        
+        // Start by creating the appointment without the Meet link
+        $appointmentModel = new \App\Models\Appointment();
+        $appointmentId = $appointmentModel->bookAppointment($appointmentData);
+        
+        error_log("Appointment created with ID: " . $appointmentId);
+        
+        // Flag to track if Meet link generation was attempted
+        $meetLinkAttempted = false;
+        $meetLinkSuccess = false;
+        $meetLink = null;
+        
+        // Try to generate Meet link only for online appointments
+        if ($appointmentData['consultation_type'] === 'Online') {
+            $meetLinkAttempted = true;
+            
+            try {
+                error_log("Attempting to create Google Meet link for online appointment");
+                
+                // Get the appointment details
+                $appointment = $appointmentModel->getById($appointmentId);
+                
+                if ($appointment) {
+                    // Log the retrieved appointment details
+                    error_log("Retrieved appointment details: " . print_r($appointment, true));
+                    
+                    // Extract appointment details directly for meet link creation
+                    $patientId = $appointment['patient_id'];
+                    $doctorId = $appointment['doctor_id'];
+                    $date = $appointment['appointment_date'];
+                    $time = $appointment['appointment_time'];
+                    $reason = $appointment['reason_for_visit'];
+                    
+                    error_log("Creating Meet link with: Date={$date}, Time={$time}, PatientID={$patientId}, DoctorID={$doctorId}");
+                    
+                    // Directly instantiate the GoogleMeetService
+                    try {
+                        $googleMeetService = new \App\Services\GoogleMeetService();
+                        
+                        // Try to format the date and time first
+                        $startDateObj = new \DateTime($date . ' ' . $time);
+                        $startDateTime = $startDateObj->format('Y-m-d H:i:s');
+                        $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime) + 30 * 60);
+                        
+                        error_log("Formatted start time: {$startDateTime}, Formatted end time: {$endDateTime}");
+                        
+                        // Get doctor and patient details for attendees
+                        $query = "SELECT 
+                                CONCAT(d_user.first_name, ' ', d_user.last_name) AS doctor_name,
+                                CONCAT(p_user.first_name, ' ', p_user.last_name) AS patient_name,
+                                d_user.email AS doctor_email,
+                                p_user.email AS patient_email
+                                FROM doctors d 
+                                JOIN users d_user ON d.user_id = d_user.user_id
+                                JOIN users p_user ON p_user.user_id = ?
+                                WHERE d.doctor_id = ?";
+                
+                        $stmt = $this->db->prepare($query);
+                        $stmt->bind_param("ii", $patientId, $doctorId);
+                        $stmt->execute();
+                        $result = $stmt->get_result()->fetch_assoc();
+                        
+                        if (!$result) {
+                            error_log("Failed to get doctor and patient details");
+                            throw new \Exception("Could not retrieve doctor and patient information");
+                        }
+                        
+                        // Create event title and description
+                        $summary = "Medical Appointment: Dr. {$result['doctor_name']} with {$result['patient_name']}";
+                        $description = "Appointment ID: {$appointmentId}\nReason for visit: {$reason}";
+                        
+                        // Attendee emails
+                        $attendees = [
+                            $result['doctor_email'],
+                            $result['patient_email']
+                        ];
+                        
+                        // Create the Google Meet event
+                        $eventData = $googleMeetService->createMeetEvent(
+                            $summary,
+                            $description,
+                            $startDateTime,
+                            $endDateTime,
+                            $attendees
+                        );
+                        
+                        if ($eventData && isset($eventData['meet_link'])) {
+                            $meetLink = $eventData['meet_link'];
+                            $meetLinkSuccess = true;
+                            
+                            // Update the appointment with the Meet link
+                            $updateResult = $appointmentModel->updateMeetLink($appointmentId, $meetLink);
+                            error_log("Meet link created successfully: {$meetLink}, Update result: " . ($updateResult ? "Success" : "Failed"));
+                        } else {
+                            error_log("No meet link returned from GoogleMeetService");
+                        }
+                    } catch (\Exception $meetServiceEx) {
+                        error_log("Error with GoogleMeetService: " . $meetServiceEx->getMessage());
+                        error_log("GoogleMeetService error trace: " . $meetServiceEx->getTraceAsString());
+                    }
+                } else {
+                    error_log("Could not retrieve appointment details for Meet link creation");
+                }
+            } catch (\Exception $e) {
+                error_log("Error creating Meet link (appointment will still be created): " . $e->getMessage());
+                error_log("Stack trace: " . $e->getTraceAsString());
+                // Don't rethrow - we want to continue even if Meet link fails
+            }
+        }
+        
+        // Get the full appointment details including the Meet link if it was created
+        $appointmentDetails = $appointmentModel->getById($appointmentId);
+        
+        // Check if this is a general doctor booking for a new medical session
+        if (isset($_POST['start_medical_session']) && $_POST['start_medical_session'] == 1) {
+            // Create a new medical session
+            $this->startNewMedicalSession($appointmentId);
+        }
+        
+        // Prepare response data
+        $response = [
+            'success' => true,
+            'appointment_id' => $appointmentId,
+            'message' => 'Appointment booked successfully!'
+        ];
+        
+        // Add Meet link info if it's an online appointment
+        if ($appointmentData['consultation_type'] === 'Online') {
+            // First check if the link was saved in the appointment details
+            if ($appointmentDetails && !empty($appointmentDetails['meet_link'])) {
+                $response['meet_link'] = $appointmentDetails['meet_link'];
+                $response['message'] .= ' Your Google Meet link is: ' . $appointmentDetails['meet_link'];
+            } 
+            // Then check if we just created a link but it wasn't saved yet
+            else if ($meetLinkSuccess && $meetLink) {
+                $response['meet_link'] = $meetLink;
+                $response['message'] .= ' Your Google Meet link is: ' . $meetLink;
+            } 
+            // If link creation was attempted but failed, note this in the response
+            else if ($meetLinkAttempted) {
+                $response['meet_link_failed'] = true;
+                $response['message'] .= ' However, we could not generate a Google Meet link at this time. Please check back later.';
+            }
+        }
+        
+        // Clear any buffered output before sending JSON response
+        ob_end_clean();
+        
+        echo json_encode($response);
+        exit();
+        
+    } catch (\Exception $e) {
+        // Clear any buffered output
+        ob_end_clean();
+        
+        error_log("Error in processAppointmentWithMeetLink: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
+        
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error booking appointment: ' . $e->getMessage()
+        ]);
+        exit();
     }
+}
     
     public function paymentPlan()
     {

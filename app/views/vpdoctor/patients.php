@@ -151,86 +151,92 @@
         }
 
         function viewPatient(patientId) {
-        fetch(`${basePath}/vpdoctor/get-patient-details?patient_id=${patientId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+    fetch(`${basePath}/vpdoctor/get-patient-details?patient_id=${patientId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(data.error);
+            }
 
-                const patientContent = document.getElementById('patientContent');
-                const age = calculateAge(data.user.date_of_birth);
-                
-                patientContent.innerHTML = `
-                    <div class="patient-profile">
-                        <div class="profile-header">
-                            <h3>${data.user.first_name} ${data.user.last_name}</h3>
-                            <p class="patient-meta">
-                                ${age} years old | ${data.user.gender} | ${data.user.nationality}
-                            </p>
+            const patientContent = document.getElementById('patientContent');
+            
+            // Check if age can be calculated
+            let age = '';
+            if (data.user && data.user.date_of_birth) {
+                age = calculateAge(data.user.date_of_birth);
+                age = `${age} years old | `;
+            }
+            
+            patientContent.innerHTML = `
+                <div class="patient-profile">
+                    <div class="profile-header">
+                        <h3>${data.user.first_name} ${data.user.last_name}</h3>
+                        <p class="patient-meta">
+                            ${age}${data.user.gender || ''} ${data.user.nationality ? '| ' + data.user.nationality : ''}
+                        </p>
+                    </div>
+                    
+                    <div class="contact-info">
+                        <div class="info-item">
+                            <i class="ri-mail-line"></i>
+                            <span>${data.user.email || 'N/A'}</span>
                         </div>
-                        
-                        <div class="contact-info">
-                            <div class="info-item">
-                                <i class="ri-mail-line"></i>
-                                <span>${data.user.email}</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="ri-phone-line"></i>
-                                <span>${data.user.phone_number}</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="ri-map-pin-line"></i>
-                                <span>${data.user.address_line1} ${data.user.address_line2 || ''}</span>
-                            </div>
+                        <div class="info-item">
+                            <i class="ri-phone-line"></i>
+                            <span>${data.user.phone_number || 'N/A'}</span>
                         </div>
-
-                        <div class="patient-actions">
-                            <button class="view-btn" onclick="viewMedicalReports(${patientId})">
-                                <i class="ri-file-list-3-line"></i>
-                                View Medical Reports
-                            </button>
-                        </div>
-
-                        <div class="medical-history">
-                            <h4>Medical History</h4>
-                            ${data.appointments.length > 0 ? `
-                                <div class="appointment-timeline">
-                                    ${data.appointments.map(app => `
-                                        <div class="timeline-item">
-                                            <div class="timeline-date">
-                                                ${formatDate(app.appointment_date)}
-                                            </div>
-                                            <div class="timeline-content">
-                                                <div class="appointment-header">
-                                                    <span class="appointment-type">${app.consultation_type}</span>
-                                                    <span class="appointment-status status-${app.appointment_status.toLowerCase()}">
-                                                        ${app.appointment_status}
-                                                    </span>
-                                                </div>
-                                                <p class="appointment-reason">${app.reason_for_visit || 'No reason specified'}</p>
-                                                <p class="appointment-notes">${app.notes || 'No notes available'}</p>
-                                                ${app.medical_history ? `
-                                                    <div class="medical-details">
-                                                        <p><strong>Medical History:</strong> ${app.medical_history}</p>
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : '<p class="no-history">No appointment history available.</p>'}
+                        <div class="info-item">
+                            <i class="ri-map-pin-line"></i>
+                            <span>${data.user.address_line1 || 'N/A'} ${data.user.address_line2 || ''}</span>
                         </div>
                     </div>
-                `;
 
-                document.getElementById('patientModal').style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load patient details. Please try again.');
-            });
-    }
+                    <div class="patient-actions">
+                        <button class="view-btn" onclick="viewMedicalReports(${patientId})">
+                            <i class="ri-file-list-3-line"></i>
+                            View Medical Reports
+                        </button>
+                    </div>
+
+                    <div class="medical-history">
+                        <h4>Medical History</h4>
+                        ${data.appointments && data.appointments.length > 0 ? `
+                            <div class="appointment-timeline">
+                                ${data.appointments.map(app => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-date">
+                                            ${formatDate(app.appointment_date)}
+                                        </div>
+                                        <div class="timeline-content">
+                                            <div class="appointment-header">
+                                                <span class="appointment-type">${app.consultation_type || 'Consultation'}</span>
+                                                <span class="appointment-status status-${app.appointment_status ? app.appointment_status.toLowerCase() : 'unknown'}">
+                                                    ${app.appointment_status || 'Unknown'}
+                                                </span>
+                                            </div>
+                                            <p class="appointment-reason">${app.reason_for_visit || 'No reason specified'}</p>
+                                            <p class="appointment-notes">${app.notes || 'No notes available'}</p>
+                                            ${app.medical_history ? `
+                                                <div class="medical-details">
+                                                    <p><strong>Medical History:</strong> ${app.medical_history}</p>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="no-history">No appointment history available.</p>'}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('patientModal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load patient details. Please try again.');
+        });
+}
 
     function viewMedicalReports(patientId) {
     const modalContent = document.getElementById('medicalReportsContent');

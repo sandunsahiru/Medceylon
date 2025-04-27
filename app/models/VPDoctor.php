@@ -548,75 +548,72 @@ public function getReferralAppointments($doctorId)
     }
 
     /**
-     * Get patient statistics
-     * 
-     * @param int $doctorId
-     * @return array
-     */
-    public function getPatientStats($doctorId)
-    {
-        try {
-            $query = "SELECT 
-                    COUNT(DISTINCT a.patient_id) as total_patients,
-                    COUNT(CASE WHEN a.appointment_status = 'Completed' THEN 1 END) as total_consultations,
-                    COUNT(CASE WHEN YEAR(a.appointment_date) = YEAR(CURRENT_DATE) THEN 1 END) as consultations_this_year,
-                    COUNT(CASE WHEN MONTH(a.appointment_date) = MONTH(CURRENT_DATE) AND YEAR(a.appointment_date) = YEAR(CURRENT_DATE) THEN 1 END) as consultations_this_month
-                    FROM appointments a
-                    WHERE a.doctor_id = ?";
-
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $doctorId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                return $result->fetch_assoc();
-            }
-
-            return [
-                'total_patients' => 0,
-                'total_consultations' => 0,
-                'consultations_this_year' => 0,
-                'consultations_this_month' => 0
-            ];
-        } catch (\Exception $e) {
-            error_log("Error in getPatientStats: " . $e->getMessage());
-            return [
-                'total_patients' => 0,
-                'total_consultations' => 0,
-                'consultations_this_year' => 0,
-                'consultations_this_month' => 0
-            ];
+ * Get patient statistics
+ * 
+ * @param int $doctorId
+ * @return array
+ */
+public function getPatientStats($doctorId)
+{
+    try {
+        $query = "SELECT 
+                COUNT(DISTINCT a.patient_id) as total_patients,
+                COUNT(CASE WHEN a.appointment_status = 'Completed' THEN 1 END) as completed_visits,
+                COUNT(CASE WHEN a.appointment_status = 'Scheduled' AND a.appointment_date >= CURDATE() THEN 1 END) as upcoming_appointments
+                FROM appointments a
+                WHERE a.doctor_id = ?";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $doctorId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            return $result->fetch_assoc();
         }
+        
+        return [
+            'total_patients' => 0,
+            'completed_visits' => 0,
+            'upcoming_appointments' => 0
+        ];
+    } catch (\Exception $e) {
+        error_log("Error in getPatientStats: " . $e->getMessage());
+        return [
+            'total_patients' => 0,
+            'completed_visits' => 0,
+            'upcoming_appointments' => 0
+        ];
     }
+}
 
     /**
-     * Get doctor's patients
-     * 
-     * @param int $doctorId
-     * @return \mysqli_result|array
-     */
-    public function getDoctorPatients($doctorId)
-    {
-        try {
-            $query = "SELECT DISTINCT u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender,
-                    MAX(a.appointment_date) as last_visit,
-                    COUNT(a.appointment_id) as visit_count
-                    FROM appointments a
-                    JOIN users u ON a.patient_id = u.user_id
-                    WHERE a.doctor_id = ?
-                    GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender
-                    ORDER BY last_visit DESC";
+ * Get doctor's patients
+ * 
+ * @param int $doctorId
+ * @return \mysqli_result|array
+ */
+public function getDoctorPatients($doctorId)
+{
+    try {
+        $query = "SELECT DISTINCT u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender,
+                MAX(a.appointment_date) as last_visit,
+                COUNT(a.appointment_id) as total_visits
+                FROM appointments a
+                JOIN users u ON a.patient_id = u.user_id
+                WHERE a.doctor_id = ?
+                GROUP BY u.user_id, u.first_name, u.last_name, u.email, u.phone_number, u.gender
+                ORDER BY last_visit DESC";
 
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param("i", $doctorId);
-            $stmt->execute();
-            return $stmt->get_result();
-        } catch (\Exception $e) {
-            error_log("Error in getDoctorPatients: " . $e->getMessage());
-            return [];
-        }
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $doctorId);
+        $stmt->execute();
+        return $stmt->get_result();
+    } catch (\Exception $e) {
+        error_log("Error in getDoctorPatients: " . $e->getMessage());
+        return [];
     }
+}
 
     /**
      * Get patient details
@@ -861,50 +858,149 @@ public function getReferralAppointments($doctorId)
             return false;
         }
     }
-
-    /**
-     * Create treatment plan
-     * 
-     * @param array $data
-     * @return int|false Plan ID if successful, false otherwise
-     */
-    public function createTreatmentPlan($data)
+/**
+ * Create treatment plan
+ * 
+ * @param array $data
+ * @return int|false Plan ID if successful, false otherwise
+ */
+public function createTreatmentPlan($data)
 {
     try {
         $this->db->begin_transaction();
 
-        $query = "INSERT INTO treatment_plans 
-                 (session_id, doctor_id, travel_restrictions, vehicle_type, 
-                  arrival_deadline, treatment_description, 
-                  estimated_budget, estimated_duration, created_at) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Debug the incoming data
+        error_log("Create Treatment Plan - Data received: " . print_r($data, true));
+        
+        // Allow session_id to be null if not provided
+        $sessionId = !empty($data['session_id']) ? (int)$data['session_id'] : null;
+        $patientId = (int)$data['patient_id'];
+        $doctorId = (int)$data['doctor_id'];
+        $travelRestrictions = $data['travel_restrictions'] ?? 'None';
+        $vehicleType = $data['vehicle_type'] ?? 'Regular Vehicle';
+        $arrivalDeadline = !empty($data['arrival_deadline']) ? $data['arrival_deadline'] : null;
+        $treatmentDescription = $data['treatment_description'] ?? '';
+        $estimatedBudget = !empty($data['estimated_budget']) ? $data['estimated_budget'] : 0;
+        $estimatedDuration = !empty($data['estimated_duration']) ? (int)$data['estimated_duration'] : 0;
+        $createdAt = $data['created_at'] ?? date('Y-m-d H:i:s');
+        
+        // Validate patient and doctor IDs
+        if ($patientId <= 0) {
+            error_log("Error: Invalid patient ID: " . $patientId);
+            throw new \Exception("Invalid patient ID");
+        }
+        
+        if ($doctorId <= 0) {
+            error_log("Error: Invalid doctor ID: " . $doctorId);
+            throw new \Exception("Invalid doctor ID");
+        }
+        
+        // Log the processed data
+        error_log("Processed data for DB insertion: " . json_encode([
+            'session_id' => $sessionId,
+            'patient_id' => $patientId,
+            'doctor_id' => $doctorId,
+            'travel_restrictions' => $travelRestrictions,
+            'vehicle_type' => $vehicleType,
+            'arrival_deadline' => $arrivalDeadline,
+            'treatment_description' => $treatmentDescription,
+            'estimated_budget' => $estimatedBudget,
+            'estimated_duration' => $estimatedDuration,
+            'created_at' => $createdAt
+        ]));
+        
+        // Prepare the query based on whether session_id is null
+        if ($sessionId === null) {
+            $query = "INSERT INTO treatment_plans 
+                     (patient_id, doctor_id, travel_restrictions, vehicle_type, 
+                      arrival_deadline, treatment_description, 
+                      estimated_budget, estimated_duration, created_at) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     
+            error_log("Using query without session_id: " . $query);
+            
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                error_log("Prepare failed: " . $this->db->error);
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+            
+            $stmt->bind_param(
+                "iisssssis",  // 9 types for 9 parameters
+                $patientId,
+                $doctorId,
+                $travelRestrictions,
+                $vehicleType,
+                $arrivalDeadline,
+                $treatmentDescription, // This is likely what got replaced with 's'
+                $estimatedBudget,
+                $estimatedDuration,
+                $createdAt
+            );
+        } else {
+            $query = "INSERT INTO treatment_plans 
+                     (session_id, patient_id, doctor_id, travel_restrictions, vehicle_type, 
+                      arrival_deadline, treatment_description, 
+                      estimated_budget, estimated_duration, created_at) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                     
+            error_log("Using query with session_id: " . $query);
+            
+            $stmt = $this->db->prepare($query);
+            if (!$stmt) {
+                error_log("Prepare failed: " . $this->db->error);
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+            
+            $stmt->bind_param(
+                "iiisssssis",
+                $sessionId,
+                $patientId,
+                $doctorId,
+                $travelRestrictions,
+                $vehicleType,
+                $arrivalDeadline,
+                $treatmentDescription,
+                $estimatedBudget,
+                $estimatedDuration,
+                $createdAt
+            );
+        }
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param(
-            "iisssssis",
-            $data['session_id'],
-            $data['doctor_id'],
-            $data['travel_restrictions'],
-            $data['vehicle_type'],
-            $data['arrival_deadline'],
-            $data['treatment_description'],
-            $data['estimated_budget'],
-            $data['estimated_duration'],
-            $data['created_at']
-        );
-
+        // Execute the statement
         if (!$stmt->execute()) {
+            error_log("Database error: " . $stmt->error);
             $this->db->rollback();
-            error_log("Failed to create treatment plan: " . $stmt->error);
-            return false;
+            throw new \Exception("Failed to create treatment plan: " . $stmt->error);
         }
 
         $planId = $this->db->insert_id;
         $this->db->commit();
 
+        error_log("Successfully created treatment plan with ID: " . $planId);
+        
+        // If session ID exists, update the medical session with the plan ID
+        if ($sessionId) {
+            try {
+                $updateQuery = "UPDATE medical_sessions SET treatment_plan_id = ? WHERE session_id = ?";
+                $updateStmt = $this->db->prepare($updateQuery);
+                $updateStmt->bind_param("ii", $planId, $sessionId);
+                $updateStmt->execute();
+                error_log("Updated medical session " . $sessionId . " with treatment plan " . $planId);
+            } catch (\Exception $e) {
+                error_log("Warning: Could not update medical session with treatment plan ID: " . $e->getMessage());
+                // Don't throw this exception as the treatment plan was created successfully
+            }
+        }
+        
         return $planId;
     } catch (\Exception $e) {
-        $this->db->rollback();
+        try {
+            $this->db->rollback();
+        } catch (\Exception $rollbackException) {
+            // Transaction wasn't active
+            error_log("No active transaction to roll back: " . $rollbackException->getMessage());
+        }
         error_log("Error in createTreatmentPlan: " . $e->getMessage());
         return false;
     }
@@ -1095,4 +1191,92 @@ public function getReferralAppointments($doctorId)
             return null;
         }
     }
+
+    /**
+ * Check treatment_plans table structure
+ * 
+ * @return array Table structure info and diagnostics
+ */
+public function checkTreatmentPlansTable()
+{
+    $results = [
+        'table_exists' => false,
+        'columns' => [],
+        'diagnostics' => [],
+        'sample_record' => null
+    ];
+    
+    try {
+        // Check if table exists
+        $query = "SHOW TABLES LIKE 'treatment_plans'";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $tableExists = $stmt->get_result()->num_rows > 0;
+        
+        $results['table_exists'] = $tableExists;
+        $results['diagnostics'][] = "Table 'treatment_plans' exists: " . ($tableExists ? 'Yes' : 'No');
+        
+        if (!$tableExists) {
+            return $results;
+        }
+        
+        // Get column structure
+        $query = "DESCRIBE treatment_plans";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $columns = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        $results['columns'] = $columns;
+        
+        // Log each column with its type
+        foreach ($columns as $column) {
+            $results['diagnostics'][] = "Column: {$column['Field']}, Type: {$column['Type']}, Null: {$column['Null']}, Key: {$column['Key']}, Default: {$column['Default']}";
+        }
+        
+        // Check for required columns
+        $requiredColumns = [
+            'plan_id', 'session_id', 'patient_id', 'doctor_id',
+            'travel_restrictions', 'vehicle_type', 'arrival_deadline',
+            'treatment_description', 'estimated_budget', 'estimated_duration'
+        ];
+        
+        $columnNames = array_column($columns, 'Field');
+        $missingColumns = array_diff($requiredColumns, $columnNames);
+        
+        if (!empty($missingColumns)) {
+            $results['diagnostics'][] = "Missing required columns: " . implode(', ', $missingColumns);
+        } else {
+            $results['diagnostics'][] = "All required columns are present in the table.";
+        }
+        
+        // Get a sample record if available
+        $query = "SELECT * FROM treatment_plans LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $sampleRecord = $stmt->get_result()->fetch_assoc();
+        
+        if ($sampleRecord) {
+            $results['sample_record'] = $sampleRecord;
+            $results['diagnostics'][] = "Sample record found with ID: {$sampleRecord['plan_id']}";
+        } else {
+            $results['diagnostics'][] = "No existing records found in the table.";
+        }
+        
+        // Get table's creation SQL
+        $query = "SHOW CREATE TABLE treatment_plans";
+        $stmt = $this->db->prepare($query);
+        $stmt->execute();
+        $createTableSql = $stmt->get_result()->fetch_assoc();
+        
+        if ($createTableSql) {
+            $results['create_table_sql'] = $createTableSql['Create Table'];
+            $results['diagnostics'][] = "Retrieved table creation SQL.";
+        }
+        
+        return $results;
+    } catch (\Exception $e) {
+        $results['diagnostics'][] = "Error checking treatment_plans table: " . $e->getMessage();
+        return $results;
+    }
+}
 }

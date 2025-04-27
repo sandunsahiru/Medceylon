@@ -84,6 +84,12 @@ public function createMeetEvent($summary, $description, $startDateTime, $endDate
         $this->logError("Input startDateTime: {$startDateTime}");
         $this->logError("Input endDateTime: {$endDateTime}");
         
+        // Validate and standardize input date/time formats
+        if (!$this->validateDateTime($startDateTime) || !$this->validateDateTime($endDateTime)) {
+            $this->logError("CRITICAL ERROR: Invalid date/time format provided");
+            throw new \Exception("Invalid date/time format provided. Expected Y-m-d H:i:s");
+        }
+        
         // Parse the date times
         $startDateObj = new \DateTime($startDateTime);
         $endDateObj = new \DateTime($endDateTime);
@@ -102,6 +108,12 @@ public function createMeetEvent($summary, $description, $startDateTime, $endDate
         
         // Create event description with Meet link
         $enhancedDescription = $description . "\n\nJoin Google Meet: " . $meetLink;
+        
+        // Add attendees to description if provided
+        if (!empty($attendees) && is_array($attendees)) {
+            $this->logError("Adding attendees to description: " . implode(", ", $attendees));
+            $enhancedDescription .= "\n\nAttendees: " . implode(", ", $attendees);
+        }
         
         // Create a basic event without conference data
         $event = new Google_Service_Calendar_Event();
@@ -146,13 +158,13 @@ public function createMeetEvent($summary, $description, $startDateTime, $endDate
             $this->logError("Failed to create event: " . $e->getMessage());
             
             if ($e instanceof \Google\Service\Exception) {
-                $this->logError("Google Service Exception details:", [
-                    'errors' => $e->getErrors(),
-                    'code' => $e->getCode()
-                ]);
+                $errors = $e->getErrors();
+                $errorDetails = is_array($errors) ? json_encode($errors) : 'No error details available';
+                $this->logError("Google Service Exception details: " . $errorDetails);
             }
             
             // Try creating an even simpler event as fallback
+            $this->logError("Attempting to create a simplified event as fallback");
             $basicEvent = new Google_Service_Calendar_Event();
             $basicEvent->setSummary($summary . " (Google Meet)");
             $basicEvent->setDescription($enhancedDescription);
@@ -189,6 +201,32 @@ public function createMeetEvent($summary, $description, $startDateTime, $endDate
         return false;
     }
 }
+
+    /**
+     * Validate a date/time string is in proper format
+     * 
+     * @param string $dateTime Date/time string to validate
+     * @return bool True if valid, false otherwise
+     */
+    private function validateDateTime($dateTime) {
+        // Try to parse the date time string
+        $parsedDate = date_parse($dateTime);
+        
+        // Check if the date is valid
+        if ($parsedDate['error_count'] > 0) {
+            $this->logError("Date validation failed for: " . $dateTime);
+            return false;
+        }
+        
+        // Try creating a DateTime object
+        try {
+            new \DateTime($dateTime);
+            return true;
+        } catch (\Exception $e) {
+            $this->logError("DateTime validation exception: " . $e->getMessage());
+            return false;
+        }
+    }
     
     /**
      * Generate a random Google Meet code
