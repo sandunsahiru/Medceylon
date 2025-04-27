@@ -15,8 +15,6 @@
     <?php endif; ?>
 
     <h2>Local Site Seeing</h2>
-    
-    <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button>
 
     <div class="travel-plan-section">
     <h3>Build Your Travel Plan</h3>
@@ -26,67 +24,69 @@
         <ul id="selectedDestinations"></ul>
     </div>
     
-    <button id="calculatePlanBtn" class="btn">Calculate Travel Plan</button>
+    <button id="calculatePlanBtn" class="btn">Calculate Travel Plan</button><br><br>
     <button id="savePlanBtn" class="btn" style="display:none;">Save Travel Plan</button>
     
-    <div id="travelPlanContainer"></div>
+    <input type="hidden" id="csrf_token" name="csrf_token" value="<?= $this->session->getCSRFToken() ?>">
+    
+<div id="travelPlanContainer"></div>
 </div>
 
-<div class="filter-bar">
-    <form method="get" action="<?php echo $this->url('travelplan/destinations'); ?>">
-        <div class="filter-item">
-            <label for="province">Select Province:</label>
-            <select id="province" name="province_id">
-                <option value="">Select Province</option>
-                <?php foreach ($provinces as $province): ?>
-                    <option value="<?= $province['province_id'] ?>" 
-                        <?= (!empty($_GET['province_id']) && $_GET['province_id'] == $province['province_id']) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($province['province_name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+    <div class="filter-bar">
+        <form method="get" action="<?php echo $this->url('travelplan/destinations'); ?>">
+            <div class="filter-item">
+                <label for="province">Select Province:</label>
+                <select id="province" name="province_id">
+                    <option value="">Select Province</option>
+                    <?php foreach ($provinces as $province): ?>
+                        <option value="<?= $province['province_id'] ?>" 
+                            <?= (!empty($_GET['province_id']) && $_GET['province_id'] == $province['province_id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($province['province_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <div class="filter-item">
-            <label for="wheelchair">Wheelchair Accessibility:</label>
-            <select name="wheelchair" id="wheelchair">
-                <option value="" <?= empty($_GET['wheelchair']) ? 'selected' : '' ?>>Any</option>
-                <option value="Yes" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
-                <option value="No" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'No' ? 'selected' : '' ?>>No</option>
-            </select>
-        </div>
+            <div class="filter-item">
+                <label for="wheelchair">Wheelchair Accessibility:</label>
+                <select name="wheelchair" id="wheelchair">
+                    <option value="" <?= empty($_GET['wheelchair']) ? 'selected' : '' ?>>Any</option>
+                    <option value="Yes" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                    <option value="No" <?= isset($_GET['wheelchair']) && $_GET['wheelchair'] === 'No' ? 'selected' : '' ?>>No</option>
+                </select>
+            </div>
 
-        <div class="filter-item">
-            <label for="destinationType">Destination Type</label>
-            <select id="destinationType" name="type_id">
-                <option value="">Select Type</option>
-                <?php foreach ($destinationTypes as $destinationType): ?>
-                    <option value="<?= $destinationType['type_id'] ?>"
-                        <?= (!empty($_GET['type_id']) && $_GET['type_id'] == $destinationType['type_id']) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($destinationType['type_name']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+            <div class="filter-item">
+                <label for="destinationType">Destination Type</label>
+                <select id="destinationType" name="type_id">
+                    <option value="">Select Type</option>
+                    <?php foreach ($destinationTypes as $destinationType): ?>
+                        <option value="<?= $destinationType['type_id'] ?>"
+                            <?= (!empty($_GET['type_id']) && $_GET['type_id'] == $destinationType['type_id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($destinationType['type_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
 
-        <div class="filter-item">
-            <label for="cost_category">Cost Category:</label>
-            <select name="cost_category" id="cost_category">
-                <option value="" <?= empty($_GET['cost_category']) ? 'selected' : '' ?>>Any</option>
-                <option value="Low" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'Low' ? 'selected' : '' ?>>Low</option>
-                <option value="Medium" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'Medium' ? 'selected' : '' ?>>Medium</option>
-                <option value="High" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'High' ? 'selected' : '' ?>>High</option>
-            </select>
-        </div>
+            <div class="filter-item">
+                <label for="cost_category">Cost Category:</label>
+                <select name="cost_category" id="cost_category">
+                    <option value="" <?= empty($_GET['cost_category']) ? 'selected' : '' ?>>Any</option>
+                    <option value="Low" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'Low' ? 'selected' : '' ?>>Low</option>
+                    <option value="Medium" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'Medium' ? 'selected' : '' ?>>Medium</option>
+                    <option value="High" <?= isset($_GET['cost_category']) && $_GET['cost_category'] === 'High' ? 'selected' : '' ?>>High</option>
+                </select>
+            </div>
 
-        <div class="filter-item">
-            <button type="submit">Filter</button>
-            <?php if (!empty($_GET)): ?>
-                <a href="<?php echo $this->url('travelplan/destinations'); ?>" class="clear-filters">Clear Filters</a>
-            <?php endif; ?>
-        </div>
-    </form>
-</div>
+            <div class="filter-item">
+                <button type="submit">Filter</button>
+                <?php if (!empty($_GET)): ?>
+                    <a href="<?php echo $this->url('travelplan/destinations'); ?>" class="clear-filters">Clear Filters</a>
+                <?php endif; ?>
+            </div>
+        </form>
+    </div>
    
     <div class="travel-destinations-wrapper">
     <?php if (!empty($destinations)): ?> 
@@ -115,7 +115,8 @@
     <?php else: ?>
         <p>No destinations available. Please check back later.</p>
     <?php endif; ?>
-</div>
+    </div>
+
 
     <br>
 

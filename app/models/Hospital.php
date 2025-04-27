@@ -589,6 +589,25 @@ class Hospital
         }
     }
 
+    public function getApprovedRequests(){
+        try {
+            $query = "SELECT 
+                tr.*,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.phone_number
+                FROM treatment_requests tr
+                JOIN users u ON tr.patient_id = u.user_id
+                WHERE tr.is_active = 1 AND tr.request_status = 'Approved'
+                ORDER BY tr.request_date DESC";
+            return $this->db->query($query);
+        } catch (\Exception $e) {
+            error_log("Error in getApprovedRequests: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     public function updateRequest($requestId, $data)
     {
         try {
@@ -695,6 +714,166 @@ class Hospital
             return $result;
         } catch (\Exception $e) {
             error_log("Error in getRequestDetails: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    public function getCurrentAvailability($userId) {
+        try {
+            $query = "SELECT theatres, beds FROM hospitals WHERE user_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            
+            if (!$result) {
+                throw new \Exception("Hospital details not found");
+            }
+            
+            $totalTheatres = $result['theatres'];
+            $totalBeds = $result['beds'];
+            
+            $today = date('Y-m-d');
+            $query = "SELECT COUNT(*) as booked_theatres 
+                      FROM treatment_requests 
+                      WHERE hospital_id = ? 
+                      AND preferred_date = ? 
+                      AND request_status = 'Approved'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("is", $userId, $today);
+            $stmt->execute();
+            $bookedTheatres = $stmt->get_result()->fetch_assoc()['booked_theatres'];
+            
+            $surgeryDate = date('Y-m-d', strtotime('-2 days'));
+            $query = "SELECT COUNT(*) as occupied_beds 
+                      FROM treatment_requests 
+                      WHERE hospital_id = ? 
+                      AND preferred_date = ? 
+                      AND request_status = 'Approved'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("is", $userId, $surgeryDate);
+            $stmt->execute();
+            $occupiedBeds = $stmt->get_result()->fetch_assoc()['occupied_beds'];
+            
+            return [
+                'theatres' => [
+                    'total' => $totalTheatres,
+                    'booked' => $bookedTheatres,
+                    'available' => $totalTheatres - $bookedTheatres
+                ],
+                'beds' => [
+                    'total' => $totalBeds,
+                    'occupied' => $occupiedBeds,
+                    'available' => $totalBeds - $occupiedBeds
+                ]
+            ];
+        } catch (\Exception $e) {
+            error_log("Error in getCurrentAvailability: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+    public function getDailyAvailability($startDate, $endDate, $userId) {
+        try {
+            $query = "SELECT theatres, beds FROM hospitals WHERE user_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            
+            $totalTheatres = $result['theatres'];
+            $totalBeds = $result['beds'];
+            
+            $query = "SELECT preferred_date as date, COUNT(*) as booked_theatres 
+                      FROM treatment_requests 
+                      WHERE hospital_id = ? 
+                      AND preferred_date BETWEEN ? AND ? 
+                      AND request_status = 'Approved'
+                      GROUP BY preferred_date";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("iss", $userId, $startDate, $endDate);
+            $stmt->execute();
+            $theatreData = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            
+            $query = "SELECT DATE_ADD(preferred_date, INTERVAL 2 DAY) as date, COUNT(*) as occupied_beds 
+                      FROM treatment_requests 
+                      WHERE hospital_id = ? 
+                      AND preferred_date BETWEEN DATE_SUB(?, INTERVAL 2 DAY) AND DATE_SUB(?, INTERVAL 2 DAY)
+                      AND request_status = 'Approved'
+                      GROUP BY DATE_ADD(preferred_date, INTERVAL 2 DAY)";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("iss", $userId, $startDate, $endDate);
+            $stmt->execute();
+            $bedData = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            
+            $availability = [];
+            $currentDate = new \DateTime($startDate);
+            $endDateObj = new \DateTime($endDate);
+            
+            while ($currentDate <= $endDateObj) {
+                $dateStr = $currentDate->format('Y-m-d');
+                
+                $theatreBookings = 0;
+                foreach ($theatreData as $tData) {
+                    if ($tData['date'] == $dateStr) {
+                        $theatreBookings = $tData['booked_theatres'];
+                        break;
+                    }
+                }
+                
+                $bedOccupancy = 0;
+                foreach ($bedData as $bData) {
+                    if ($bData['date'] == $dateStr) {
+                        $bedOccupancy = $bData['occupied_beds'];
+                        break;
+                    }
+                }
+                
+                $availability[$dateStr] = [
+                    'theatres_total' => $totalTheatres,
+                    'theatres_available' => $totalTheatres - $theatreBookings,
+                    'beds_total' => $totalBeds,
+                    'beds_available' => $totalBeds - $bedOccupancy
+                ];
+                
+                $currentDate->modify('+1 day');
+            }
+            
+            return $availability;
+        } catch (\Exception $e) {
+            error_log("Error in getDailyAvailability: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getUpcomingSurgeries($hospitalId, $startDate, $endDate)
+    {
+        try {
+            $query = "SELECT COUNT(*) as count 
+                    FROM treatment_requests 
+                    WHERE hospital_id = ? 
+                    AND preferred_date BETWEEN ? AND ? 
+                    AND request_status = 'Approved'";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("iss", $hospitalId, $startDate, $endDate);
+            $stmt->execute();
+            $result = $stmt->get_result()->fetch_assoc();
+            return $result['count'] ?? 0;
+        } catch (\Exception $e) {
+            error_log("Error fetching upcoming surgeries: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    public function getHospitalID($userId) {
+        try {
+            $query = "SELECT hospital_id FROM hospitals WHERE user_id = ?";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_assoc()['hospital_id'];
+        } catch (\Exception $e) {
+            error_log("Error in getHospitalID: " . $e->getMessage());
             throw $e;
         }
     }

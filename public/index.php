@@ -57,6 +57,7 @@ try {
     $router->get('/patient/download-attachment', 'ChatController', 'downloadAttachment', \App\Core\Middleware\AuthMiddleware::class);
 
 
+
     // Doctor Chat Routes
     $router->get('/doctor/chat', 'ChatController', 'index', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->post('/doctor/send-message', 'ChatController', 'sendMessage', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -150,7 +151,7 @@ try {
     $router->post('/vpdoctor/update-specializations', 'VPDoctorController', 'updateSpecializations', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/vpdoctor/profile', 'VPDoctorController', 'profile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
-    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals');
+    $router->get('/hospital/partner-hospitals', 'PatientController', 'hospitals', \App\Core\Middleware\AuthMiddleware::class);
 
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -159,7 +160,7 @@ try {
     $router->get('/hospital/doctors', 'HospitalController', 'doctors', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/departments', 'HospitalController', 'departments', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/patients', 'HospitalController', 'patients', \App\Core\Middleware\HospitalAuthMiddleware::class);
-    $router->get('/hospital/rooms','HospitalController','rooms',\App\Core\Middleware\HospitalAuthMiddleware::class); 
+    $router->get('/hospital/rooms', 'HospitalController', 'rooms', \App\Core\Middleware\HospitalAuthMiddleware::class);
 
     // Hospital API Routes
     $router->get('/hospital/get-request-details', 'HospitalController', 'getRequestDetails', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -224,9 +225,10 @@ try {
     $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/provinces', 'TravelPlanController', 'provinces', \App\Core\Middleware\AuthMiddleware::class);
 
-    $router->get('/travelplan/travel-plans', 'TravelPlanController', 'TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/travelplan/travel-preferences', 'TravelPlanController', 'travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
-
+    $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController','calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/save-plan', 'TravelPlanController','savePlan', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/view-plan', 'TravelPlanController', 'viewPlan',    \App\Core\Middleware\AuthMiddleware::class);
+    
     $router->get('/forgot-password', 'ForgotPasswordController', 'showForm');
     $router->post('/forgot-password', 'ForgotPasswordController', 'handleForm');
     $router->get('/reset-password', 'ForgotPasswordController', 'showResetForm');
