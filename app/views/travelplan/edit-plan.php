@@ -9,7 +9,7 @@
         </div>
 
         <div class="modal-form">
-            <form id="editDestinationForm" action= "http://localhost/Medceylon/TravelPlan/edit-plan" method="post">
+            <form id="editDestinationForm" action= "http://localhost/Medceylon/travelplan/edit-plan" method="post">
                 <input type="hidden" name="csrf_token" value="<?= $this->session->getCSRFToken(); ?>">
                 <div class="body">
                     <div class="left">

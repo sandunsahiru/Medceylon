@@ -12,7 +12,6 @@ class Hospital
         $this->db = $db;
     }
 
-    // Dashboard Statistics
     public function getRequestStatistics()
     {
         try {
@@ -66,7 +65,6 @@ class Hospital
         }
     }
 
-    // Department Methoda
     public function getAllDepartments()
     {
         try {
@@ -177,7 +175,6 @@ class Hospital
         try {
             $this->db->begin_transaction();
 
-            // Check if department has active doctors
             $checkQuery = "SELECT COUNT(*) as doctor_count 
                           FROM doctors 
                           WHERE department_id = ? AND is_active = 1";
@@ -190,7 +187,6 @@ class Hospital
                 throw new \Exception("Cannot delete department with active doctors");
             }
 
-            // Soft delete the department
             $query = "UPDATE hospital_departments SET 
                       is_active = 0,
                       updated_at = NOW()
@@ -212,7 +208,6 @@ class Hospital
         }
     }
 
-    // Doctor Methoda
     public function getAllDoctors()
     {
         try {
@@ -259,10 +254,9 @@ class Hospital
         try {
             $this->db->begin_transaction();
 
-            // First create user account
             $query = "INSERT INTO users 
                       (first_name, last_name, email, phone_number, role_id, created_by) 
-                      VALUES (?, ?, ?, ?, 2, ?)"; // role_id 2 for doctors
+                      VALUES (?, ?, ?, ?, 2, ?)"; 
 
             $stmt = $this->db->prepare($query);
             $stmt->bind_param(
@@ -280,7 +274,6 @@ class Hospital
 
             $userId = $stmt->insert_id;
 
-            // Then create doctor record
             $query = "INSERT INTO doctors 
                       (user_id, specialization, license_number, department_id) 
                       VALUES (?, ?, ?, ?)";
@@ -312,7 +305,6 @@ class Hospital
         try {
             $this->db->begin_transaction();
     
-            // 1. Update doctors table
             $query = "UPDATE doctors SET 
                       license_number = ?, 
                       department_id = ?, 
@@ -329,7 +321,6 @@ class Hospital
                 throw new \Exception($stmt->error);
             }
     
-            // 2. Update users table
             $query = "UPDATE users SET 
                       first_name = ?, 
                       last_name = ?, 
@@ -352,7 +343,6 @@ class Hospital
                 throw new \Exception($stmt->error);
             }
     
-            // 3. Update doctorspecializations table
             $query = "UPDATE doctorspecializations SET 
                       specialization_id = ? 
                       WHERE doctor_id = ?";
@@ -404,26 +394,24 @@ class Hospital
     public function getDoctorSchedule($doctorId)
     {
         try {
-            $query = "SELECT * FROM doctor_schedules WHERE doctor_id = ?";
-
+            $this->db->begin_transaction();
+            $query = "SELECT * FROM doctor_availability WHERE doctor_id = ? ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')";
             $stmt = $this->db->prepare($query);
             $stmt->bind_param("i", $doctorId);
             $stmt->execute();
-
             $result = $stmt->get_result();
             $schedule = [];
-
             while ($row = $result->fetch_assoc()) {
-                $schedule[$row['day']] = [
+                $schedule[$row['day_of_week']] = [
                     'start' => $row['start_time'],
                     'end' => $row['end_time'],
-                    'available' => $row['is_available']
+                    'available' => (bool)$row['is_active']
                 ];
             }
-
+            $this->db->commit();
             return $schedule;
         } catch (\Exception $e) {
-            error_log("Error in getDoctorSchedule: " . $e->getMessage());
+            $this->db->rollback();
             throw $e;
         }
     }
@@ -433,13 +421,11 @@ class Hospital
         try {
             $this->db->begin_transaction();
 
-            // Delete existing schedule
             $deleteQuery = "DELETE FROM doctor_schedules WHERE doctor_id = ?";
             $stmt = $this->db->prepare($deleteQuery);
             $stmt->bind_param("i", $doctorId);
             $stmt->execute();
 
-            // Insert new schedule
             $insertQuery = "INSERT INTO doctor_schedules 
                         (doctor_id, day, start_time, end_time, is_available) 
                         VALUES (?, ?, ?, ?, ?)";
@@ -470,7 +456,6 @@ class Hospital
         }
     }
 
-    // Patient Methoda
     public function getAllPatients()
     {
         try {
@@ -538,7 +523,6 @@ class Hospital
         }
     }
 
-    // Treatment Request Methoda
     public function getAllTreatmentRequests()
     {
         try {
@@ -613,7 +597,6 @@ class Hospital
         try {
             $this->db->begin_transaction();
     
-            // Fetch old status
             $statusQuery = "SELECT request_status FROM treatment_requests WHERE request_id = ?";
             $statusStmt = $this->db->prepare($statusQuery);
             $statusStmt->bind_param("i", $requestId);
@@ -622,7 +605,6 @@ class Hospital
             $row = $statusResult->fetch_assoc();
             $oldStatus = $row['request_status'];
     
-            // Update treatment_requests
             $query = "UPDATE treatment_requests SET 
                       estimated_cost = ?, 
                       response_message = ?, 

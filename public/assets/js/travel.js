@@ -35,12 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalentry.textContent = entryFee;
 
 
-                // Set minimum for check-in as today
+                
                 const today = new Date().toISOString().split('T')[0];
                 checkInInput.min = today;
                 checkInInput.value = today;
 
-                // Reset checkout
+               
                 checkOutInput.value = '';
                 checkOutInput.min = today;
 
@@ -49,23 +49,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         });
 
-        // Update checkout's min when check-in changes
+        
         checkInInput.addEventListener('change', () => {
             const checkInDate = checkInInput.value;
             checkOutInput.min = checkInDate;
 
-            // Clear checkout if it's before check-in
+            
             if (checkOutInput.value && checkOutInput.value <= checkInDate) {
                 checkOutInput.value = '';
             }
         });
 
-        // Close modal
+        
         closeModal.addEventListener('click', () => {
             modal.classList.remove('active');
         });
 
-        // Close modal when clicking outside
+       
         window.addEventListener('click', (event) => {
             if (event.target === modal) {
                 modal.classList.remove('active');
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const destinationIdInput = document.getElementById('destination_id');
     const travelIdInput = document.getElementById('travel_id');
 
-    // Only run if edit modal exists
+    
     if (editModal && closeEditModal && modalEditDestinationName && modalEditDestinationImage) {
         
         editButtons.forEach(button => {
@@ -109,6 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const today = new Date().toISOString().split('T')[0];
                 editCheckInInput.min = today;
+                editCheckInInput.value = today;
+               
+                editCheckOutInput.value = '';
+                editCheckOutInput.min = today;
 
                 editModal.classList.add('active');
             });
@@ -163,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const provinceId = this.value;
         console.log("Province changed: ", provinceId);
 
-        // Clear the district and town dropdowns
+
         districtSelect.innerHTML = '<option value="">Select District</option>';
         townSelect.innerHTML = '<option value="">Select Town</option>';
 
@@ -250,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add Memories Modal
     const addMemoriesModal = document.getElementById('addMemoriesModal');
     const addMemoriesButtons = document.querySelectorAll('.add-memories-button');
     const closeAddMemoriesModal = document.getElementById('closeAddMemoriesModal');
@@ -269,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 memoriesTraveId.value = travelId;
                 memoriesDestinationName.textContent = destinationName;
                 
-                // Clear any existing preview
                 if (photoPreviewContainer) {
                     photoPreviewContainer.innerHTML = '';
                 }
@@ -278,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Photo preview functionality
+
         if (photoInput && photoPreviewContainer) {
             photoInput.addEventListener('change', () => {
                 photoPreviewContainer.innerHTML = '';
@@ -330,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // View Memories Modal
+    
     const viewMemoriesModal = document.getElementById('viewMemoriesModal');
     const viewMemoriesButtons = document.querySelectorAll('.view-memories-button');
     const closeViewMemoriesModal = document.getElementById('closeViewMemoriesModal');
@@ -342,11 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
             button.addEventListener('click', () => {
                 const travelId = button.getAttribute('data-plan-travelid');
                 
-                // Show loading state
+               
                 viewMemoriesContent.innerHTML = '<div class="memory-loading">Loading memories...</div>';
                 viewMemoriesModal.classList.add('active');
                 
-                // Fetch memories data
+                
                 fetch(`/travelplan/getMemories?travel_id=${travelId}`)
                     .then(response => response.json())
                     .then(data => {
@@ -405,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Helper function to generate star rating display
+    
     function generateStars(rating) {
         let stars = '';
         for (let i = 1; i <= 5; i++) {
