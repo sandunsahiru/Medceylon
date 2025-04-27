@@ -226,15 +226,7 @@ try {
     $router->get('/agent/transport/view/{id}', 'AgentTransportationController', 'view', \App\Core\Middleware\TravelAgentMiddleware::class);
     $router->post('/agent/transport/respond/{id}', 'AgentTransportationController', 'respond', \App\Core\Middleware\TravelAgentMiddleware::class);
 
-    $router->get('/caregivers', 'CaregiverMessageController', 'list');
-    $router->get('/caregiver/profile/{id}', 'CaregiverMessageController', 'viewProfile');
-    $router->post('/caregiver/send-message/{id}', 'CaregiverMessageController', 'sendMessage');
-    $router->get('/caregiver/chat/{id}', 'CaregiverMessageController', 'viewChat');
-    $router->get('/caregiver/dashboard', 'CaregiverMessageController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/caregivers', 'CaregiverMessageController', 'list');
-    $router->post('/caregiver/request/{id}', 'CaregiverRequestController', 'sendRequest', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/caregiver', 'CaregiverController', 'list');
 
     $router->get('/debug/test-meet', 'DebugController', 'testMeet');
     $router->get('/debug/check-calendar', 'DebugController', 'checkCalendarAccess');

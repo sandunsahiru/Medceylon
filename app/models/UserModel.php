@@ -11,26 +11,23 @@ class UserModel {
     public function getAllCaregivers($filter = null, $sort = null) {
         $roleId = 6; // Caregiver role_id
     
-        $query = "SELECT u.*, 
-                    (SELECT AVG(rating) FROM caregiver_ratings WHERE caregiver_id = u.user_id) AS average_rating
-                  FROM users u
-                  WHERE u.role_id = ?";
+        $query = "SELECT * FROM users WHERE role_id = ?";
     
+        // Filtering
         if ($filter) {
             if ($filter == 'experience') {
-                $query .= " AND u.experience_years >= 5";
+                $query .= " AND experience_years >= 5";
             } elseif ($filter == 'young') {
-                $query .= " AND u.age <= 30";
+                $query .= " AND age <= 30";
             }
         }
     
+        // Sorting
         if ($sort) {
             if ($sort == 'experience') {
-                $query .= " ORDER BY u.experience_years DESC";
+                $query .= " ORDER BY experience_years DESC";
             } elseif ($sort == 'young') {
-                $query .= " ORDER BY u.age ASC";
-            } elseif ($sort == 'rating') {
-                $query .= " ORDER BY average_rating DESC";
+                $query .= " ORDER BY age ASC";
             }
         }
     
