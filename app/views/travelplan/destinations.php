@@ -15,8 +15,6 @@
     <?php endif; ?>
 
     <h2>Local Site Seeing</h2>
-    
-    <button onclick="location.href='<?php echo $basePath; ?>/travelplan/travel-preferences';">Do it for Me</button>
 
     <div class="travel-plan-section">
     <h3>Build Your Travel Plan</h3>

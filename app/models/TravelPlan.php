@@ -104,10 +104,6 @@ class TravelPlan {
     }
 }
 
-
-
-
-
     public function getDestinationTypes()
     {
         try{
@@ -682,48 +678,91 @@ class TravelPlan {
         ];
     }
 
-    public function saveMultiDestinationPlan($userId, $planData)
-    {
+    public function saveMultiDestinationPlan($userId, $planData) {
         try {
             $this->db->begin_transaction();
+    
+            // 1. Create a new trip record
+            $tripName = "Multi-Destination Trip " . date('Y-m-d');
+            $tripStartDate = $planData['items'][0]['start_date'] ?? date('Y-m-d');
+            $tripEndDate = end($planData['items'])['end_date'] ?? date('Y-m-d');
+            
+            // Calculate total duration
+            $totalDuration = array_reduce($planData['items'], function($carry, $item) {
+                return $carry + ($item['travel_time_hours'] ?? 0) + ($item['time_spent_hours'] ?? 0);
+            }, 0);
+    
+            $tripId = $this->createTrip(
+                $userId,
+                $tripName,
+                $tripStartDate,
+                $tripEndDate,
+                $totalDuration
+            );
 
-            // Clear any existing temporary plans for this user
-            $sql = "DELETE FROM travel_plans WHERE user_id = ? AND trip_id IS NULL";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param("i", $userId);
-            $stmt->execute();
-
-            // Insert each destination in the plan
+            // Clear existing plans
+                $deleteStmt = $this->db->prepare("DELETE FROM travel_plans WHERE user_id = ?");
+                $deleteStmt->bind_param("i", $userId);
+                $deleteStmt->execute();
+                $deleteStmt->close();
+            
+    
+            // 3. Insert each destination with the trip_id
+            $insertSql = "INSERT INTO travel_plans (
+                user_id, 
+                destination_id, 
+                check_in,      
+                check_out,     
+                travel_time_hours, 
+                time_spent_hours, 
+                sequence,
+                trip_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            $insertStmt = $this->db->prepare($insertSql);
+    
             foreach ($planData['items'] as $item) {
-                $sql = "INSERT INTO travel_plans 
-                        (user_id, destination_id, check_in, check_out, 
-                        travel_time_hours, time_spent_hours, sequence) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)";
-                
-                $stmt = $this->db->prepare($sql);
-                $stmt->bind_param(
-                    "iissddi",
+                $insertStmt->bind_param(
+                    "iissddii",
                     $userId,
                     $item['destination_id'],
                     $item['start_date'],
                     $item['end_date'],
                     $item['travel_time_hours'],
                     $item['time_spent_hours'],
-                    $item['sequence']
+                    $item['sequence'],
+                    $tripId
                 );
-                $stmt->execute();
-                $stmt->close();
+                
+                if (!$insertStmt->execute()) {
+                    throw new \Exception("Insert failed: " . $insertStmt->error);
+                }
             }
-
+    
+            $insertStmt->close();
             $this->db->commit();
-            return true;
-
+            return $tripId; // Return the trip ID for reference
+    
         } catch (\Exception $e) {
             $this->db->rollback();
-            error_log("Error in saveMultiDestinationPlan: " . $e->getMessage());
-            throw new \Exception("Failed to save travel plan");
+            error_log("Save error: " . $e->getMessage());
+            throw $e;
         }
     }
+    
+    // Add this helper method
+    private function isValidDate($dateStr) {
+        if (empty($dateStr)) return false;
+        try {
+            new \DateTime($dateStr);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+    
+
+
 
     public function getMultiDestinationPlan($userId)
     {

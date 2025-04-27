@@ -186,8 +186,8 @@ try {
     $router->get('/travelplan/travel-preferences', 'TravelPlanController','travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
 
     $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController','calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/save-complete-plan', 'TravelPlanController','saveCompletePlan', \App\Core\Middleware\AuthMiddleware::class);
-    
+    $router->post('/travelplan/save-plan', 'TravelPlanController','savePlan', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/view-plan', 'TravelPlanController', 'viewPlan',    \App\Core\Middleware\AuthMiddleware::class);
     
     $router->get('/forgot-password', 'ForgotPasswordController', 'showForm');
     $router->post('/forgot-password', 'ForgotPasswordController', 'handleForm');

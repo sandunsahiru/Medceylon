@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    const BASE_URL = window.location.origin + '/Medceylon';
     // Check if we're on the correct page
     const planContainer = document.getElementById('travelPlanContainer');
     const calculateBtn = document.getElementById('calculatePlanBtn');
@@ -35,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateBtn.disabled = true;
             calculateBtn.textContent = 'Calculating...';
     
-            const response = await fetch('http://localhost/Medceylon/travelplan/calculate-travel-dates', {
+            const response = await fetch('travelplan/calculate-travel-dates', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -65,69 +67,119 @@ document.addEventListener('DOMContentLoaded', () => {
             calculateBtn.disabled = false;
             calculateBtn.textContent = 'Calculate Travel Plan';
         }
-    }
-    
-    );
+    });
 
     function showBookingRequiredModal(message) {
-        // Implement UI to guide user to book a room
-        const modal = `
-            <div class="booking-required-modal">
+        const modal = document.createElement('div');
+        modal.className = 'booking-required-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
                 <h3>Room Booking Required</h3>
                 <p>${message}</p>
-                <a href="/room-booking" class="btn">Book a Room Now</a>
+                <div class="modal-actions">
+                    <a href="/room-booking" class="btn primary">Book a Room Now</a>
+                    <button class="btn secondary close-modal">Cancel</button>
+                </div>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', modal);
+        
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+        
+        document.body.appendChild(modal);
     }
     
     // Save plan
-    savePlanBtn.addEventListener('click', async function() {
+    savePlanBtn?.addEventListener('click', async function() {
         try {
-            // Get all the plan items from the displayed plan
-            const planItems = Array.from(document.querySelectorAll('.plan-item')).map(item => {
+            console.log("Save button clicked - starting save process");
+            console.log("Raw plan items:", 
+                Array.from(document.querySelectorAll('.plan-item')).map(item => ({
+                    id: item.querySelector('.edit-dates-btn').getAttribute('data-id'),
+                    start: item.querySelector('.edit-dates-btn').getAttribute('data-min-start'),
+                    end: item.querySelector('.edit-dates-btn').getAttribute('data-min-end'),
+                    travel: item.querySelector('.edit-dates-btn').getAttribute('data-travel-hours'),
+                    hours: item.querySelector('.edit-dates-btn').getAttribute('data-min-hours')
+                }))
+            );
+    
+            // Process items
+            const planItems = Array.from(document.querySelectorAll('.plan-item')).map((item, index) => {
+                const btn = item.querySelector('.edit-dates-btn');
+                
+                // Simple date validation
+                const validateDate = (dateStr) => {
+                    if (!dateStr) return null;
+                    // Basic check for YYYY-MM-DD format
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                        console.warn("Invalid date format:", dateStr);
+                        return null;
+                    }
+                    return dateStr;
+                };
+    
                 return {
-                    destination_id: item.querySelector('.edit-dates-btn').getAttribute('data-id'),
-                    start_date: item.querySelector('.edit-dates-btn').getAttribute('data-min-start'),
-                    end_date: item.querySelector('.edit-dates-btn').getAttribute('data-min-end'),
-                    travel_time_hours: parseFloat(item.querySelector('.edit-dates-btn').getAttribute('data-travel-hours')),
-                    time_spent_hours: parseFloat(item.querySelector('.edit-dates-btn').getAttribute('data-min-hours')),
-                    sequence: Array.from(document.querySelectorAll('.plan-item')).indexOf(item) + 1
+                    destination_id: btn.getAttribute('data-id'),
+                    start_date: btn.getAttribute('data-min-start'), // Changed from check_in
+                    end_date: btn.getAttribute('data-min-end'),    // Changed from check_out
+                    travel_time_hours: parseFloat(btn.getAttribute('data-travel-hours')) || 0,
+                    time_spent_hours: parseFloat(btn.getAttribute('data-min-hours')) || 2,
+                    sequence: index + 1
                 };
             });
     
-            const response = await fetch('http://localhost/Medceylon/travelplan/save-complete-plan', {
+            // Debug: Show processed data
+            console.log("Processed data to send:", planItems);
+    
+            const csrfToken = document.getElementById('csrf_token')?.value;
+            
+            const response = await fetch('/Medceylon/travelplan/save-plan', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken || ''
                 },
-                body: `plan_data=${encodeURIComponent(JSON.stringify({
-                    items: planItems
-                }))}`
+                body: JSON.stringify({
+                    items: planItems,
+                    csrf_token: csrfToken
+                })
             });
     
+            // Debug: Show full response
+            console.log("Response status:", response.status);
+            const responseBody = await response.text();
+            console.log("Response body:", responseBody);
+            
             if (!response.ok) {
-                throw new Error('Failed to save plan');
+                throw new Error(`Server error: ${response.status} - ${responseBody}`);
             }
     
-            const result = await response.json();
+            const result = JSON.parse(responseBody);
             if (result.success) {
-                alert('Travel plan saved successfully!');
+                alert('Saved successfully!');
                 window.location.reload();
             } else {
-                throw new Error(result.error || 'Failed to save plan');
+                throw new Error(result.message || 'Unknown error');
             }
         } catch (error) {
-            console.error('Error saving plan:', error);
+            console.error('Full error:', error);
             alert(`Error: ${error.message}`);
         }
     });
-    
+
     function updateSelectedDestinations() {
         const selectedList = document.getElementById('selectedDestinations');
         if (selectedList) {
             selectedList.innerHTML = selectedDestinations.map(dest => 
-                `<li>${dest.name} <button class="remove-dest" data-id="${dest.id}">×</button></li>`
+                `<li class="selected-destination">
+                    <span>${dest.name}</span>
+                    <button class="remove-dest" data-id="${dest.id}" aria-label="Remove destination">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </li>`
             ).join('');
             
             document.querySelectorAll('.remove-dest').forEach(btn => {
@@ -174,34 +226,42 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        const formatDate = (date) => {
+            if (!(date instanceof Date)) date = new Date(date);
+            return date.toISOString().split('T')[0];
+        };
+
         const planHTML = `
             <div class="plan-summary">
                 <h3>Travel Plan Summary</h3>
-                <p>Starting from: ${accommodation.name} (check-out: ${accommodation.check_out})</p>
-                <p>Total trip time: ${plan.total_trip_time_hours} hours</p>
-                <p>Time in Travel Days: ${plan.travel_days} days</p>
+                <p><strong>Starting from:</strong> ${accommodation.name} (check-out: ${formatDate(accommodation.check_out)})</p>
+                <p><strong>Total trip time:</strong> ${plan.total_trip_time_hours} hours</p>
+                <p><strong>Estimated travel days:</strong> ${Math.ceil(plan.total_trip_time_hours / 8)} days</p>
             </div>
             <div class="plan-details">
                 ${plan.items.map((item, index) => {
                     const dates = calculatedDates.find(d => d.id === item.destination_id);
-                    const formatDate = (date) => date.toISOString().split('T')[0];
                     
                     return `
-                        <div class="plan-item">
-                            <h4>${index + 1}. ${item.destination_name}</h4>
-                            <p>Travel time: ${item.travel_time_hours} hours</p>
-                            <p>Visit time: ${item.time_spent_hours} hours (minimum)</p>
-                            <p>Calculated dates: ${formatDate(dates.minStartDate)} to ${formatDate(dates.minEndDate)}</p>
-                            <button class="edit-dates-btn" 
-                                    data-id="${item.destination_id}"
-                                    data-name="${item.destination_name}"
-                                    data-min-start="${formatDate(dates.minStartDate)}"
-                                    data-min-end="${formatDate(dates.minEndDate)}"
-                                    data-min-hours="${item.time_spent_hours}"
-                                    data-travel-hours="${item.travel_time_hours}"
-                                    data-travel-id="${plan.travel_id || 'NEW'}">
-                                Edit Dates
-                            </button>
+                        <div class="plan-item" data-id="${item.destination_id}">
+                            <div class="plan-item-header">
+                                <h4>${index + 1}. ${item.destination_name}</h4>
+                                <button class="edit-dates-btn" 
+                                        data-id="${item.destination_id}"
+                                        data-name="${item.destination_name}"
+                                        data-min-start="${formatDate(dates.minStartDate)}"
+                                        data-min-end="${formatDate(dates.minEndDate)}"
+                                        data-min-hours="${item.time_spent_hours}"
+                                        data-travel-hours="${item.travel_time_hours}"
+                                        data-travel-id="${plan.travel_id || 'NEW'}">
+                                    Edit Dates
+                                </button>
+                            </div>
+                            <div class="plan-item-details">
+                                <p><strong>Travel time:</strong> ${item.travel_time_hours} hours</p>
+                                <p><strong>Visit time:</strong> ${item.time_spent_hours} hours (minimum)</p>
+                                <p><strong>Scheduled dates:</strong> ${formatDate(dates.minStartDate)} to ${formatDate(dates.minEndDate)}</p>
+                            </div>
                         </div>
                     `;
                 }).join('')}
@@ -209,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         
         planContainer.innerHTML = planHTML;
-        savePlanBtn.style.display = 'block';
+        if (savePlanBtn) savePlanBtn.style.display = 'block';
         
         // Add event listeners to edit buttons
         document.querySelectorAll('.edit-dates-btn').forEach(btn => {
@@ -222,92 +282,85 @@ document.addEventListener('DOMContentLoaded', () => {
                 const travelHours = this.getAttribute('data-travel-hours');
                 const travelId = this.getAttribute('data-travel-id');
 
-                console.log('Edit button clicked with:', {
-                    travelId, destId, destName, minStart, minEnd
-                });
-                
                 openEditDatesModal(destId, destName, minStart, minEnd, minHours, travelHours, travelId);
             });
         });
     }
 
-    function openEditDatesModal(destId, destName, minStart, minEnd, minHours, travelId) {
+    function openEditDatesModal(destId, destName, minStart, minEnd, minHours, travelHours, travelId) {
+        // 1. First check if modal exists
         const modal = document.getElementById('editPlanModal');
-        if (!modal) return;
-    
-        // Debug log
-        console.log('Opening modal with:', { 
-            travelId, 
-            destId, 
-            minStart, 
-            minEnd 
-        });
-    
-        // Set form values
-        document.getElementById('modalTravelID').value = travelId;
-        document.getElementById('modalDestinationID').value = destId;
-        document.getElementById('modalDestinationName').textContent = destName;
-        document.getElementById('check_in').value = minStart;
-        document.getElementById('check_out').value = minEnd;
+        if (!modal) {
+          console.error('Error: Modal element (#editPlanModal) not found in DOM');
+          return;
+        }
+      
+        // 2. Safely get all elements with null checks
+        const elements = {
+          travelId: document.getElementById('modalTravelID'),
+          destId: document.getElementById('modalDestinationID'),
+          destName: document.getElementById('modalDestinationName'),
+          checkIn: document.getElementById('check_in'),
+          checkOut: document.getElementById('check_out'),
+          travelTime: document.getElementById('travel_time'),
+          minHours: document.getElementById('min_hours')
+        };
+      
+        // 3. Verify all required elements exist
+        for (const [key, element] of Object.entries(elements)) {
+          if (!element && key !== 'travelTime' && key !== 'minHours') { // Some might be optional
+            console.error(`Error: Element #${key} not found in DOM`);
+            return;
+          }
+        }
+      
+        // 4. Now safely set values
+        elements.travelId.value = travelId || '';
+        elements.destId.value = destId;
+        elements.destName.textContent = destName;
+        elements.checkIn.value = minStart;
+        elements.checkOut.value = minEnd;
         
+        if (elements.travelTime) elements.travelTime.value = travelHours;
+        if (elements.minHours) elements.minHours.value = minHours;
+      
+        // 5. Show modal
         modal.classList.add('active');
-    }
-    // Single form submission handler
-    document.getElementById('editPlanForm')?.addEventListener('submit', async function(e) {
+      }
+
+      document.getElementById('editPlanForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const form = e.target;
         const submitBtn = form.querySelector('button[type="submit"]');
-        const travel_id = document.getElementById('travel_id').value;
-        console.log("Submitting travel_id:", travel_id);
-
         
         try {
-            // Show loading state
             submitBtn.disabled = true;
             submitBtn.textContent = 'Saving...';
             
-            // Validate form before submission
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
             }
     
-            // Create FormData and append all required fields
             const formData = new FormData(form);
-            
-            // Debug: Log what's being sent
-            console.log('Submitting:', Object.fromEntries(formData.entries()));
-            
-            const response = await fetch(form.action, {
+
+            const jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
+            const response = await fetch('/Medceylon/travelplan/save-plan', {
                 method: 'POST',
-                body: formData,
                 headers: {
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    items: [jsonData], // Wrap in items array to match savePlan format
+                    csrf_token: document.getElementById('csrf_token')?.value
+                })
             });
     
-            // Check if response is JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Non-JSON response:', text);
-                throw new Error('Server returned an unexpected response');
-            }
-    
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || `Server error: ${response.status}`);
-            }
-            
-            // Success case
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            } else {
-                alert('Changes saved successfully!');
-                document.getElementById('editPlanModal').classList.remove('active');
-                // Optional: Refresh the plan display
-            }
+            // ... rest of your existing error handling ...
         } catch (error) {
             console.error('Save failed:', error);
             alert(`Save failed: ${error.message}`);
@@ -316,7 +369,6 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'Save Changes';
         }
     });
-
     // Modal close handlers
     document.getElementById('closeEditModal')?.addEventListener('click', () => {
         document.getElementById('editPlanModal')?.classList.remove('active');
@@ -328,36 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    savePlanBtn.addEventListener('click', async function() {
-        try {
-            // Generate a temporary ID for new plans
-            const tempTravelId = 'temp-' + Date.now();
-            
-            // Add to each destination
-            selectedDestinations.forEach(dest => {
-                dest.travel_id = tempTravelId;
-            });
-    
-            const response = await fetch('/travelplan/save-plan', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    travel_id: tempTravelId,
-                    destinations: selectedDestinations
-                })
-            });
-    
-            // Handle response...
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to save plan');
-            }
-        } catch (error) {
-            console.error('Save error:', error);
+    // Escape key to close modal
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            document.getElementById('editPlanModal')?.classList.remove('active');
         }
     });
-    
-
 });

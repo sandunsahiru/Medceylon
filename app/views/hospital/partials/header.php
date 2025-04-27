@@ -35,6 +35,10 @@
                     <i class="ri-hospital-line"></i>
                     <span>Departments</span>
                 </a>
+                <a href="<?php echo $basePath; ?>/hospital/theatres-beds" class="nav-item <?php echo $currentPage === 'theatres-beds' ? 'active' : ''; ?>">
+                    <i class="ri-hospital-line"></i>
+                    <span>Theatres and Beds</span>
+                </a>
                 <a href="<?php echo $basePath; ?>/hospital/doctors" class="nav-item <?php echo $currentPage === 'doctors' ? 'active' : ''; ?>">
                     <i class="ri-nurse-line"></i>
                     <span>Doctors</span>
