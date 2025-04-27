@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\HealthRecord;
 use App\Models\Patient;
+use App\Models\Hospital;
 
 class PatientController extends BaseController
 {
@@ -13,6 +14,7 @@ class PatientController extends BaseController
     private $doctorModel;
     private $healthRecordModel;
     private $patientModel;
+    private $hospitalModel;
 
     public function __construct()
     {
@@ -21,6 +23,7 @@ class PatientController extends BaseController
         $this->doctorModel = new Doctor();
         $this->healthRecordModel = new HealthRecord();
         $this->patientModel = new Patient();
+        $this->hospitalModel = new Hospital();
     }
 
     public function dashboard()
@@ -355,5 +358,35 @@ class PatientController extends BaseController
             error_log("Error in paymentPlan: " . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function hospitals()
+    {
+        try {
+            error_log("Starting hospitals view");
+            $hospitals = $this->hospitalModel->getAllHospitals();
+
+            if  (!$hospitals || count($hospitals) === 0) {
+                error_log("No hospitals found");
+                $this->session->setFlash('error', 'No hospitals available');
+            }
+
+            $data = [
+                'pageTitle' => 'Hospitals',
+                'currentPage' => 'partner-hospitals',
+                'hospitals' => $hospitals,
+                'basePath' => $this->basePath,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success')
+            ];
+            echo $this->view('hospital/partner-hospitals', $data);
+            exit();
+        } catch (\Exception $e) {
+            error_log("Error in hospitals: " . $e->getMessage());
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('error/404'));
+            exit();
+        }
+        
     }
 }

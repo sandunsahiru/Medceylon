@@ -49,6 +49,7 @@ try {
     $router->get('/patient/download-attachment', 'ChatController', 'downloadAttachment', \App\Core\Middleware\AuthMiddleware::class);
 
 
+
     // Doctor Chat Routes
     $router->get('/doctor/chat', 'ChatController', 'index', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->post('/doctor/send-message', 'ChatController', 'sendMessage', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -121,7 +122,7 @@ try {
     $router->post('/vpdoctor/update-specializations', 'VPDoctorController', 'updateSpecializations', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/vpdoctor/profile', 'VPDoctorController', 'profile', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
 
-    $router->get('/hospital/partner-hospitals', 'HospitalController', 'hospitals');
+    $router->get('/hospital/partner-hospitals', 'PatientController', 'hospitals', \App\Core\Middleware\AuthMiddleware::class);
 
     // Hospital Dashboard Routes
     $router->get('/hospital/dashboard', 'HospitalController', 'dashboard', \App\Core\Middleware\HospitalAuthMiddleware::class);
