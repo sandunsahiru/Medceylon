@@ -1,3 +1,116 @@
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.dashboard-table th, .dashboard-table td {
+    padding: 14px 16px;
+    text-align: center;
+    border-bottom: 1px solid #d6eee2;
+}
+
+.dashboard-table th {
+    background-color: #e4f9f8;
+    color: #299D97;
+    font-weight: 600;
+}
+
+.dashboard-table tr:hover {
+    background-color: #f1fffd;
+}
+
+.btn.danger-btn {
+    background-color: #dc3545;
+}
+
+.btn.danger-btn:hover {
+    background-color: #bb2d3b;
+}
+
+.page-title {
+    text-align: center;
+    color: #299D97;
+    margin-bottom: 30px;
+}
+
+.caregiver-cards-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.caregiver-card {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(41, 157, 151, 0.1);
+    padding: 20px;
+    width: 220px;
+    text-align: center;
+}
+
+.caregiver-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 12px;
+}
+
+/* NEW Custom Fixes */
+.top-header-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+
+.top-header-row h2 {
+    font-size: 24px;
+    color: #299D97;
+    margin: 0;
+}
+
+.new-request-btn {
+    background-color: #299D97;
+    color: white;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.new-request-btn:hover {
+    background-color: #247c78;
+}
+
+.chart-box {
+    max-width: 200px;
+    margin-left: auto;
+    align-self: flex-start;
+    padding-top: 0;
+    padding-right: 0;
+    transform: translateY(-90px);
+}
+
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* ⬅️ this pulls it a bit to the left */
+    justify-content: flex-start;
+    position: relative;
+    padding-left: 140px; /* adjust as needed */
+}
+
+
 /* Base Page */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -229,3 +342,84 @@ html, body {
 .container {
     flex: 1;
 }
+
+.dashboard-widgets {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.summary-cards {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: #e4f9f8;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #299D97;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(41, 157, 151, 0.1);
+}
+
+.chart-card {
+    flex: 1;
+    max-width: 240px;
+}
+
+.vehicle-widget-box {
+    background-color: #ffffff;
+    padding: 30px 30px 0px 30px;  
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(3, 21, 0, 7);
+    margin-bottom: 10px;
+}
+
+.vehicle-widget-inner.stacked-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.summary-cards-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 170px;
+}
+
+.card {
+    background-color: #e4f9f8;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: #299D97;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(41, 157, 151, 0.1);
+    text-align: center;
+}
+
+
+.top-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.top-header-row h2 {
+    color: #299D97;
+    font-size: 22px;
+    margin: 0;
+}
+
+
+

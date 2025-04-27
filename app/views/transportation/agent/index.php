@@ -198,38 +198,47 @@
             <?php endif; ?>
         </div>
 
-        <!-- Accepted Tab -->
-        <div id="accepted" class="tab-content">
-            <h2>Accepted Transportation Requests</h2>
-            <?php if (empty($acceptedRequests)): ?>
-                <p class="empty">No accepted requests.</p>
-            <?php else: ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th><th>Patient Name</th><th>Email</th><th>Phone</th>
-                            <th>Pickup</th><th>Dropoff</th><th>Date</th><th>Time</th><th>Vehicle</th><th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($acceptedRequests as $index => $req): ?>
-                            <tr>
-                                <td><?= $index + 1 ?></td>
-                                <td><?= htmlspecialchars($req['patient_name'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['email'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['phone_number'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['pickup_location'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['dropoff_location'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['date'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['time'] ?? '') ?></td>
-                                <td><?= htmlspecialchars($req['transport_type'] ?? '') ?></td>
-                                <td class="status-accepted">Accepted</td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
+       <!-- Accepted Tab -->
+<div id="accepted" class="tab-content">
+    <h2>Accepted Transportation Requests</h2>
+    <?php if (empty($acceptedRequests)): ?>
+        <p class="empty">No accepted requests.</p>
+    <?php else: ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th><th>Patient Name</th><th>Email</th><th>Phone</th>
+                    <th>Pickup</th><th>Dropoff</th><th>Date</th><th>Time</th><th>Vehicle</th><th>Status</th><th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($acceptedRequests as $index => $req): ?>
+                    <tr>
+                        <td><?= $index + 1 ?></td>
+                        <td><?= htmlspecialchars($req['patient_name'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['email'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['phone_number'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['pickup_location'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['dropoff_location'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['date'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['time'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($req['transport_type'] ?? '') ?></td>
+                        <td class="status-accepted">Accepted</td>
+                        <td>
+                            <?php if ($req['status'] === 'Booked'): ?>
+                                <form method="POST" action="/Medceylon/agent/transport/complete/<?= $req['transport_request_id'] ?>" class="inline-form">
+                                    <button type="submit" class="btn">Mark as Completed</button>
+                                </form>
+                            <?php else: ?>
+                                <span class="locked">Completed</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</div>
 
         <!-- Rejected Tab -->
         <div id="rejected" class="tab-content">

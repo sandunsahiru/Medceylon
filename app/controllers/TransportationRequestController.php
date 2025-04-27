@@ -4,6 +4,8 @@ namespace App\Controllers;
 use App\Models\TransportationAssistance;
 use App\Helpers\SessionHelper;
 use App\Helpers\DistanceHelper;
+use App\Models\User;
+use App\Models\Vehicle;
 
 class TransportationRequestController {
     private $model;
@@ -16,7 +18,14 @@ class TransportationRequestController {
     }
 
     public function index() {
-        $requests = $this->model->getAllByPatient($this->session->getUserId());
+        $userId = $this->session->getUserId();
+
+        $requests = $this->model->getAllByPatient($userId);
+
+        // ➕ Add vehicle availability counts for the top pie chart
+        $vehicleModel = new Vehicle($GLOBALS['db']);
+        $counts = $vehicleModel->getAvailableVehicleCounts();
+
         require_once ROOT_PATH . '/app/views/transportation/patient/index.php';
     }
 
@@ -90,5 +99,16 @@ class TransportationRequestController {
     public function delete($id) {
         $this->model->delete($id, $this->session->getUserId());
         header("Location: /Medceylon/patient/transport");
+    }
+
+    public function downloadReport() {
+        $userId = $this->session->getUserId();
+    
+        $userModel = new User($GLOBALS['db']);
+        $user = $userModel->getUserById($userId); // 👈 get user details
+    
+        $rides = $this->model->getAllByPatientWithVehicle($userId);
+    
+        require ROOT_PATH . '/app/views/transportation/patient/ride-report.php';
     }
 }

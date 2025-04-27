@@ -87,6 +87,8 @@ class VPDoctor
     }
 }
 
+
+
     /**
  * Get all appointments for the specialist dashboard
  * 
@@ -867,43 +869,46 @@ public function getReferralAppointments($doctorId)
      * @return int|false Plan ID if successful, false otherwise
      */
     public function createTreatmentPlan($data)
-    {
-        try {
-            $this->db->begin_transaction();
+{
+    try {
+        $this->db->begin_transaction();
 
-            $query = "INSERT INTO treatment_plans 
-                     (session_id, doctor_id, travel_restrictions, treatment_description, 
-                      estimated_budget, estimated_duration, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO treatment_plans 
+                 (session_id, doctor_id, travel_restrictions, vehicle_type, 
+                  arrival_deadline, treatment_description, 
+                  estimated_budget, estimated_duration, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            $stmt = $this->db->prepare($query);
-            $stmt->bind_param(
-                "iisssss",
-                $data['session_id'],
-                $data['doctor_id'],
-                $data['travel_restrictions'],
-                $data['treatment_description'],
-                $data['estimated_budget'],
-                $data['estimated_duration'],
-                $data['created_at']
-            );
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param(
+            "iisssssis",
+            $data['session_id'],
+            $data['doctor_id'],
+            $data['travel_restrictions'],
+            $data['vehicle_type'],
+            $data['arrival_deadline'],
+            $data['treatment_description'],
+            $data['estimated_budget'],
+            $data['estimated_duration'],
+            $data['created_at']
+        );
 
-            if (!$stmt->execute()) {
-                $this->db->rollback();
-                error_log("Failed to create treatment plan: " . $stmt->error);
-                return false;
-            }
-
-            $planId = $this->db->insert_id;
-            $this->db->commit();
-
-            return $planId;
-        } catch (\Exception $e) {
+        if (!$stmt->execute()) {
             $this->db->rollback();
-            error_log("Error in createTreatmentPlan: " . $e->getMessage());
+            error_log("Failed to create treatment plan: " . $stmt->error);
             return false;
         }
+
+        $planId = $this->db->insert_id;
+        $this->db->commit();
+
+        return $planId;
+    } catch (\Exception $e) {
+        $this->db->rollback();
+        error_log("Error in createTreatmentPlan: " . $e->getMessage());
+        return false;
     }
+}
 
     /**
      * Update treatment plan

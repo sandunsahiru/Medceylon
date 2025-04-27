@@ -30,6 +30,17 @@ class AuthController extends BaseController
                 'experience_years' => $_POST['experience_years'] ?? null
             ];
 
+            // 🚫 CAREGIVERS CANNOT REGISTER
+            if ($userData['user_type'] === 'caregiver') {
+                $error = "Caregivers cannot register directly.";
+                echo $this->view('auth/register', [
+                    'error' => $error,
+                    'oldInput' => $userData,
+                    'basePath' => $this->basePath
+                ]);
+                return;
+            }
+
             // 🔒 BACKEND VALIDATION
             if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
                 $error = "Name can only contain letters and spaces.";
@@ -56,7 +67,7 @@ class AuthController extends BaseController
                 return;
             }
 
-            // Register logic
+            // ✅ Register logic
             $result = $this->userModel->register($userData);
 
             if ($result['success']) {
@@ -80,7 +91,6 @@ class AuthController extends BaseController
         ]);
     }
 
-
     public function login()
     {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -103,6 +113,22 @@ class AuthController extends BaseController
                 }
             }
 
+            // Hardcoded Caregiver credentials
+            if ($userType === 'caregiver') {
+                if ($email === 'caregiver@example.com' && $password === 'caregiver123') {
+                    $this->session->setUserSession(888, 'Caregiver User', 6);
+                    header("Location: {$this->basePath}/caregiver/dashboard");
+                    exit();
+                } else {
+                    echo $this->view('auth/login', [
+                        'error' => 'Invalid Caregiver credentials.',
+                        'basePath' => $this->basePath
+                    ]);
+                    return;
+                }
+            }
+
+            // Normal user login
             $result = $this->userModel->authenticate($email, $password, $userType);
 
             if ($result['success']) {
@@ -197,10 +223,11 @@ class AuthController extends BaseController
             3 => $this->basePath . '/vpdoctor/dashboard',
             4 => $this->basePath . '/admin/dashboard',
             5 => $this->basePath . '/agent/transport-requests',
-            6 => $this->basePath . '/hospital/dashboard'
+            6 => $this->basePath . '/caregiver/dashboard'
         ];
 
         header("Location: " . ($redirects[$roleId] ?? $this->basePath . '/home'));
         exit();
     }
 }
+?>

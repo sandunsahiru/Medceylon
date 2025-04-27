@@ -1,3 +1,5 @@
+<?php error_reporting(E_ALL); ini_set('display_errors', 1); ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +30,6 @@
                     <option value="patient">Patient</option>
                     <option value="general_doctor">General Doctor</option>
                     <option value="special_doctor">Special Doctor</option>
-                    <option value="caretaker">Caretaker</option>
                     <option value="admin">Admin</option>
                     <option value="hospital">Hospital Admin</option>
                     <option value="travel_agent">Travel Agent</option> 
@@ -51,28 +52,36 @@
 
             <div class="links">
     <div><a href="<?php echo $basePath; ?>/register">Don't have an account? Register</a></div>
-    <div><a href="<?php echo $basePath; ?>/forgot-password">Forgot Password?</a></div>
+    <!--<div><a href="<?php echo $basePath; ?>/forgot-password">Forgot Password?</a></div>  -->
 </div>
         </form>
     </div>
 
     <script>
-        document.getElementById('user_type').addEventListener('change', function () {
-            const email = document.getElementById('email');
-            const password = document.getElementById('password');
+    document.getElementById('user_type').addEventListener('change', function () {
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
 
-            if (this.value === 'travel_agent') {
-                email.value = 'travelagent@example.com';
-                password.value = 'agent123';
-                email.readOnly = true;
-                password.readOnly = true;
-            } else {
-                email.value = '';
-                password.value = '';
-                email.readOnly = false;
-                password.readOnly = false;
-            }
-        });
-    </script>
+        if (this.value === 'travel_agent') {
+            email.value = 'travelagent@example.com';
+            password.value = 'agent123';
+            email.readOnly = true;
+            password.readOnly = true;
+        } 
+        else if (this.value === 'caregiver') {
+            email.value = 'caregiver@example.com';
+            password.value = 'caregiver123';
+            email.readOnly = true;
+            password.readOnly = true;
+        }
+        else {
+            email.value = '';
+            password.value = '';
+            email.readOnly = false;
+            password.readOnly = false;
+        }
+    });
+</script>
+
 </body>
 </html>
