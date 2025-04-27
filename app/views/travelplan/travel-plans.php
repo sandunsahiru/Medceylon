@@ -90,9 +90,6 @@
 <!-- Include Modals -->
 <?php include('edit-plan.php'); ?>
 <?php include('delete-destination.php'); ?>
-<?php include('mark-completed.php'); ?>
-<?php include('add-memories.php'); ?>
-<?php include('view-memories.php'); ?>
 
 <script src="<?php echo $basePath; ?>/public/assets/js/travel.js"></script>
 

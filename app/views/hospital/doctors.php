@@ -85,12 +85,6 @@
                             title="Manage Schedule">
                             <i class="ri-calendar-2-line"></i>
                         </button>
-                        <button class="action-btn toggle-status-btn"
-                            data-id="<?php echo $doctor['doctor_id']; ?>"
-                            data-active="<?php echo $doctor['is_active']; ?>"
-                            title="Toggle Status">
-                            <i class="ri-toggle-line"></i>
-                        </button>
                     </div>
                 </div>
             <?php endwhile; ?>
@@ -99,7 +93,7 @@
 </main>
 </div>
 
-<!-- Edit Doctor Modal -->
+
 <div id="doctorModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -169,54 +163,11 @@
     </div>
 </div>
 
-<!-- Schedule Modal -->
-<div id="scheduleModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Manage Schedule</h2>
-            <button class="close-btn">&times;</button>
-        </div>
-        <form id="scheduleForm">
-            <input type="hidden" name="csrf_token" value="<?php echo $this->session->getCSRFToken(); ?>">
-            <input type="hidden" name="doctor_id" id="scheduleDoctor">
 
-            <div class="schedule-grid">
-                <?php
-                $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                foreach ($days as $day):
-                ?>
-                    <div class="schedule-day">
-                        <label><?php echo $day; ?></label>
-                        <div class="time-slots">
-                            <div class="time-input">
-                                <input type="time" name="schedule[<?php echo strtolower($day); ?>][start]">
-                                <span>to</span>
-                                <input type="time" name="schedule[<?php echo strtolower($day); ?>][end]">
-                            </div>
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="schedule[<?php echo strtolower($day); ?>][available]" value="1">
-                                Available
-                            </label>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
 
-            <div class="form-actions">
-                <button type="submit" class="submit-btn">
-                    <i class="ri-save-line"></i>
-                    Save Schedule
-                </button>
-                <button type="button" class="cancel-btn" onclick="closeScheduleModal()">
-                    <i class="ri-close-line"></i>
-                    Cancel
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
-//View Doctor Details Modal
+
+
 <div id="detailsModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -224,28 +175,28 @@
                 <h2>Doctor Details</h2>
             </div>
             <div id="doctorDetails" class="patient-details">
-                <!-- Doctor details will be loaded here -->
+                
             </div>
         </div>
     </div>
 
 <script>
-// In the doctors.php file, within the <script> section:
+
 
     const basePath = 'http://localhost/MedCeylon';
     document.addEventListener('DOMContentLoaded', function () {
-        // Modal Elements
+        
         const doctorModal = document.getElementById('doctorModal');
         const scheduleModal = document.getElementById('scheduleModal');
-        const detailsModal = document.getElementById('detailsModal'); // Add this line
+        const detailsModal = document.getElementById('detailsModal'); 
 
-        // Form Elements
+       
         const doctorForm = document.getElementById('doctorForm');
         const scheduleForm = document.getElementById('scheduleForm');
         const searchInput = document.getElementById('searchInput');
         const departmentFilter = document.getElementById('departmentFilter');
 
-        // Global functions for modal handling
+        
         window.closeModal = function() {
             doctorModal.classList.remove('show');
             doctorForm.reset();
@@ -256,11 +207,11 @@
             scheduleForm.reset();
         };
 
-        window.closeDetailsModal = function() { // Add this function
+        window.closeDetailsModal = function() { 
             detailsModal.classList.remove('show');
         };
 
-        // View Doctor Details
+        
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const doctorId = this.dataset.id;
@@ -321,51 +272,27 @@
             });
         });
 
-        // Schedule Buttons
+        
         document.querySelectorAll('.schedule-btn').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const doctorId = this.dataset.id;
-                document.getElementById('scheduleDoctor').value = doctorId;
-                
                 try {
-                    // Clear previous schedule data
-                    const dayInputs = scheduleForm.querySelectorAll('input[type="time"], input[type="checkbox"]');
-                    dayInputs.forEach(input => {
-                        if (input.type === 'checkbox') {
-                            input.checked = false;
-                        } else {
-                            input.value = '';
-                        }
-                    });
-                    
-                    // Fetch doctor's schedule
                     const response = await fetch(`${basePath}/hospital/get-doctor-schedule?id=${doctorId}`);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    
+                    if (!response.ok) throw new Error('Failed to fetch schedule');
                     const schedule = await response.json();
-                    
-                    // Populate schedule form
-                    for (const day in schedule) {
-                        const startTime = scheduleForm.querySelector(`input[name="schedule[${day}][start]"]`);
-                        const endTime = scheduleForm.querySelector(`input[name="schedule[${day}][end]"]`);
-                        const available = scheduleForm.querySelector(`input[name="schedule[${day}][available]"]`);
-                        
-                        if (startTime) startTime.value = schedule[day].start;
-                        if (endTime) endTime.value = schedule[day].end;
-                        if (available) available.checked = schedule[day].available == 1;
-                    }
-                    
-                    scheduleModal.classList.add('show');
+                    const scheduleHTML = Object.entries(schedule).map(([day, times]) => {
+                        const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+                        return `<div class="schedule-day"><h4>${dayName}</h4>${times.available ? `<p>${times.start || ''} - ${times.end || ''}</p>` : `<p class="text-danger">Not available</p>`}</div>`;
+                    }).join('');
+                    document.getElementById('doctorDetails').innerHTML = `<div class="details-section"><h3>Doctor's Weekly Schedule</h3>${scheduleHTML ? `<div class="schedule-grid">${scheduleHTML}</div>` : `<p>No schedule found</p>`}</div>`;
+                    detailsModal.classList.add('show');
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert('Failed to fetch doctor schedule: ' + error.message);
+                    alert(error.message);
                 }
             });
         });
 
-        // Close Modals - X buttons
+        
         document.querySelectorAll('.close-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const modal = this.closest('.modal');
@@ -379,7 +306,7 @@
             });
         });
 
-        // Close Modals - Click outside
+        
         window.addEventListener('click', function(event) {
             if (event.target === doctorModal) {
                 window.closeModal();
@@ -390,7 +317,7 @@
             }
         });
 
-    // Toggle Status Buttons
+    
     document.querySelectorAll('.action-btn.toggle-status-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
             const doctorId = this.dataset.id;
@@ -412,7 +339,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Toggle the visual indicator without page reload
+                    
                     const doctorCard = this.closest('.doctor-card');
                     const isActive = this.dataset.active === '1';
                     this.dataset.active = isActive ? '0' : '1';
@@ -421,9 +348,9 @@
                         doctorCard.dataset.status = isActive ? 'inactive' : 'active';
                     }
                     
-                    // Optional: Show success message
+                    
                     alert('Doctor status updated successfully');
-                    // Reload to reflect changes
+                    
                     location.reload();
                 } else {
                     alert(result.error || 'Failed to update doctor status');
@@ -435,7 +362,7 @@
         });
     });
 
-    // Doctor Form Submission
+    
     doctorForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -469,7 +396,7 @@
         }
     });
 
-    // Schedule Form Submission
+   
     scheduleForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -477,7 +404,7 @@
         const doctorId = formData.get('doctor_id');
         const csrf_token = formData.get('csrf_token');
         
-        // Convert form data to structured schedule object
+    
         const scheduleData = {};
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         
@@ -526,7 +453,6 @@
         }
     });
 
-    // Search and Filter functionality
     if (searchInput) {
         searchInput.addEventListener('input', filterDoctors);
     }

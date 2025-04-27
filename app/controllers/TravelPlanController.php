@@ -183,59 +183,55 @@ class TravelPlanController extends BaseController
 
     public function editDestination()
     {
-        // Clear output buffer and set JSON header
-        if (ob_get_length()) ob_clean();
-        header('Content-Type: application/json');
-
         try {
-            // Verify CSRF token
-            if (!$this->session->verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+            if (!$this->session->verifyCSRFToken($_POST['csrf_token'])) {
                 throw new \Exception("Invalid CSRF token");
             }
 
-            // Validate required fields
-            $required = ['travel_id', 'destination_id', 'check_in', 'check_out'];
-            $missing = [];
-            foreach ($required as $field) {
-                if (empty($_POST[$field])) {
-                    $missing[] = $field;
-                }
-            }
-            
-            if (!empty($missing)) {
-                throw new \Exception("Missing required fields: " . implode(', ', $missing));
+            $travel_id = filter_var($_POST['travel_id'], FILTER_SANITIZE_NUMBER_INT);
+            $startDate = htmlspecialchars($_POST['check_in']);
+            $endDate = htmlspecialchars($_POST['check_out']);
+
+            if (empty($startDate) || empty($endDate)) {
+                throw new \Exception("Dates cannot be empty");
             }
 
-            // Sanitize inputs
-            $travel_id = (int)$_POST['travel_id'];
-            $destination_id = (int)$_POST['destination_id'];
-            $startDate = date('Y-m-d', strtotime($_POST['check_in']));
-            $endDate = date('Y-m-d', strtotime($_POST['check_out']));
-
-            // Validate dates
-            if ($startDate > $endDate) {
-                throw new \Exception("End date cannot be before start date");
+            if (!strtotime($startDate) || !strtotime($endDate)) {
+                throw new \Exception("Invalid date format");
             }
 
-            // Update in database
-            if ($this->travelPlanModel->editTravelPlan($travel_id, $destination_id, $startDate, $endDate)) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Dates updated successfully',
-                    'redirect' => $this->url('travelplan/travel-plans')
-                ]);
+            if ($endDate < $startDate) {
+                throw new \Exception("Check-out date cannot be before check-in date");
+            }
+
+            if ($this->travelPlanModel->hasOverlappingPlan(
+                $this->session->getUserId(),
+                $startDate,
+                $endDate,
+                $travel_id
+            )) {
+                echo "<script>alert('Warning: You already have a travel plan overlapping with these dates!'); window.history.back();</script>";
+                exit();
+            }
+
+            if ($this->travelPlanModel->editTravelPlan($travel_id, $startDate, $endDate)) {
+                $this->session->setFlash('success', 'Travel plan updated successfully!');
             } else {
-                throw new \Exception('Database update failed');
+                throw new \Exception('Failed to update travel plan');
             }
+
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
+
         } catch (\Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => $e->getMessage()
-            ]);
+            error_log("Error in editDestination: " . $e->getMessage());
+            $this->session->setFlash('error', $e->getMessage());
+            header('Location: ' . $this->url('travelplan/travel-plans'));
+            exit();
         }
-        exit();
     }
+
+
             
     public function deleteDestination()
     {

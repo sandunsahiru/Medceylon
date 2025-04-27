@@ -223,7 +223,7 @@ class AuthController extends BaseController
             3 => $this->basePath . '/vpdoctor/dashboard',
             4 => $this->basePath . '/admin/dashboard',
             5 => $this->basePath . '/agent/transport-requests',
-            6 => $this->basePath . '/caregiver/dashboard'
+            6 => $this->basePath . '/hospital/dashboard'
         ];
 
         header("Location: " . ($redirects[$roleId] ?? $this->basePath . '/home'));

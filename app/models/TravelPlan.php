@@ -348,10 +348,11 @@ class TravelPlan {
         }
     }
 
-    public function hasOverlappingPlan($user_id, $start_date, $end_date)
+    public function hasOverlappingPlan($user_id, $start_date, $end_date, $exclude_plan_id = null)
     {
         $sql = "SELECT COUNT(*) as overlap_count FROM travel_plans 
                 WHERE user_id = ?
+                AND travel_plan_id != ?
                 AND (
                     (check_in <= ? AND check_out >= ?) OR
                     (check_in <= ? AND check_out >= ?) OR
@@ -363,10 +364,13 @@ class TravelPlan {
             throw new \Exception("Prepare failed: " . $this->db->error);
         }
 
-        $stmt->bind_param("issssss",
+        $exclude_id = $exclude_plan_id ?? 0; // <-- Assign to a variable first
+
+        $stmt->bind_param("iissssss",
             $user_id,
-            $start_date, $start_date,
-            $end_date, $end_date,
+            $exclude_id,
+            $start_date, $end_date,
+            $end_date, $start_date,
             $start_date, $end_date
         );
 
@@ -377,11 +381,12 @@ class TravelPlan {
 
         $result = $stmt->get_result();
         $data = $result->fetch_assoc();
-
         $stmt->close();
 
         return $data['overlap_count'] > 0;
     }
+
+
 
 
 
