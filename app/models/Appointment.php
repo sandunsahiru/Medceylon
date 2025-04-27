@@ -748,6 +748,43 @@ class Appointment
     }
 
     /**
+ * Update appointment with treatment plan information
+ * 
+ * @param int $appointmentId
+ * @param int $planId
+ * @return bool
+ */
+/**
+ * Update appointment with treatment plan information
+ * 
+ * @param int $appointmentId
+ * @param int $planId
+ * @return bool
+ */
+public function updateWithTreatmentPlan($appointmentId, $planId)
+{
+    try {
+        $query = "UPDATE appointments 
+                SET treatment_plan_id = ?,
+                    updated_at = NOW() 
+                WHERE appointment_id = ?";
+
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("ii", $planId, $appointmentId);
+
+        if (!$stmt->execute()) {
+            error_log("Failed to update appointment with treatment plan: " . $stmt->error);
+            return false;
+        }
+
+        return $stmt->affected_rows > 0;
+    } catch (\Exception $e) {
+        error_log("Error in updateWithTreatmentPlan: " . $e->getMessage());
+        return false;
+    }
+}
+
+    /**
      * Update Google Meet link for an appointment
      * 
      * @param int $appointmentId

@@ -116,7 +116,7 @@ try {
     $router->post('/doctor/refer-to-specialist', 'DoctorController@referToSpecialist', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
     // Treatment plan actions
-    $router->post('/doctor/create-treatment-plan', 'DoctorController@createTreatmentPlan', \App\Core\Middleware\DoctorAuthMiddleware::class);
+    $router->post('/vpdoctor/createTreatmentPlan', 'VPDoctorController', 'createTreatmentPlan', \App\Core\Middleware\VPDoctorAuthMiddleware::class);
     $router->post('/doctor/update-treatment-plan', 'DoctorController@updateTreatmentPlan', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
     // Complete session

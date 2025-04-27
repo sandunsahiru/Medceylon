@@ -1,8 +1,104 @@
 <?php require_once ROOT_PATH . '/app/views/vpdoctor/partials/header.php'; ?>
 
 <head>
+    <!-- Add meta tag for base path that JavaScript can access -->
+    <meta name="base-path" content="<?php echo $basePath; ?>">
     <!-- Add the external CSS file reference -->
-    <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/doctor-dashboard.css">
+    <!-- <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/session-details-fix.css"> -->
+    <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/vpdoctor-dashboard.css">
+
+    <style>
+        /* Fix black color issue - more comprehensive fix */
+        .session-body {
+            background-color: #fff !important;
+            color: #333 !important;
+        }
+
+        .step-progress-container {
+            background-color: transparent !important;
+        }
+
+        .step-text {
+            color: #666 !important;
+        }
+
+        /* Make sure all text in the session is visible */
+        .session-body h3,
+        .session-body p,
+        .session-body label,
+        .session-body .doctor-info h3,
+        .session-body .doctor-info p,
+        .session-body .meta-item span,
+        .session-body .form-group label,
+        .session-body .referral-notes,
+        .session-body .treatment-details p,
+        .session-body .checkbox-container label {
+            color: #333 !important;
+        }
+
+        /* Form elements with proper color */
+        .form-control,
+        textarea.form-control,
+        select.form-control,
+        .doctor-notes {
+            background-color: #fff !important;
+            color: #333 !important;
+        }
+
+        /* Referral badge styling */
+        .referral-badge {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        /* Travel restrictions checkbox style */
+        .travel-restrictions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .checkbox-container label {
+            color: #333 !important;
+            margin-bottom: 0;
+        }
+
+        /* Deadline and vehicle selection styles */
+        .additional-fields {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .additional-fields .form-group {
+            flex: 1;
+        }
+
+        /* Override modal content colors */
+        .modal-content .form-group label,
+        .modal-content textarea,
+        .modal-content select,
+        .modal-content input,
+        .modal-content p {
+            color: #333 !important;
+        }
+    </style>
 </head>
 
 <main class="main-content">
@@ -19,6 +115,9 @@
             </div>
         </div>
     </header>
+
+    <!-- CSRF Token Hidden Field -->
+    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
 
     <!-- Stats Cards -->
     <div class="stats-grid">
@@ -50,13 +149,45 @@
         </div>
     </div>
 
-    <!-- Referral Appointments Section -->
+    <!-- Appointments Section -->
     <section class="appointments-section">
-        <h2>Referral Appointments</h2>
+        <h2>Appointments</h2>
 
-        <?php if (!empty($referralAppointments)): ?>
+        <?php
+        // Merge all appointments into a single array
+        $allAppointments = [];
+        if (!empty($referralAppointments)) {
+            foreach ($referralAppointments as $appointment) {
+                $appointment['is_referral'] = true;
+                $allAppointments[] = $appointment;
+            }
+        }
+        if (!empty($regularAppointments)) {
+            foreach ($regularAppointments as $appointment) {
+                $appointment['is_referral'] = false;
+                $allAppointments[] = $appointment;
+            }
+        }
+
+        // Sort by date and time if needed
+        usort($allAppointments, function ($a, $b) {
+            $dateA = strtotime($a['appointment_date'] . ' ' . $a['appointment_time']);
+            $dateB = strtotime($b['appointment_date'] . ' ' . $b['appointment_time']);
+            return $dateB - $dateA; // Descending (newest first)
+        });
+        ?>
+
+        <?php if (!empty($allAppointments)): ?>
             <div class="appointments-list">
-                <?php foreach ($referralAppointments as $appointment): ?>
+            <?php 
+        $displayedIds = []; // Track already displayed appointments
+        foreach ($allAppointments as $appointment): 
+            // Skip if already displayed
+            if (in_array($appointment['appointment_id'], $displayedIds)) {
+                continue;
+            }
+            $displayedIds[] = $appointment['appointment_id'];
+        ?>
                     <div class="appointment-card" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                         <div class="appointment-time">
                             <?php echo date('H:i', strtotime($appointment['appointment_time'])); ?>
@@ -67,6 +198,9 @@
                             <span class="status <?php echo strtolower($appointment['appointment_status']); ?>">
                                 <?php echo htmlspecialchars($appointment['appointment_status']); ?>
                             </span>
+                            <?php if ($appointment['is_referral']): ?>
+                                <span class="referral-badge">Referral</span>
+                            <?php endif; ?>
                         </div>
                         <div class="appointment-actions">
                             <button class="action-btn primary view-session-btn">
@@ -173,8 +307,8 @@
                                 </div>
                             </div>
 
-                            <!-- Referring Doctor Information -->
-                            <?php if (isset($appointment['referring_doctor_id']) && $appointment['referring_doctor_id']): ?>
+                            <!-- Referring Doctor Information - Only show if this is a referral appointment -->
+                            <?php if ($appointment['is_referral'] && isset($appointment['referring_doctor_id']) && $appointment['referring_doctor_id']): ?>
                                 <div class="session-details-container">
                                     <h3>Referring Doctor Information</h3>
                                     <div class="doctor-card">
@@ -200,7 +334,7 @@
                             <div class="session-details-container">
                                 <h3>Specialist Notes</h3>
                                 <textarea id="specialist-notes-<?php echo $appointment['appointment_id']; ?>" class="doctor-notes" placeholder="Enter your specialist notes for this patient..."><?php echo htmlspecialchars($appointment['specialist_notes'] ?? ''); ?></textarea>
-                                <button class="action-btn primary save-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <button class="action-btn primary save-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                     <i class="ri-save-line"></i> Save Notes
                                 </button>
                             </div>
@@ -211,29 +345,65 @@
                                     <h3>Create Treatment Plan</h3>
                                     <div class="treatment-plan-form">
                                         <div class="form-group">
-                                            <label for="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">Travel Restrictions</label>
-                                            <select id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>" class="travel-restrictions form-control">
-                                                <option value="None">No Restrictions</option>
-                                                <option value="Can travel, but avoid high altitudes">Can travel, but avoid high altitudes</option>
-                                                <option value="Can travel, but need wheelchair assistance">Can travel, but need wheelchair assistance</option>
-                                                <option value="Can travel with medical escort only">Can travel with medical escort only</option>
-                                                <option value="Limited to short flights only">Limited to short flights only</option>
-                                                <option value="Not fit for air travel at this time">Not fit for air travel at this time</option>
-                                            </select>
+                                            <label>Travel Restrictions</label>
+                                            <div class="travel-restrictions-group" id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="no-restrictions-<?php echo $appointment['appointment_id']; ?>" value="None">
+                                                    <label for="no-restrictions-<?php echo $appointment['appointment_id']; ?>">No Restrictions</label>
+                                                </div>
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="high-altitude-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but avoid high altitudes">
+                                                    <label for="high-altitude-<?php echo $appointment['appointment_id']; ?>">Can travel, but avoid high altitudes</label>
+                                                </div>
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="wheelchair-<?php echo $appointment['appointment_id']; ?>" value="Can travel, but need wheelchair assistance">
+                                                    <label for="wheelchair-<?php echo $appointment['appointment_id']; ?>">Can travel, but need wheelchair assistance</label>
+                                                </div>
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="escort-<?php echo $appointment['appointment_id']; ?>" value="Can travel with medical escort only">
+                                                    <label for="escort-<?php echo $appointment['appointment_id']; ?>">Can travel with medical escort only</label>
+                                                </div>
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="short-flights-<?php echo $appointment['appointment_id']; ?>" value="Limited to short flights only">
+                                                    <label for="short-flights-<?php echo $appointment['appointment_id']; ?>">Limited to short flights only</label>
+                                                </div>
+                                                <div class="checkbox-container">
+                                                    <input type="checkbox" id="no-air-travel-<?php echo $appointment['appointment_id']; ?>" value="Not fit for air travel at this time">
+                                                    <label for="no-air-travel-<?php echo $appointment['appointment_id']; ?>">Not fit for air travel at this time</label>
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <div class="additional-fields">
+                                            <div class="form-group">
+                                                <label for="vehicle-type-<?php echo $appointment['appointment_id']; ?>">Required Vehicle Type</label>
+                                                <select id="vehicle-type-<?php echo $appointment['appointment_id']; ?>" class="form-control">
+                                                    <option value="Regular Vehicle">Regular Vehicle</option>
+                                                    <option value="Wheelchair Accessible">Wheelchair Accessible</option>
+                                                    <option value="Ambulance">Ambulance</option>
+                                                    <option value="Medical Transport with Bed">Medical Transport with Bed</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="arrival-deadline-<?php echo $appointment['appointment_id']; ?>">Arrival Deadline in Sri Lanka</label>
+                                                <input type="date" id="arrival-deadline-<?php echo $appointment['appointment_id']; ?>" class="form-control">
+                                            </div>
+                                        </div>
+
                                         <div class="form-group">
                                             <label for="treatment-description-<?php echo $appointment['appointment_id']; ?>">Treatment Description</label>
                                             <textarea id="treatment-description-<?php echo $appointment['appointment_id']; ?>" class="treatment-description form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
                                         </div>
                                         <div class="form-group">
-                                            <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated Budget (USD)</label>
-                                            <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>" class="estimated-budget form-control" placeholder="Enter estimated cost">
+                                            <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated Budget (LKR)</label>
+                                            <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>" class="estimated-budget form-control" placeholder="Enter estimated cost in Sri Lankan Rupees">
                                         </div>
                                         <div class="form-group">
                                             <label for="estimated-duration-<?php echo $appointment['appointment_id']; ?>">Estimated Duration (Days)</label>
                                             <input type="number" id="estimated-duration-<?php echo $appointment['appointment_id']; ?>" class="estimated-duration form-control" placeholder="Enter estimated duration">
                                         </div>
-                                        <button class="full-width-button create-treatment-plan-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                        <button class="full-width-button create-treatment-plan-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                             <i class="ri-file-list-3-line"></i> Create Treatment Plan
                                         </button>
                                     </div>
@@ -244,13 +414,15 @@
                                     <h3>Treatment Information</h3>
                                     <div class="treatment-details">
                                         <p><strong>Travel Restrictions:</strong> <?php echo htmlspecialchars($appointment['travel_restrictions'] ?? 'None'); ?></p>
+                                        <p><strong>Vehicle Type:</strong> <?php echo htmlspecialchars($appointment['vehicle_type'] ?? 'Regular Vehicle'); ?></p>
+                                        <p><strong>Arrival Deadline:</strong> <?php echo !empty($appointment['arrival_deadline']) ? date('d/m/Y', strtotime($appointment['arrival_deadline'])) : 'Not specified'; ?></p>
                                         <p><strong>Treatment Description:</strong> <?php echo htmlspecialchars($appointment['treatment_description'] ?? 'No description provided.'); ?></p>
-                                        <p><strong>Estimated Budget:</strong> $<?php echo htmlspecialchars($appointment['estimated_budget'] ?? '0'); ?></p>
+                                        <p><strong>Estimated Budget:</strong> LKR <?php echo htmlspecialchars(number_format($appointment['estimated_budget'] ?? 0)); ?></p>
                                         <p><strong>Estimated Duration:</strong> <?php echo htmlspecialchars($appointment['estimated_duration'] ?? '0'); ?> days</p>
                                     </div>
 
                                     <div class="action-buttons">
-                                        <button class="action-btn secondary" id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                        <button class="action-btn secondary" id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                             <i class="ri-edit-line"></i> Edit Treatment Plan
                                         </button>
                                     </div>
@@ -259,10 +431,10 @@
 
                             <!-- Medical Request & Cancel Buttons -->
                             <div class="session-actions">
-                                <button class="action-btn primary request-medical-btn" id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <button class="action-btn primary request-medical-btn" id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                     <i class="ri-test-tube-line"></i> Request Medical Tests
                                 </button>
-                                <button class="action-btn secondary cancel-treatment-btn" id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <button class="action-btn secondary cancel-treatment-btn" id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                     <i class="ri-close-circle-line"></i> Cancel Treatment
                                 </button>
                             </div>
@@ -272,46 +444,7 @@
             </div>
         <?php else: ?>
             <div class="no-appointments">
-                <p>No referral appointments scheduled</p>
-            </div>
-        <?php endif; ?>
-    </section>
-
-    <!-- Regular Appointments Section -->
-    <section class="appointments-section">
-        <h2>Regular Appointments</h2>
-
-        <?php if (!empty($regularAppointments)): ?>
-            <div class="appointments-list">
-                <?php foreach ($regularAppointments as $appointment): ?>
-                    <div class="appointment-card" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
-                        <!-- Existing card content -->
-                        <div class="appointment-time">
-                            <?php echo date('H:i', strtotime($appointment['appointment_time'])); ?>
-                        </div>
-                        <div class="appointment-info">
-                            <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?></h3>
-                            <p><?php echo date('d/m/Y', strtotime($appointment['appointment_date'])); ?></p>
-                            <span class="status <?php echo strtolower($appointment['appointment_status']); ?>">
-                                <?php echo htmlspecialchars($appointment['appointment_status']); ?>
-                            </span>
-                        </div>
-                        <div class="appointment-actions">
-                            <button class="action-btn primary view-details-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
-                                <i class="ri-eye-line"></i> View Details
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- This div will be populated dynamically when View Details is clicked -->
-                    <div id="session-details-<?php echo $appointment['appointment_id']; ?>" class="medical-session session-details-container" style="display: none;">
-                        <!-- Content will be populated dynamically -->
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <div class="no-appointments">
-                <p>No regular appointments scheduled</p>
+                <p>No appointments scheduled</p>
             </div>
         <?php endif; ?>
     </section>
@@ -395,23 +528,59 @@
         </div>
         <div class="treatment-plan-form">
             <div class="form-group">
-                <label for="editTravelRestrictions">Travel Restrictions</label>
-                <select id="editTravelRestrictions" class="form-control">
-                    <option value="None">No Restrictions</option>
-                    <option value="Can travel, but avoid high altitudes">Can travel, but avoid high altitudes</option>
-                    <option value="Can travel, but need wheelchair assistance">Can travel, but need wheelchair assistance</option>
-                    <option value="Can travel with medical escort only">Can travel with medical escort only</option>
-                    <option value="Limited to short flights only">Limited to short flights only</option>
-                    <option value="Not fit for air travel at this time">Not fit for air travel at this time</option>
-                </select>
+                <label>Travel Restrictions</label>
+                <div class="travel-restrictions-group" id="editTravelRestrictions">
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-no-restrictions" value="None">
+                        <label for="edit-no-restrictions">No Restrictions</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-high-altitude" value="Can travel, but avoid high altitudes">
+                        <label for="edit-high-altitude">Can travel, but avoid high altitudes</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-wheelchair" value="Can travel, but need wheelchair assistance">
+                        <label for="edit-wheelchair">Can travel, but need wheelchair assistance</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-escort" value="Can travel with medical escort only">
+                        <label for="edit-escort">Can travel with medical escort only</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-short-flights" value="Limited to short flights only">
+                        <label for="edit-short-flights">Limited to short flights only</label>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="edit-no-air-travel" value="Not fit for air travel at this time">
+                        <label for="edit-no-air-travel">Not fit for air travel at this time</label>
+                    </div>
+                </div>
             </div>
+
+            <div class="additional-fields">
+                <div class="form-group">
+                    <label for="editVehicleType">Required Vehicle Type</label>
+                    <select id="editVehicleType" class="form-control">
+                        <option value="Regular Vehicle">Regular Vehicle</option>
+                        <option value="Wheelchair Accessible">Wheelchair Accessible</option>
+                        <option value="Ambulance">Ambulance</option>
+                        <option value="Medical Transport with Bed">Medical Transport with Bed</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editArrivalDeadline">Arrival Deadline in Sri Lanka</label>
+                    <input type="date" id="editArrivalDeadline" class="form-control">
+                </div>
+            </div>
+
             <div class="form-group">
                 <label for="editTreatmentDescription">Treatment Description</label>
                 <textarea id="editTreatmentDescription" class="form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
             </div>
             <div class="form-group">
-                <label for="editEstimatedBudget">Estimated Budget (USD)</label>
-                <input type="number" id="editEstimatedBudget" class="form-control" placeholder="Enter estimated cost">
+                <label for="editEstimatedBudget">Estimated Budget (LKR)</label>
+                <input type="number" id="editEstimatedBudget" class="form-control" placeholder="Enter estimated cost in Sri Lankan Rupees">
             </div>
             <div class="form-group">
                 <label for="editEstimatedDuration">Estimated Duration (Days)</label>
@@ -422,1007 +591,6 @@
     </div>
 </div>
 
-<!-- Appointment Details Modal -->
-<div id="appointmentDetailsModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Appointment Details</h2>
-            <button class="close-btn">&times;</button>
-        </div>
-        <div id="appointmentDetailsContent" class="modal-body">
-            <!-- Content will be dynamically populated -->
-        </div>
-        <div class="modal-footer">
-            <button class="action-btn secondary" id="closeAppointmentDetails">Close</button>
-        </div>
-    </div>
-</div>
-
-<!-- Add the variable for base path and include the JS file at the end of the document -->
-<script>
-    const basePath = '<?php echo $basePath; ?>';
-
-    // Global variables to store current IDs for modals
-    let currentAppointmentId = null;
-    let currentSessionId = null;
-
-    document.addEventListener('DOMContentLoaded', function() {
-        // Search functionality
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                const searchTerm = e.target.value.toLowerCase();
-                document.querySelectorAll('.appointment-card').forEach(card => {
-                    const patientName = card.querySelector('h3').textContent.toLowerCase();
-                    if (patientName.includes(searchTerm)) {
-                        card.style.display = 'flex';
-                        // Also hide any open session details
-                        const appointmentId = card.dataset.appointmentId;
-                        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-                        if (sessionDetails) {
-                            sessionDetails.style.display = 'none';
-                        }
-                    } else {
-                        card.style.display = 'none';
-                        // Also hide any open session details
-                        const appointmentId = card.dataset.appointmentId;
-                        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-                        if (sessionDetails) {
-                            sessionDetails.style.display = 'none';
-                        }
-                    }
-                });
-            });
-        }
-
-        // View Session button click
-        document.querySelectorAll('.view-session-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const appointmentCard = this.closest('.appointment-card');
-                const appointmentId = appointmentCard.dataset.appointmentId;
-                const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-
-                if (!sessionDetails) {
-                    console.error(`Session details container not found for appointment ${appointmentId}`);
-                    return;
-                }
-
-                // Close all other open sessions first
-                document.querySelectorAll('.medical-session').forEach(container => {
-                    if (container.id !== `session-details-${appointmentId}` && container.style.display !== 'none') {
-                        container.style.display = 'none';
-
-                        // Find the associated appointment card and update button text
-                        const otherAppointmentId = container.id.replace('session-details-', '');
-                        const otherButton = document.querySelector(`.appointment-card[data-appointment-id="${otherAppointmentId}"] .view-session-btn`);
-                        if (otherButton) {
-                            otherButton.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
-                        }
-                    }
-                });
-
-                // Toggle session details visibility
-                if (sessionDetails.style.display === 'none' || !sessionDetails.style.display) {
-                    sessionDetails.style.display = 'block';
-                    this.innerHTML = '<i class="ri-eye-off-line"></i> Hide Session';
-                } else {
-                    sessionDetails.style.display = 'none';
-                    this.innerHTML = '<i class="ri-file-list-3-line"></i> View Session';
-                }
-            });
-        });
-
-        // View Regular Appointment Details
-        document.querySelectorAll('.view-details-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const appointmentId = this.dataset.appointmentId;
-        const appointmentCard = this.closest('.appointment-card');
-        
-        // Check if we already have session details showing
-        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-        if (sessionDetails) {
-            // Toggle visibility if session details already exist
-            if (sessionDetails.style.display === 'none' || !sessionDetails.style.display) {
-                sessionDetails.style.display = 'block';
-                this.innerHTML = '<i class="ri-eye-off-line"></i> Hide Details';
-            } else {
-                sessionDetails.style.display = 'none';
-                this.innerHTML = '<i class="ri-eye-line"></i> View Details';
-            }
-            return;
-        }
-        
-        // If no session details exist yet, create them
-        const newSessionDetails = document.createElement('div');
-        newSessionDetails.id = `session-details-${appointmentId}`;
-        newSessionDetails.className = 'medical-session session-details-container';
-        
-        // Insert as next sibling of appointment card
-        appointmentCard.parentNode.insertBefore(newSessionDetails, appointmentCard.nextSibling);
-        
-        // Add loading indicator
-        newSessionDetails.innerHTML = '<div class="loading">Loading patient details...</div>';
-        newSessionDetails.style.display = 'block';
-        
-        // Change button text
-        this.innerHTML = '<i class="ri-eye-off-line"></i> Hide Details';
-        
-        // Fetch appointment details
-        fetch(`${basePath}/vpdoctor/get-appointment-details?appointment_id=${appointmentId}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Create the session details content
-                    const details = data.data;
-                    const sessionHTML = `
-                        <div class="session-header">
-                            <h2>Medical Session: ${details.patient_name}</h2>
-                            <div class="session-status">${details.appointment_status}</div>
-                        </div>
-                        <div class="session-body">
-                            <!-- Patient Information -->
-                            <div class="session-details-container">
-                                <h3>Patient Information</h3>
-                                <div class="doctor-card">
-                                    <div class="doctor-avatar">
-                                        <i class="ri-user-line"></i>
-                                    </div>
-                                    <div class="doctor-info">
-                                        <h3>${details.patient_name}</h3>
-                                        <p>Patient ID: ${details.patient_id || 'P-' + Math.floor(10000 + Math.random() * 90000)}</p>
-                                        
-                                        <div class="appointment-meta">
-                                            <div class="meta-item">
-                                                <i class="ri-calendar-line"></i>
-                                                <span>${details.appointment_date}</span>
-                                            </div>
-                                            <div class="meta-item">
-                                                <i class="ri-time-line"></i>
-                                                <span>${details.appointment_time}</span>
-                                            </div>
-                                            <div class="meta-item">
-                                                <i class="ri-user-location-line"></i>
-                                                <span>Mode: ${details.consultation_type || 'Online'}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Notes Section -->
-                            <div class="session-details-container">
-                                <h3>Medical Notes</h3>
-                                <textarea id="specialist-notes-${details.appointment_id}" class="doctor-notes" placeholder="Enter your specialist notes for this patient...">${details.notes || ''}</textarea>
-                                <button class="action-btn primary save-notes-btn" data-appointment-id="${details.appointment_id}">
-                                    <i class="ri-save-line"></i> Save Notes
-                                </button>
-                            </div>
-                            
-                            <!-- Action Buttons -->
-                            <div class="session-actions">
-                                <button class="action-btn primary request-medical-btn" data-appointment-id="${details.appointment_id}">
-                                    <i class="ri-test-tube-line"></i> Request Medical Tests
-                                </button>
-                                <button class="action-btn secondary cancel-treatment-btn" data-appointment-id="${details.appointment_id}">
-                                    <i class="ri-close-circle-line"></i> Cancel Treatment
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    newSessionDetails.innerHTML = sessionHTML;
-                    
-                    // Add event listeners to buttons in the new session details
-                    addSessionButtonEventListeners(newSessionDetails);
-                } else {
-                    newSessionDetails.innerHTML = `<div class="error-message">Failed to load appointment details: ${data.error || 'Unknown error'}</div>`;
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching appointment details:', error);
-                newSessionDetails.innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
-            });
-    });
-});
-        // Helper function to toggle session visibility
-        function toggleSessionVisibility(appointmentId, button) {
-            const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-
-            // Close all other open sessions first
-            document.querySelectorAll('.medical-session').forEach(container => {
-                if (container.id !== `session-details-${appointmentId}` && container.style.display !== 'none') {
-                    container.style.display = 'none';
-
-                    // Find the associated appointment card and update button text
-                    const otherAppointmentId = container.id.replace('session-details-', '');
-                    const otherButton = document.querySelector(`.appointment-card[data-appointment-id="${otherAppointmentId}"] .view-details-btn, .appointment-card[data-appointment-id="${otherAppointmentId}"] .view-session-btn`);
-                    if (otherButton) {
-                        otherButton.innerHTML = otherButton.classList.contains('view-session-btn') ?
-                            '<i class="ri-file-list-3-line"></i> View Session' :
-                            '<i class="ri-eye-line"></i> View Details';
-                    }
-                }
-            });
-
-            // Toggle session details visibility
-            if (sessionDetails.style.display === 'none' || !sessionDetails.style.display) {
-                sessionDetails.style.display = 'block';
-                button.innerHTML = '<i class="ri-eye-off-line"></i> Hide Details';
-            } else {
-                sessionDetails.style.display = 'none';
-                button.innerHTML = '<i class="ri-eye-line"></i> View Details';
-            }
-        }
-
-        // Helper function to create session details HTML
-        function createSessionDetailsHTML(details) {
-            return `
-        <div class="session-header">
-            <h2>Medical Session: ${details.patient_name}</h2>
-            <div class="session-status">${details.appointment_status}</div>
-        </div>
-        <div class="session-body">
-            <!-- Patient Information -->
-            <div class="session-details-container">
-                <h3>Patient Information</h3>
-                <div class="doctor-card">
-                    <div class="doctor-avatar">
-                        <i class="ri-user-line"></i>
-                    </div>
-                    <div class="doctor-info">
-                        <h3>${details.patient_name}</h3>
-                        <p>Patient ID: ${details.patient_id || 'P-' + Math.floor(10000 + Math.random() * 90000)}</p>
-                        
-                        <div class="appointment-meta">
-                            <div class="meta-item">
-                                <i class="ri-calendar-line"></i>
-                                <span>${details.appointment_date}</span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="ri-time-line"></i>
-                                <span>${details.appointment_time}</span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="ri-user-location-line"></i>
-                                <span>Mode: ${details.consultation_type || 'Online'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Notes Section -->
-            <div class="session-details-container">
-                <h3>Medical Notes</h3>
-                <textarea id="specialist-notes-${details.appointment_id}" class="doctor-notes" placeholder="Enter your specialist notes for this patient...">${details.notes || ''}</textarea>
-                <button class="action-btn primary save-notes-btn" data-appointment-id="${details.appointment_id}">
-                    <i class="ri-save-line"></i> Save Notes
-                </button>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="session-actions">
-                <button class="action-btn primary" onclick="completeAppointment(${details.appointment_id})">
-                    <i class="ri-check-line"></i> Complete Appointment
-                </button>
-                <button class="action-btn secondary" onclick="cancelAppointment(${details.appointment_id})">
-                    <i class="ri-close-line"></i> Cancel Appointment
-                </button>
-            </div>
-        </div>
-    `;
-        }
-
-        // Save Notes button click
-        document.querySelectorAll('.save-notes-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const appointmentId = this.dataset.appointmentId;
-                const sessionId = this.dataset.sessionId || '';
-                const notesId = `specialist-notes-${appointmentId}`;
-                const notes = document.getElementById(notesId).value;
-
-                if (!notes.trim()) {
-                    alert('Please enter some notes before saving');
-                    return;
-                }
-
-                // Create form to submit data to the server
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `${basePath}/vpdoctor/saveSpecialistNotes`;
-                form.style.display = 'none';
-
-                // Add CSRF token
-                const csrfField = document.createElement('input');
-                csrfField.type = 'hidden';
-                csrfField.name = 'csrf_token';
-                csrfField.value = document.querySelector('input[name="csrf_token"]')?.value || '';
-                form.appendChild(csrfField);
-
-                // Add session ID and notes
-                const sessionIdField = document.createElement('input');
-                sessionIdField.type = 'hidden';
-                sessionIdField.name = 'session_id';
-                sessionIdField.value = sessionId;
-                form.appendChild(sessionIdField);
-
-                // Add specialist notes
-                const notesField = document.createElement('input');
-                notesField.type = 'hidden';
-                notesField.name = 'specialist_notes';
-                notesField.value = notes;
-                form.appendChild(notesField);
-
-                // Add to document and submit
-                document.body.appendChild(form);
-
-                // Show success message while form is submitting
-                showSuccessAlert(appointmentId, 'Specialist notes saved successfully!');
-                showToast('Notes saved successfully');
-
-                // Submit the form
-                form.submit();
-            });
-        });
-
-        // Create Treatment Plan button click
-        document.querySelectorAll('.create-treatment-plan-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const appointmentId = this.dataset.appointmentId;
-                const sessionId = this.dataset.sessionId || '';
-                const travelRestrictionsId = `travel-restrictions-${appointmentId}`;
-                const treatmentDescriptionId = `treatment-description-${appointmentId}`;
-                const estimatedBudgetId = `estimated-budget-${appointmentId}`;
-                const estimatedDurationId = `estimated-duration-${appointmentId}`;
-
-                const travelRestrictions = document.getElementById(travelRestrictionsId).value;
-                const treatmentDescription = document.getElementById(treatmentDescriptionId).value;
-                const estimatedBudget = document.getElementById(estimatedBudgetId).value;
-                const estimatedDuration = document.getElementById(estimatedDurationId).value;
-
-                if (!treatmentDescription) {
-                    alert('Please provide a treatment description');
-                    return;
-                }
-
-                if (!estimatedBudget) {
-                    alert('Please provide an estimated budget');
-                    return;
-                }
-
-                if (!estimatedDuration) {
-                    alert('Please provide an estimated duration');
-                    return;
-                }
-
-                // Create form to submit data to the server
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `${basePath}/vpdoctor/createTreatmentPlan`;
-                form.style.display = 'none';
-
-                // Add CSRF token
-                const csrfField = document.createElement('input');
-                csrfField.type = 'hidden';
-                csrfField.name = 'csrf_token';
-                csrfField.value = document.querySelector('input[name="csrf_token"]')?.value || '';
-                form.appendChild(csrfField);
-
-                // Add session ID
-                const sessionIdField = document.createElement('input');
-                sessionIdField.type = 'hidden';
-                sessionIdField.name = 'session_id';
-                sessionIdField.value = sessionId;
-                form.appendChild(sessionIdField);
-
-                // Add appointment ID
-                const appointmentIdField = document.createElement('input');
-                appointmentIdField.type = 'hidden';
-                appointmentIdField.name = 'appointment_id';
-                appointmentIdField.value = appointmentId;
-                form.appendChild(appointmentIdField);
-
-                // Add treatment plan fields
-                const travelRestrictionsField = document.createElement('input');
-                travelRestrictionsField.type = 'hidden';
-                travelRestrictionsField.name = 'travel_restrictions';
-                travelRestrictionsField.value = travelRestrictions;
-                form.appendChild(travelRestrictionsField);
-
-                const treatmentDescriptionField = document.createElement('input');
-                treatmentDescriptionField.type = 'hidden';
-                treatmentDescriptionField.name = 'treatment_description';
-                treatmentDescriptionField.value = treatmentDescription;
-                form.appendChild(treatmentDescriptionField);
-
-                const estimatedBudgetField = document.createElement('input');
-                estimatedBudgetField.type = 'hidden';
-                estimatedBudgetField.name = 'estimated_budget';
-                estimatedBudgetField.value = estimatedBudget;
-                form.appendChild(estimatedBudgetField);
-
-                const estimatedDurationField = document.createElement('input');
-                estimatedDurationField.type = 'hidden';
-                estimatedDurationField.name = 'estimated_duration';
-                estimatedDurationField.value = estimatedDuration;
-                form.appendChild(estimatedDurationField);
-
-                // Add to document and submit
-                document.body.appendChild(form);
-
-                // Show success message while form is submitting
-                showSuccessAlert(appointmentId, 'Treatment plan created successfully!');
-                showToast('Treatment plan created!');
-
-                // Submit the form
-                form.submit();
-            });
-        });
-
-        // Handle edit treatment plan button click
-        document.addEventListener('click', function(event) {
-            if (event.target && event.target.id && event.target.id.startsWith('editTreatmentPlanBtn-')) {
-                const appointmentId = event.target.dataset.appointmentId;
-                const sessionId = event.target.dataset.sessionId || '';
-                currentAppointmentId = appointmentId;
-                currentSessionId = sessionId;
-
-                // Find the treatment details container
-                const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-                if (!sessionDetails) {
-                    console.error(`Session details not found for appointment ${appointmentId}`);
-                    return;
-                }
-
-                const treatmentDetailsContainer = sessionDetails.querySelector('.treatment-details');
-
-                if (treatmentDetailsContainer) {
-                    // Extract current values
-                    const travelRestrictions = treatmentDetailsContainer.querySelector('p:nth-of-type(1)').textContent.split(':')[1].trim();
-                    const treatmentDescription = treatmentDetailsContainer.querySelector('p:nth-of-type(2)').textContent.split(':')[1].trim();
-                    const estimatedBudget = treatmentDetailsContainer.querySelector('p:nth-of-type(3)').textContent.split(':')[1].trim().replace('$', '').replace(',', '');
-                    const estimatedDuration = treatmentDetailsContainer.querySelector('p:nth-of-type(4)').textContent.split(':')[1].trim().split(' ')[0];
-
-                    // Populate the edit form
-                    document.getElementById('editTravelRestrictions').value = travelRestrictions;
-                    document.getElementById('editTreatmentDescription').value = treatmentDescription;
-                    document.getElementById('editEstimatedBudget').value = estimatedBudget;
-                    document.getElementById('editEstimatedDuration').value = estimatedDuration;
-
-                    // Show modal
-                    const editTreatmentModal = document.getElementById('editTreatmentModal');
-                    editTreatmentModal.style.display = 'block';
-                }
-            }
-        });
-
-        // Handle medical test request
-        document.addEventListener('click', function(event) {
-            if (event.target && event.target.classList.contains('request-medical-btn')) {
-                const appointmentId = event.target.dataset.appointmentId;
-                const sessionId = event.target.dataset.sessionId || '';
-                currentAppointmentId = appointmentId;
-                currentSessionId = sessionId;
-
-                // Clear previous selections
-                const testTypeField = document.getElementById('testType');
-                const testDescriptionField = document.getElementById('testDescription');
-                const testUrgencyField = document.getElementById('testUrgency');
-                const testRequiredFastingField = document.getElementById('testRequiredFasting');
-
-                if (testTypeField) testTypeField.value = '';
-                if (testDescriptionField) testDescriptionField.value = '';
-                if (testUrgencyField) testUrgencyField.value = 'routine';
-                if (testRequiredFastingField) testRequiredFastingField.value = 'no';
-
-                // Show modal
-                const medicalTestsModal = document.getElementById('medicalTestsModal');
-                if (medicalTestsModal) medicalTestsModal.style.display = 'block';
-            }
-        });
-
-        // Handle treatment cancellation request
-        document.addEventListener('click', function(event) {
-            if (event.target && event.target.classList.contains('cancel-treatment-btn')) {
-                const appointmentId = event.target.dataset.appointmentId;
-                const sessionId = event.target.dataset.sessionId || '';
-                currentAppointmentId = appointmentId;
-                currentSessionId = sessionId;
-
-                // Clear previous input
-                const cancelReasonField = document.getElementById('cancellationReason');
-                if (cancelReasonField) cancelReasonField.value = '';
-
-                // Show modal
-                const cancelTreatmentModal = document.getElementById('cancelTreatmentModal');
-                if (cancelTreatmentModal) cancelTreatmentModal.style.display = 'block';
-            }
-        });
-
-        // Close modals
-        document.querySelectorAll('.close-btn').forEach(element => {
-            element.addEventListener('click', function() {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    modal.style.display = 'none';
-                });
-            });
-        });
-
-        // Close modals when clicking outside
-        window.addEventListener('click', function(event) {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
-        });
-
-        // Submit Medical Test Request
-        const submitMedicalTestBtn = document.getElementById('submitMedicalTest');
-        if (submitMedicalTestBtn) {
-            submitMedicalTestBtn.addEventListener('click', function() {
-                const testTypeField = document.getElementById('testType');
-                const testDescriptionField = document.getElementById('testDescription');
-                const testUrgencyField = document.getElementById('testUrgency');
-                const testRequiredFastingField = document.getElementById('testRequiredFasting');
-
-                if (!testTypeField || !testDescriptionField || !testUrgencyField || !testRequiredFastingField) {
-                    console.error('Test form fields not found');
-                    return;
-                }
-
-                const testType = testTypeField.value;
-                const testDescription = testDescriptionField.value;
-                const testUrgency = testUrgencyField.value;
-                const testRequiredFasting = testRequiredFastingField.value;
-
-                if (!testType) {
-                    alert('Please select a test type');
-                    return;
-                }
-
-                if (!testDescription) {
-                    alert('Please provide a test description');
-                    return;
-                }
-
-                // Create form to submit data to the server
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `${basePath}/vpdoctor/requestMedicalTests`;
-                form.style.display = 'none';
-
-                // Add CSRF token
-                const csrfField = document.createElement('input');
-                csrfField.type = 'hidden';
-                csrfField.name = 'csrf_token';
-                csrfField.value = document.querySelector('input[name="csrf_token"]')?.value || '';
-                form.appendChild(csrfField);
-
-                // Add session ID
-                const sessionIdField = document.createElement('input');
-                sessionIdField.type = 'hidden';
-                sessionIdField.name = 'session_id';
-                sessionIdField.value = currentSessionId;
-                form.appendChild(sessionIdField);
-
-                // Add appointment ID
-                const appointmentIdField = document.createElement('input');
-                appointmentIdField.type = 'hidden';
-                appointmentIdField.name = 'appointment_id';
-                appointmentIdField.value = currentAppointmentId;
-                form.appendChild(appointmentIdField);
-
-                // Add patient ID (from the patient info in the session)
-                const patientIdField = document.createElement('input');
-                patientIdField.type = 'hidden';
-                patientIdField.name = 'patient_id';
-                // Try to get patient ID from the session details
-                const sessionDetails = document.getElementById(`session-details-${currentAppointmentId}`);
-                let patientId = '';
-                if (sessionDetails) {
-                    const patientIdText = sessionDetails.querySelector('.doctor-info p:nth-child(2)')?.textContent || '';
-                    patientId = patientIdText.match(/Patient ID: (\w+-\d+|\d+)/)?.[1] || '';
-                }
-                patientIdField.value = patientId;
-                form.appendChild(patientIdField);
-
-                // Add test details
-                const testTypeInputField = document.createElement('input');
-                testTypeInputField.type = 'hidden';
-                testTypeInputField.name = 'test_type';
-                testTypeInputField.value = testType;
-                form.appendChild(testTypeInputField);
-
-                const testDescInputField = document.createElement('input');
-                testDescInputField.type = 'hidden';
-                testDescInputField.name = 'test_description';
-                testDescInputField.value = testDescription;
-                form.appendChild(testDescInputField);
-
-                const fastingField = document.createElement('input');
-                fastingField.type = 'hidden';
-                fastingField.name = 'requires_fasting';
-                fastingField.value = testRequiredFasting;
-                form.appendChild(fastingField);
-
-                const urgencyField = document.createElement('input');
-                urgencyField.type = 'hidden';
-                urgencyField.name = 'urgency';
-                urgencyField.value = testUrgency;
-                form.appendChild(urgencyField);
-
-                // Show visual feedback first
-                showSuccessAlert(currentAppointmentId, `Medical test requested: ${testType} (${testUrgency})`);
-                showToast('Medical test requested successfully');
-
-                // Close the modal
-                const medicalTestsModal = document.getElementById('medicalTestsModal');
-                if (medicalTestsModal) medicalTestsModal.style.display = 'none';
-
-                // Add to document and submit
-                document.body.appendChild(form);
-                form.submit();
-            });
-        }
-
-        // Confirm Cancel Treatment
-        const confirmCancelBtn = document.getElementById('confirmCancelTreatment');
-        if (confirmCancelBtn) {
-            confirmCancelBtn.addEventListener('click', function() {
-                const cancelReasonField = document.getElementById('cancellationReason');
-                if (!cancelReasonField) {
-                    console.error('Cancellation reason field not found');
-                    return;
-                }
-
-                const cancelReason = cancelReasonField.value;
-
-                if (!cancelReason) {
-                    alert('Please provide a reason for cancellation');
-                    return;
-                }
-
-                // Create form to submit data to the server
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `${basePath}/vpdoctor/cancelTreatment`;
-                form.style.display = 'none';
-
-                // Add CSRF token
-                const csrfField = document.createElement('input');
-                csrfField.type = 'hidden';
-                csrfField.name = 'csrf_token';
-                csrfField.value = document.querySelector('input[name="csrf_token"]')?.value || '';
-                form.appendChild(csrfField);
-
-                // Add session ID
-                const sessionIdField = document.createElement('input');
-                sessionIdField.type = 'hidden';
-                sessionIdField.name = 'session_id';
-                sessionIdField.value = currentSessionId;
-                form.appendChild(sessionIdField);
-
-                // Add appointment ID
-                const appointmentIdField = document.createElement('input');
-                appointmentIdField.type = 'hidden';
-                appointmentIdField.name = 'appointment_id';
-                appointmentIdField.value = currentAppointmentId;
-                form.appendChild(appointmentIdField);
-
-                // Add cancellation reason
-                const reasonField = document.createElement('input');
-                reasonField.type = 'hidden';
-                reasonField.name = 'cancel_reason';
-                reasonField.value = cancelReason;
-                form.appendChild(reasonField);
-
-                // Update the UI first to give immediate feedback
-                const sessionDetails = document.getElementById(`session-details-${currentAppointmentId}`);
-                if (sessionDetails) {
-                    const sessionStatus = sessionDetails.querySelector('.session-status');
-                    if (sessionStatus) {
-                        sessionStatus.textContent = 'Cancelled';
-                        sessionStatus.style.backgroundColor = '#f44336';
-                    }
-
-                    // Add alert box explanation
-                    const alertBox = document.createElement('div');
-                    alertBox.className = 'alert-box alert-warning';
-                    alertBox.innerHTML = `
-                        <i class="ri-close-circle-line"></i>
-                        <p>Treatment cancelled: ${cancelReason}</p>
-                    `;
-
-                    // Add to the beginning of the session body
-                    const sessionBody = sessionDetails.querySelector('.session-body');
-                    if (sessionBody) {
-                        sessionBody.insertBefore(alertBox, sessionBody.firstChild);
-                    }
-                }
-
-                // Update appointment card status too
-                const appointmentCard = document.querySelector(`.appointment-card[data-appointment-id="${currentAppointmentId}"]`);
-                if (appointmentCard) {
-                    const statusSpan = appointmentCard.querySelector('.status');
-                    if (statusSpan) {
-                        statusSpan.textContent = 'Cancelled';
-                        statusSpan.className = 'status canceled';
-                    }
-                }
-
-                showToast('Treatment cancelled');
-
-                // Close the modal
-                const cancelTreatmentModal = document.getElementById('cancelTreatmentModal');
-                if (cancelTreatmentModal) cancelTreatmentModal.style.display = 'none';
-
-                // Add to document and submit
-                document.body.appendChild(form);
-                form.submit();
-            });
-        }
-
-        // Update Treatment Plan
-        const updateTreatmentPlanBtn = document.getElementById('updateTreatmentPlan');
-        if (updateTreatmentPlanBtn) {
-            updateTreatmentPlanBtn.addEventListener('click', function() {
-                const travelRestrictionsField = document.getElementById('editTravelRestrictions');
-                const treatmentDescriptionField = document.getElementById('editTreatmentDescription');
-                const estimatedBudgetField = document.getElementById('editEstimatedBudget');
-                const estimatedDurationField = document.getElementById('editEstimatedDuration');
-
-                if (!travelRestrictionsField || !treatmentDescriptionField || !estimatedBudgetField || !estimatedDurationField) {
-                    console.error('Treatment plan fields not found');
-                    return;
-                }
-
-                const travelRestrictions = travelRestrictionsField.value;
-                const treatmentDescription = treatmentDescriptionField.value;
-                const estimatedBudget = estimatedBudgetField.value;
-                const estimatedDuration = estimatedDurationField.value;
-
-                if (!treatmentDescription) {
-                    alert('Please provide a treatment description');
-                    return;
-                }
-
-                if (!estimatedBudget) {
-                    alert('Please provide an estimated budget');
-                    return;
-                }
-
-                if (!estimatedDuration) {
-                    alert('Please provide an estimated duration');
-                    return;
-                }
-
-                // Create form to submit data to the server
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `${basePath}/vpdoctor/updateTreatmentPlan`;
-                form.style.display = 'none';
-
-                // Add CSRF token
-                const csrfField = document.createElement('input');
-                csrfField.type = 'hidden';
-                csrfField.name = 'csrf_token';
-                csrfField.value = document.querySelector('input[name="csrf_token"]')?.value || '';
-                form.appendChild(csrfField);
-
-                // Add session ID
-                const sessionIdField = document.createElement('input');
-                sessionIdField.type = 'hidden';
-                sessionIdField.name = 'session_id';
-                sessionIdField.value = currentSessionId;
-                form.appendChild(sessionIdField);
-
-                // Add appointment ID
-                const appointmentIdField = document.createElement('input');
-                appointmentIdField.type = 'hidden';
-                appointmentIdField.name = 'appointment_id';
-                appointmentIdField.value = currentAppointmentId;
-                form.appendChild(appointmentIdField);
-
-                // Add treatment plan fields
-                const travelRestrictionsInputField = document.createElement('input');
-                travelRestrictionsInputField.type = 'hidden';
-                travelRestrictionsInputField.name = 'travel_restrictions';
-                travelRestrictionsInputField.value = travelRestrictions;
-                form.appendChild(travelRestrictionsInputField);
-
-                const treatmentDescriptionInputField = document.createElement('input');
-                treatmentDescriptionInputField.type = 'hidden';
-                treatmentDescriptionInputField.name = 'treatment_description';
-                treatmentDescriptionInputField.value = treatmentDescription;
-                form.appendChild(treatmentDescriptionInputField);
-
-                const estimatedBudgetInputField = document.createElement('input');
-                estimatedBudgetInputField.type = 'hidden';
-                estimatedBudgetInputField.name = 'estimated_budget';
-                estimatedBudgetInputField.value = estimatedBudget;
-                form.appendChild(estimatedBudgetInputField);
-
-                const estimatedDurationInputField = document.createElement('input');
-                estimatedDurationInputField.type = 'hidden';
-                estimatedDurationInputField.name = 'estimated_duration';
-                estimatedDurationInputField.value = estimatedDuration;
-                form.appendChild(estimatedDurationInputField);
-
-                // Update the UI first
-                const sessionDetails = document.getElementById(`session-details-${currentAppointmentId}`);
-                if (sessionDetails) {
-                    const treatmentDetails = sessionDetails.querySelector('.treatment-details');
-                    if (treatmentDetails) {
-                        const paragraphs = treatmentDetails.querySelectorAll('p');
-                        paragraphs[0].innerHTML = `<strong>Travel Restrictions:</strong> ${travelRestrictions}`;
-                        paragraphs[1].innerHTML = `<strong>Treatment Description:</strong> ${treatmentDescription}`;
-                        paragraphs[2].innerHTML = `<strong>Estimated Budget:</strong> ${Number(estimatedBudget).toLocaleString()}`;
-                        paragraphs[3].innerHTML = `<strong>Estimated Duration:</strong> ${estimatedDuration} days`;
-                    }
-
-                    // Add success message
-                    showSuccessAlert(currentAppointmentId, 'Treatment plan updated successfully!');
-                }
-
-                showToast('Treatment plan updated successfully');
-
-                // Close the modal
-                const editTreatmentModal = document.getElementById('editTreatmentModal');
-                if (editTreatmentModal) editTreatmentModal.style.display = 'none';
-
-                // Add to document and submit
-                document.body.appendChild(form);
-                form.submit();
-            });
-        }
-
-        // Close appointment details modal
-        document.getElementById('closeAppointmentDetails').addEventListener('click', function() {
-            document.getElementById('appointmentDetailsModal').style.display = 'none';
-        });
-    });
-
-    // Helper functions for UI interactions
-
-    // Complete appointment
-    function completeAppointment(appointmentId) {
-        if (confirm('Are you sure you want to mark this appointment as completed?')) {
-            submitAppointmentAction(appointmentId, 'complete');
-        }
-    }
-
-    // Cancel appointment
-    function cancelAppointment(appointmentId) {
-        const reason = prompt('Please provide a reason for cancellation:');
-        if (reason) {
-            submitAppointmentAction(appointmentId, 'cancel', {
-                reason: reason
-            });
-        }
-    }
-
-    // Submit appointment action
-    function submitAppointmentAction(appointmentId, action, extraData = {}) {
-        const formData = new FormData();
-        formData.append('appointment_id', appointmentId);
-        formData.append('action', action);
-        formData.append('csrf_token', document.querySelector('input[name="csrf_token"]')?.value || '');
-
-        // Add any extra data
-        for (const key in extraData) {
-            formData.append(key, extraData[key]);
-        }
-
-        fetch(`${basePath}/vpdoctor/appointment-action`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message || 'Action completed successfully');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    alert(data.message || 'An error occurred');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-    }
-
-    // Helper functions
-    function showSuccessAlert(appointmentId, message) {
-        const sessionDetails = document.getElementById(`session-details-${appointmentId}`);
-        if (!sessionDetails) return;
-
-        const alertBox = document.createElement('div');
-        alertBox.className = 'alert-box alert-success';
-        alertBox.innerHTML = `
-            <i class="ri-check-line"></i>
-            <p>${message}</p>
-        `;
-
-        // Find where to insert the alert
-        const sessionBody = sessionDetails.querySelector('.session-body');
-        if (!sessionBody) return;
-
-        const existingAlerts = sessionBody.querySelectorAll('.alert-box');
-        if (existingAlerts.length > 0) {
-            sessionBody.insertBefore(alertBox, existingAlerts[0]);
-        } else {
-            sessionBody.insertBefore(alertBox, sessionBody.firstChild);
-        }
-
-        // Auto-remove alert after 5 seconds
-        setTimeout(() => {
-            alertBox.style.opacity = '0';
-            alertBox.style.transition = 'opacity 0.5s';
-            setTimeout(() => alertBox.remove(), 500);
-        }, 5000);
-    }
-
-    function showToast(message, type = 'success') {
-        // Check if toast container exists, if not create it
-        let toastContainer = document.querySelector('.toast-container');
-        if (!toastContainer) {
-            toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container';
-            toastContainer.style.position = 'fixed';
-            toastContainer.style.top = '20px';
-            toastContainer.style.right = '20px';
-            toastContainer.style.zIndex = '1000';
-            document.body.appendChild(toastContainer);
-        }
-
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = 'toast-notification';
-        toast.textContent = message;
-
-        // Style based on type
-        if (type === 'success') {
-            toast.style.backgroundColor = '#4CAF50';
-        } else if (type === 'error') {
-            toast.style.backgroundColor = '#F44336';
-        } else if (type === 'warning') {
-            toast.style.backgroundColor = '#FF9800';
-        }
-
-        toast.style.color = 'white';
-        toast.style.padding = '12px 20px';
-        toast.style.marginBottom = '10px';
-        toast.style.borderRadius = '4px';
-        toast.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
-        toast.style.minWidth = '250px';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-20px)';
-        toast.style.transition = 'opacity 0.3s, transform 0.3s';
-
-        // Add to container
-        toastContainer.appendChild(toast);
-
-        // Show after a brief delay (to allow transition to work)
-        setTimeout(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
-        }, 10);
-
-        // Remove after 5 seconds
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-20px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 5000);
-    }
-</script>
+<!-- Make sure the script order in the footer is: -->
+<script src="<?php echo $basePath; ?>/public/assets/js/view-details-fix.js"></script>
+<script src="<?php echo $basePath; ?>/public/assets/js/vpdoctor-dashboard.js"></script>
