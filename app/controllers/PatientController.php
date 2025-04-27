@@ -1023,6 +1023,12 @@ public function sessionSummary()
             exit();
         }
         
+        // Prepare complete session data for summary
+        $sessionData = $this->prepareSessionData($activeSession, $patientId);
+        
+        // Store session data in session for access in the view
+        $this->session->set('medical_session_data', $sessionData);
+        
         // Navigate to summary tab
         header('Location: ' . $this->url('patient/dashboard') . '?tab=summary');
         exit();
