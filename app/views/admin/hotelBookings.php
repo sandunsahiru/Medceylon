@@ -1,7 +1,7 @@
 <?php require_once ROOT_PATH . '/app/views/admin/layouts/header.php'; ?>
 
 <body>
-    <?php require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <?php $page = 'hotelbookings'; require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/hotelbooking.css">
 
     <div class="main-content">
