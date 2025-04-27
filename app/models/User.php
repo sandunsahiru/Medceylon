@@ -188,4 +188,21 @@ class User {
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
+
+    public function getCaregiversWithRatings()
+{
+    $query = "SELECT u.*, 
+                     IFNULL(AVG(r.rating), 0) AS average_rating
+              FROM users u
+              LEFT JOIN caregiver_ratings r ON u.user_id = r.caregiver_id
+              WHERE u.role_id = 6
+              GROUP BY u.user_id
+              ORDER BY u.user_id ASC";
+
+    $stmt = $this->db->prepare($query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+
 }

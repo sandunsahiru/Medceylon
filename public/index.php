@@ -71,9 +71,7 @@ try {
     $router->get('/admin/editProfile', 'AdminController', 'editProfile', \App\Core\Middleware\AdminMiddleware::class);
     $router->post('/admin/updateProfile', 'AdminController', 'updateProfile', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/hotelBookings', 'AdminController', 'hotelBookings', \App\Core\Middleware\AdminMiddleware::class);
-    $router->get('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
-    $router->post('/admin/adduser', 'AdminController', 'addUser', \App\Core\Middleware\AdminMiddleware::class);
-    
+
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->get('/doctor/appointments', 'DoctorController', 'appointments', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -192,6 +190,9 @@ try {
     $router->get('/agent/transport/view/{id}', 'AgentTransportationController', 'view', \App\Core\Middleware\TravelAgentMiddleware::class);
     $router->post('/agent/transport/respond/{id}', 'AgentTransportationController', 'respond', \App\Core\Middleware\TravelAgentMiddleware::class);
 
+
+
+
     $router->get('/caregivers', 'CaregiverController', 'list');
     $router->post('/caregivers/request/{id}', 'CaregiverController', 'request');
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard');
@@ -206,6 +207,8 @@ try {
 
     $router->get('/caregiver/dashboard', 'CaregiverDashboardController', 'index');
 $router->post('/caregiver/request/respond/{id}', 'CaregiverDashboardController', 'respond');
+
+
 
     // TEMP TEST (Remove later)
     $router->get('/agent/test', 'AgentTransportationController', 'index');

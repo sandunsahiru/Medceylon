@@ -56,57 +56,81 @@ body {
 
 /* Cards Grid */
 .caregiver-cards-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 24px;
     justify-content: center;
-}
-
-.caregiver-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 columns */
-    gap: 20px;
     margin-top: 30px;
 }
 
+/* Single Card */
 .caregiver-card {
     background: #e4f9f8;
     padding: 20px;
     border-radius: 14px;
     text-align: center;
     box-shadow: 0 4px 12px rgba(41, 157, 151, 0.15);
-    cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
+    position: relative;
 }
 
 .caregiver-card:hover {
     transform: translateY(-5px);
 }
 
+/* Profile Image */
+.caregiver-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #299D97;
+    margin-bottom: 12px;
+}
+
+/* Name */
+.caregiver-card h3 {
+    color: #299D97;
+    font-size: 20px;
+    margin: 10px 0 6px 0;
+}
+
+/* Age, Experience, Rating */
+.caregiver-card p {
+    margin: 6px 0;
+    font-size: 14px;
+    color: #555;
+}
+
 .request-btn, .requested-btn {
-    margin-top: 12px;
-    width: 100%;
-    padding: 8px 0;
+    margin-top: 18px; /* Increased gap from the Experience text */
+    width: 50%;
+    padding: 10px 0;
     border-radius: 8px;
     font-weight: bold;
+    font-size: 14px;
     background-color: #299D97;
     color: white;
     border: none;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    text-decoration: none; /* 💥 Remove underline completely */
+    display: inline-block; /* 💥 Make it behave like button */
+    text-align: center; /* Center text properly */
+}
+
+.request-btn:hover {
+    background-color: #247c78;
 }
 
 .requested-btn {
     background-color: #ccc;
+    color: #555;
     cursor: not-allowed;
+    text-decoration: none; /* 💥 Remove underline */
+    display: inline-block;
 }
 
-
-/* Button Below Card */
-.caregiver-card + form {
-    text-align: center;
-    margin-top: 8px;
-}
 
 /* Empty State */
 .empty {
@@ -114,15 +138,4 @@ body {
     color: #777;
     font-style: italic;
     margin-top: 40px;
-}
-
-.caregiver-name {
-    color: #299D97;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.caregiver-name:hover {
-    color: #1d6e6e;
-    text-decoration: underline;
 }

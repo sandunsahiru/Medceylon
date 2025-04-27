@@ -30,6 +30,17 @@ class AuthController extends BaseController
                 'experience_years' => $_POST['experience_years'] ?? null
             ];
 
+            // 🚫 CAREGIVERS CANNOT REGISTER
+            if ($userData['user_type'] === 'caregiver') {
+                $error = "Caregivers cannot register directly.";
+                echo $this->view('auth/register', [
+                    'error' => $error,
+                    'oldInput' => $userData,
+                    'basePath' => $this->basePath
+                ]);
+                return;
+            }
+
             // 🔒 BACKEND VALIDATION
             if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
                 $error = "Name can only contain letters and spaces.";
@@ -56,7 +67,7 @@ class AuthController extends BaseController
                 return;
             }
 
-            // Register logic
+            // ✅ Register logic
             $result = $this->userModel->register($userData);
 
             if ($result['success']) {
@@ -80,7 +91,6 @@ class AuthController extends BaseController
         ]);
     }
 
-
     public function login()
     {
         if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -88,11 +98,10 @@ class AuthController extends BaseController
             $password = $_POST['password'] ?? '';
             $userType = $_POST['user_type'] ?? '';
 
+            // Hardcoded Travel Agent credentials
             if ($userType === 'travel_agent') {
                 if ($email === 'travelagent@example.com' && $password === 'agent123') {
-                    $_SESSION['user_id'] = 999;
-                    $_SESSION['name'] = 'Travel Agent';
-                    $_SESSION['role_id'] = 4;
+                    $this->session->setUserSession(999, 'Travel Agent', 4);
                     header("Location: {$this->basePath}/agent/transport-requests");
                     exit();
                 } else {
@@ -104,21 +113,39 @@ class AuthController extends BaseController
                 }
             }
 
+            // Hardcoded Caregiver credentials
+            if ($userType === 'caregiver') {
+                if ($email === 'caregiver@example.com' && $password === 'caregiver123') {
+                    $this->session->setUserSession(888, 'Caregiver User', 6);
+                    header("Location: {$this->basePath}/caregiver/dashboard");
+                    exit();
+                } else {
+                    echo $this->view('auth/login', [
+                        'error' => 'Invalid Caregiver credentials.',
+                        'basePath' => $this->basePath
+                    ]);
+                    return;
+                }
+            }
+
+            // Normal user login
             $result = $this->userModel->authenticate($email, $password, $userType);
 
             if ($result['success']) {
-                $_SESSION['user_id'] = $result['user']['user_id'];
-                $_SESSION['name'] = $result['user']['name'];
-                $_SESSION['role_id'] = $result['user']['role_id'];
+                $this->session->setUserSession(
+                    $result['user']['user_id'],
+                    $result['user']['name'],
+                    $result['user']['role_id']
+                );
 
                 $this->redirectBasedOnRole($result['user']['role_id']);
-            } else {
-                echo $this->view('auth/login', [
-                    'error' => $result['error'],
-                    'basePath' => $this->basePath
-                ]);
-                return;
             }
+
+            echo $this->view('auth/login', [
+                'error' => $result['error'],
+                'basePath' => $this->basePath
+            ]);
+            return;
         }
 
         echo $this->view('auth/login', ['basePath' => $this->basePath]);
@@ -133,12 +160,58 @@ class AuthController extends BaseController
 
     public function forgotPassword()
     {
-        // keep as-is
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email = $_POST['email'] ?? '';
+
+            if (empty($email)) {
+                echo $this->view('auth/forgot-password', ['error' => 'Email is required.']);
+                return;
+            }
+
+            $token = bin2hex(random_bytes(32));
+            $expiry = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+            if ($this->userModel->storeResetToken($email, $token, $expiry)) {
+                $resetLink = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . "{$this->basePath}/reset-password?token=$token";
+
+                echo $this->view('auth/forgot-password', [
+                    'message' => "Password reset link: <a href=\"$resetLink\">Reset Password</a>"
+                ]);
+                return;
+            } else {
+                echo $this->view('auth/forgot-password', ['error' => 'Email not found.']);
+                return;
+            }
+        }
+
+        echo $this->view('auth/forgot-password');
     }
 
     public function resetPassword()
     {
-        // keep as-is
+        $token = $_GET['token'] ?? '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $token = $_POST['token'] ?? '';
+            $newPassword = $_POST['new_password'] ?? '';
+
+            if (empty($newPassword)) {
+                echo $this->view('auth/reset-password', ['error' => 'Password is required.', 'token' => $token]);
+                return;
+            }
+
+            $result = $this->userModel->resetPasswordWithToken($token, $newPassword);
+
+            if ($result['success']) {
+                echo $this->view('auth/reset-password', ['message' => 'Password successfully updated!']);
+                return;
+            } else {
+                echo $this->view('auth/reset-password', ['error' => $result['error'], 'token' => $token]);
+                return;
+            }
+        }
+
+        echo $this->view('auth/reset-password', ['token' => $token]);
     }
 
     private function redirectBasedOnRole($roleId)
@@ -147,26 +220,13 @@ class AuthController extends BaseController
             1 => $this->basePath . '/home',
             2 => $this->basePath . '/doctor/dashboard',
             3 => $this->basePath . '/vpdoctor/dashboard',
-            4 => $this->basePath . '/agent/transport-requests',
-            5 => $this->basePath . '/admin/dashboard',
-            6 => $this->basePath . '/hospital/dashboard',
-            7 => $this->basePath . '/caregiver/dashboard'
+            4 => $this->basePath . '/admin/dashboard',
+            5 => $this->basePath . '/agent/transport-requests',
+            6 => $this->basePath . '/caregiver/dashboard'
         ];
 
         header("Location: " . ($redirects[$roleId] ?? $this->basePath . '/home'));
         exit();
     }
-
-    private function mapUserTypeToRoleId($type)
-    {
-        return match ($type) {
-            'patient' => 1,
-            'general_doctor' => 2,
-            'special_doctor' => 3,
-            'caretaker' => 4,
-            'admin' => 5,
-            'hospital' => 6,
-            default => 1
-        };
-    }
 }
+?>

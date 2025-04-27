@@ -10,7 +10,7 @@
 <body class="login-page">
 
 <div class="form-container">
-    <form action="<?= $formAction ?>" method="POST" onsubmit="return validateForm()">
+    <form action="<?= $basePath ?>/register" method="POST" onsubmit="return validateForm()">
         <h1>Join MedCeylon</h1>
 
         <?php if (isset($error)): ?>
@@ -25,7 +25,6 @@
                 <option value="patient">Patient</option>
                 <option value="general_doctor">General Doctor</option>
                 <option value="special_doctor">Special Doctor</option>
-                <option value="caregiver">
             </select>
         </div>
 
