@@ -194,14 +194,12 @@ class AdminController extends BaseController
     {
         try {
             error_log("Entering dashboard method");
-            $patientId = $this->session->getUserId();
-            $appointments = $this->appointmentModel->getPatientAppointments($patientId);
+            $status = $_GET['status'] ?? 'Pending';
 
-            error_log("Patient ID: " . $patientId);
-            error_log("Appointments: " . print_r($appointments, true));
-
+            $plans = $this->adminModel->getPatientPlan($status);
+            
             $data = [
-                'appointments' => $appointments,
+                'plans' => $plans,
                 'basePath' => $this->basePath
             ];
 

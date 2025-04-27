@@ -625,4 +625,25 @@ public function getMedicalHistory()
             echo json_encode(['error' => $e->getMessage()]);
         }
     }
+
+    public function rooms(){
+        try {
+            $requests = $this->hospitalModel->getAllTreatmentRequests();
+            
+            $data = [
+                'pageTitle' => 'Rooms',
+                'currentPage' => 'rooms',
+                'basePath' => $this->basePath,
+                'error' => $this->session->getFlash('error'),
+                'success' => $this->session->getFlash('success'),
+                'requests' => $requests,
+            ];
+            
+            echo $this->view('hospital/rooms', $data);
+        } catch (\Exception $e) {
+            error_log("Error in rooms: " . $e->getMessage());
+            $this->session->setFlash('error', 'An error occurred while loading rooms');
+            throw $e;
+        }
+    }
 }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Controllers\HospitalController;
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -29,6 +31,12 @@ try {
     $router->get('/about-us', 'HomeController', 'aboutUs');
     $router->get('/partner-hospitals', 'HomeController', 'partnerHospitals');
     $router->get('/pricing', 'HomeController', 'pricing');
+    $router->get('/contact-us', 'HomeController', 'contactUs');
+    $router->get('/legal-agreements', 'HomeController', 'legalAgreements');
+    $router->get('/faq', 'HomeController', 'faq');
+    $router->get('/visa-guidance', 'HomeController', 'visaGuidance');
+    $router->get('/about-us','HomeController','aboutUs');
+    $router->get('/partner-hospitals','HomeController','partnerHospitals');
 
     // Auth routes
     $router->get('/login', 'AuthController', 'login');
@@ -78,7 +86,7 @@ try {
     $router->get('/admin/pending-bookings', 'AdminController', 'pendingBookings', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/ongoing-bookings', 'AdminController', 'ongoingBookings', \App\Core\Middleware\AdminMiddleware::class);
     $router->get('/admin/cancelled-bookings', 'AdminController', 'cancelledBookings', \App\Core\Middleware\AdminMiddleware::class);
-    
+
 
     // Doctor Dashboard Routes
     $router->get('/doctor/dashboard', 'DoctorController', 'dashboard', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -151,6 +159,7 @@ try {
     $router->get('/hospital/doctors', 'HospitalController', 'doctors', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/departments', 'HospitalController', 'departments', \App\Core\Middleware\HospitalAuthMiddleware::class);
     $router->get('/hospital/patients', 'HospitalController', 'patients', \App\Core\Middleware\HospitalAuthMiddleware::class);
+    $router->get('/hospital/rooms','HospitalController','rooms',\App\Core\Middleware\HospitalAuthMiddleware::class); 
 
     // Hospital API Routes
     $router->get('/hospital/get-request-details', 'HospitalController', 'getRequestDetails', \App\Core\Middleware\HospitalAuthMiddleware::class);
@@ -192,10 +201,15 @@ try {
     $router->post('/patient/confirm-medical-session', 'PatientController', 'confirmMedicalSession', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/patient/process-appointment-with-meet-link', 'PatientController', 'processAppointmentWithMeetLink', \App\Core\Middleware\AuthMiddleware::class);
 
+    $router->get('/patient/paymentPlan', 'PatientController', 'paymentPlan', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/patient/payment-plans', 'PatientController', 'showPaymentPlans');
+    $router->post('/patient/choose-plan', 'PatientController', 'choosePlan');
+    
 
     // Caregiver routes
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/patients', 'CaregiverController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
+
 
 
     //travel routes
@@ -203,6 +217,13 @@ try {
     $router->post('/travelplan/add-destination', 'TravelPlanController', 'addDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/edit-plan', 'TravelPlanController', 'editDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/travel-plans', 'TravelPlanController', 'TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/travel-preferences', 'TravelPlanController', 'travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
+
+    $router->post('/travelplan/edit-plan', 'TravelPlanController', 'editDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/provinces', 'TravelPlanController', 'provinces', \App\Core\Middleware\AuthMiddleware::class);
+
     $router->get('/travelplan/travel-plans', 'TravelPlanController', 'TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/travel-preferences', 'TravelPlanController', 'travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
 
@@ -221,6 +242,7 @@ try {
     $router->get('/doctor/patient-session/create/:id', 'DoctorController@createSessionFromAppointment', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
 
+
     // Transportation Module — Travel Agent
     $router->get('/agent/transport-requests', 'AgentTransportationController', 'index', \App\Core\Middleware\TravelAgentMiddleware::class);
     $router->get('/agent/transport/view/{id}', 'AgentTransportationController', 'view', \App\Core\Middleware\TravelAgentMiddleware::class);
@@ -233,6 +255,8 @@ try {
     $router->get('/caregiver/dashboard', 'CaregiverMessageController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregivers', 'CaregiverMessageController', 'list');
     $router->post('/caregiver/request/{id}', 'CaregiverRequestController', 'sendRequest', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/requests', 'CaregiverRequestController', 'viewRequests', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/caregiver/respond/{id}', 'CaregiverRequestController', 'respond', \App\Core\Middleware\AuthMiddleware::class);
 
@@ -250,6 +274,16 @@ try {
     $router->get('/debug/test-basic-calendar-event', 'DebugController', 'testBasicCalendarEvent');
     $router->get('/debug/test-conference-event', 'DebugController', 'testConferenceEvent');
     $router->get('/debug/test-auth', 'DebugController', 'testAuth');
+
+
+    $router->post('/travelplan/districts', 'TravelPlanController', 'districts', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/towns', 'TravelPlanController', 'towns', \App\Core\Middleware\AuthMiddleware::class);
+
+    $router->get('/accommodation/accommodation-providers', 'AccommodationController', 'accommodations', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/accommodation/process-booking', 'AccommodationController', 'processBooking', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
+
 
     // Set 404 handler
     $router->post('/agent/transport/complete/{id}', 'AgentTransportationController', 'complete');

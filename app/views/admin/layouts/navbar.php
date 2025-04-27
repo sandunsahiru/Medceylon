@@ -35,7 +35,7 @@
             </li>
 
             <li>
-                <a href="<?php echo $basePath; ?>/home  " class="exit-button">
+                <a href="<?php echo $basePath; ?>/logout  " class="exit-button">
                     <i style="color: #853405;" class="ri-logout-box-line"></i>
                     <span>Exit</span>
                 </a>

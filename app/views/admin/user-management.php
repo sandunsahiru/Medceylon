@@ -87,10 +87,10 @@
                                             style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;"-->
                                             <?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?>
                                         </td>
-                                        <td><?= htmlspecialchars($row['gender']) ?></td>
-                                        <td><?= htmlspecialchars($row['age']) ?> years</td>
-                                        <td><?= htmlspecialchars($row['last_login'])?></td>
-                                        <td><?= htmlspecialchars($row['registration_date'])?></td>
+                                        <td><?= htmlspecialchars($row['gender']??'') ?></td>
+                                        <td><?= htmlspecialchars($row['age']??'') ?> years</td>
+                                        <td><?= htmlspecialchars($row['last_login']??'')?></td>
+                                        <td><?= htmlspecialchars($row['registration_date']??'')?></td>
                                         <td>
                                             <button class="view-profile"
                                                 onclick="window.location.href='<?= $basePath ?>/admin/editProfile?user_id=<?= $row['user_id'] ?>'">

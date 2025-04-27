@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +9,14 @@
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/main.css">
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/header.css">
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/footer.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <?php if (isset($extraCss)): ?>
-        <?php foreach($extraCss as $css): ?>
+        <?php foreach ($extraCss as $css): ?>
             <link rel="stylesheet" href="<?php echo $css; ?>">
         <?php endforeach; ?>
     <?php endif; ?>
 </head>
+
 <body>
     <header class="header">
         <div class="logo">
@@ -22,23 +25,26 @@
         <nav class="nav-links">
             <a href="<?php echo $basePath . ($this->session->isLoggedIn() ? '/home' : '/'); ?>">Home</a>
             <a href="<?php echo $basePath; ?>/about-us">About Us</a>
-            <a href="<?php echo $basePath; ?>/hospital/partner-hospitals">Our Hospitals</a>
+            <a href="<?php echo $basePath; ?>/partner-hospitals">Our Hospitals</a>
             <?php if ($this->session->isLoggedIn()): ?>
                 <a href="<?php echo $basePath; ?>/patient/book-appointment">Book Appointments</a>
             <?php else: ?>
-                <a href="<?php echo $basePath; ?>/login" onclick="alert('Please login to book appointments');">Book Appointments</a>
+                <a href="<?php echo $basePath; ?>/login" onclick="alert('Please login to book appointments');">Book
+                    Appointments</a>
             <?php endif; ?>
-            <a href="<?php echo $basePath; ?>/pricing">Pricing</a>
+            <a href="<?php echo $basePath; ?>/patient/paymentPlan/">Pricing</a>
         </nav>
         <div class="header-buttons">
             <?php if ($this->session->isLoggedIn()): ?>
                 <div class="dropdown">
-                    <button href="<?php echo $basePath; ?>/about-us" class="btn profile">Profile</button>
+
+                    <button onclick="toggleDropdown(event)" class="btn profile">Profile</i></button>
                     <div class="dropdown-menu">
                         <a href="<?php echo $basePath; ?>/patient/book-appointment">My Appointments</a>
                         <a href="<?php echo $basePath; ?>/patient/profile">My Account</a>
                     </div>
                 </div>
+
                 <a href="<?php echo $basePath; ?>/logout" class="btn logout">Logout</a>
             <?php else: ?>
                 <a href="<?php echo $basePath; ?>/register" class="btn">Sign Up</a>
@@ -46,37 +52,28 @@
             <?php endif; ?>
         </div>
     </header>
+
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const profileButton = document.querySelector('.btn.profile');
-        const dropdownMenu = document.querySelector('.dropdown-menu');
-        let isDropdownOpen = false;
+        // Function to toggle dropdown visibility
+        function toggleDropdown(event) {
+            event.stopPropagation();  // Prevent the click event from propagating to the window
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            dropdownMenu.classList.toggle('show');
+        }
 
-    if (profileButton && dropdownMenu) {
-        profileButton.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            isDropdownOpen = !isDropdownOpen;
-            dropdownMenu.classList.toggle('show', isDropdownOpen);
-        });
+        // Close dropdown if clicked outside
+        window.addEventListener('click', function (event) {
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            const dropdownButton = document.querySelector('.profile');
 
-        document.addEventListener('click', function (e) {
-            if (!profileButton.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            // Only close the dropdown if clicked outside both the dropdown and button
+            if (!dropdownMenu.contains(event.target) && !dropdownButton.contains(event.target)) {
                 dropdownMenu.classList.remove('show');
-                isDropdownOpen = false;
             }
         });
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                dropdownMenu.classList.remove('show');
-                isDropdownOpen = false;
-            }
+        // Ensure dropdown closes when focus is lost (for accessibility)
+        document.querySelector('.profile').addEventListener('blur', function () {
+            document.querySelector('.dropdown-menu').classList.remove('show');
         });
-
-        dropdownMenu.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-    }
-});
-</script>
+    </script>

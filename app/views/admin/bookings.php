@@ -1,104 +1,145 @@
 <?php require_once ROOT_PATH . '/app/views/admin/layouts/header.php'; ?>
 
 <body>
-    <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/bookings.css">
     <?php require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/bookings.css">
 
     <div class="main-content">
         <header>
-            <h1>User Management</h1>
+            <h1>Patient Plans</h1>
         </header>
-
-        <body>
-
-            <div class="container">
-                <header>
-                    <p>Manage your team members and their account permissions here.</p>
-                </header>
-
-                
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>User name</th>
-                            <th>Gender</th>
-                            <th>Age</th>
-                            <th>Access</th>
-                            <th>Last active</th>
-                            <th>Date added</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list">
-                        <?php if ($result->num_rows > 0): ?>
-                            <?php while ($row = $result->fetch_assoc()): ?>
-                                <tr>
-                                    <td><input type="checkbox"></td>
-                                    <td>
-                                        <!-- img src="./img/user.jpg" alt="<?= $row['first_name'] ?>" class="profile-img"
-                                            style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;"-->
-                                        <?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?>
-                                    </td>
-                                    <td><?= htmlspecialchars($row['gender']) ?></td>
-                                    <td><?= htmlspecialchars($row['age']) ?> years</td>
-                                    <td>Patient</td>
-                                    <td>Mar 4, 2024</td> <!-- Placeholder, replace with actual data -->
-                                    <td>July 4, 2022</td> <!-- Placeholder, replace with actual data -->
-                                    <td>
-                                        <button class="view-profile" onclick="navigateprofile(<?= $row['user_id'] ?>)">View
-                                            Profile</button>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="8" style="text-align: center;">No patients found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-
-                <script>
-                    function navigateprofile(userId) {
-                        window.location.href = 'profile.php?id=' + userId;
-                    }
-                </script>
-
-                <!-- <div class="pagination">
-                    <button class="page-btn">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">4</button>
-                    <button class="page-btn">5</button>
-                    <button class="page-btn">6</button>
-                </div> -->
-
-                <div class="notification" id="notification">
-                    <p>“Amélie Laurent” details updated</p>
-                    <a href="#">Undo</a> | <a href="#">View profile</a>
+        <div class="section">
+            <div class="toolbar">
+                <div class="search-box">
+                    <input type="text" id="search" placeholder="Search">
                 </div>
-
+                <div class="user-filters">
+                    <button onclick="navigate('silver')">Silver </button>
+                    <button onclick="navigate('gold')">Gold</button>
+                    <button onclick="navigate('platinum')">Platinum</button>
+                </div>
+                <div>
+                    <!-- <span>All users <strong>44</strong></span> -->
+                    <button class="add-user-btn" onclick="window.location.href='<?= $basePath ?>/admin/adduser'">+
+                        Add a hotel</button>
+                </div>
             </div>
 
-            <script src="script.js"></script>
-        </body>
+
+            <?php if (!empty($plans)): ?>
+                <?php foreach ($plans as $plan): ?>
+                    <div class="request-card">
+                        <div class="request-details">
+                            <div class="left-details">
+                                <p><b>Patient:</b>
+                                    <?php echo htmlspecialchars($plan['first_name']) . ' ' . htmlspecialchars($plan['last_name'] ?? '') ?>
+                                </p>
+                                <p><b>Plan Type:</b> <?php echo htmlspecialchars($plan['plan_name']) ?></p>
+                                <p><b>Check-in:</b> <?php echo htmlspecialchars($plan['check_in_date'] ?? '') ?></p>
+                                <p><b>Check-out:</b> <?php echo htmlspecialchars($plan['check_out_date'] ?? '') ?></p>
+                            </div>
+                            <div class="right-details">
+                                <!-- buttons etc -->
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No Patient Plans</p>
+            <?php endif; ?>
+
+
+            <div id="bookingModal" class="modal" style="display:none;">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal()">&times;</span>
+                    <div id="bookingDetails"></div>
+                </div>
+            </div>
+
+        </div>
 
 
 
-        </html>
+    </div>
 
-        <script>
+</body>
 
-            function navigate(page) {
-                window.location.href = `?page=${page}`;
+<script>
+    function navigate(status) {
+        window.location.href = "<?= $basePath ?>/admin/Bookings?status=" + status;
+    }
+
+    function openModal(booking) {
+        document.getElementById('bookingDetails').innerHTML = `
+        <p><b>Room Type:</b> ${booking.room_type} ${booking.last_name ?? ''}</p>
+        <p><b>Hotel:</b> ${booking.name}</p>
+        <p><b>Contact:</b> ${booking.contact_info}</p>
+        <p><b>Rooms Available:</b> ${booking.room_availability} Rooms</p>
+        <div style="display:flex; justify-content:flex-end">
+        <button onclick="confirmBooking(${booking.booking_id})">Confirm Booking</button></div>
+    `;
+        document.getElementById('bookingModal').style.display = 'flex';
+    }
+
+    function rejectModal(booking) {
+        if (confirm("Are you sure you want to reject this booking?")) {
+            // Create the AJAX request
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '<?php echo $basePath; ?>/admin/reject-booking', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+            // Send the booking_id to the server
+            xhr.send('booking_id=' + booking.booking_id);
+
+            // Handle the server response
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+
+                    // Check if the booking was rejected successfully
+                    if (response.success) {
+                        alert('Booking rejected!');
+                        location.reload(); // Reload the page to reflect changes
+                    } else {
+                        alert('Failed to reject the booking!');
+                    }
+                } else {
+                    alert('Something went wrong!');
+                }
+            };
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').style.display = 'none';
+    }
+
+    function confirmBooking(bookingId) {
+        // Create the AJAX request
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '<?php echo $basePath; ?>/admin/confirm-booking', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        // Send the booking_id to the server
+        xhr.send('booking_id=' + bookingId);
+
+        // Handle the server response
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+
+                // Check if the booking was confirmed successfully
+                if (response.success) {
+                    alert('Booking confirmed!');
+                    document.getElementById('bookingModal').style.display = 'none'; // Close modal
+                    location.reload(); // Optionally reload the page to reflect changes
+                } else {
+                    alert('Failed to confirm the booking!');
+                }
+            } else {
+                alert('Something went wrong!');
             }
+        };
+    }
 
-            function navigateprofile(user_id) {
-                window.location.href = `edit_user.php?user_id=${user_id}`;
-            }
-
-            function navigateToAddUser() {
-                window.location.href = 'register.php';
-            }
-        </script>
+</script>
