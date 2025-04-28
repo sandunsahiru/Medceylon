@@ -17,21 +17,19 @@
                 <i class="ri-user-line"></i>
                 <a href="<?php echo $basePath; ?>/admin/user-management">User Management</a>
             </li>
-            <li>
+            <li class="<?= $page == 'appointments' ? 'active' : '' ?>">
                 <i class="ri-calendar-line"></i>
                 <a href="<?php echo $basePath; ?>/admin/appointments">Appointments</a>
             </li>
-            <li>
-                <i class="ri-calendar-line"></i>
+
+            <li class="<?= $page == 'bookings' ? 'active' : '' ?>">
+                <i class="ri-book-2-line"></i>
                 <a href="<?php echo $basePath; ?>/admin/bookings">Bookings</a>
             </li>
-            <li>
-                <i class="ri-calendar-line"></i>
+
+            <li class="<?= $page == 'hotelbookings' ? 'active' : '' ?>">
+                <i class="ri-hotel-bed-line"></i>
                 <a href="<?php echo $basePath; ?>/admin/hotelbookings">Hotel Bookings</a>
-            </li>
-            <li>
-                <i class="ri-chat-4-line"></i>
-                <a href="#">Chat</a>
             </li>
 
             <li>

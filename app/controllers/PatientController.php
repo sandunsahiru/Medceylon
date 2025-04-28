@@ -1464,4 +1464,18 @@ public function processAppointmentWithMeetLink() {
         }
         
     }
+    public function getAllAppointments(){
+        try{
+            $patientId = $this->session->getUserId();
+            $appointments = $this->appointmentModel->getPatientAppointments($patientId);
+            $data = ['appointments' => $appointments,
+                    'basepath' => $this->basePath];
+            echo $this->view('patient/appointments', $data);
+            exit();
+            
+        } catch (\Exception $e) {
+            error_log("Error in getAllAppointments: " . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Error fetching appointments']);
+        }
+    }
 }

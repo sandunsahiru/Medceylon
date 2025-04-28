@@ -320,9 +320,7 @@ class DebugController extends BaseController
         exit();
     }
     
-    /**
-     * Test the service account authentication and token generation
-     */
+    
     public function testServiceAccount()
     {
         try {
@@ -397,9 +395,7 @@ class DebugController extends BaseController
         exit;
     }
     
-    /**
-     * Test creating a basic calendar event directly with the API
-     */
+    
     public function testBasicCalendarEvent()
     {
         try {
@@ -434,7 +430,7 @@ class DebugController extends BaseController
                 ],
             ]);
             
-            // Calendar ID - try primary first
+            // Calendar ID 
             $calendarId = 'primary';
             
             try {
@@ -469,9 +465,7 @@ class DebugController extends BaseController
         exit;
     }
     
-    /**
-     * Test creating a Meet conference directly with the API
-     */
+   
     public function testConferenceEvent()
     {
         try {

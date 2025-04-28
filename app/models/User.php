@@ -175,7 +175,7 @@ class User {
             'patient' => 1,
             'general_doctor' => 2,
             'special_doctor' => 3,
-            'caretaker' => 4, // ✅ Corrected from 5 → 4
+            'caretaker' => 4, 
             'admin' => 5,
             'hospital' => 6,
             default => 1

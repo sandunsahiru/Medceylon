@@ -59,7 +59,8 @@ button:hover {
 
 
 .modal {
-    display: none; /* hidden by default */
+    display: none;
+    /* hidden by default */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -67,7 +68,8 @@ button:hover {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* dark background */
+    background-color: rgba(0, 0, 0, 0.5);
+    /* dark background */
     justify-content: center;
     align-items: center;
 }
@@ -78,7 +80,7 @@ button:hover {
     border-radius: 12px;
     width: 400px;
     max-width: 90%;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Toolbar */
@@ -112,7 +114,8 @@ button:hover {
     border: 2px solid rgba(0, 153, 99, 1);
 }
 
-.filters-btn, .add-user-btn {
+.filters-btn,
+.add-user-btn {
     background-color: rgba(0, 153, 99, 1);
     color: white;
     border: none;
@@ -125,7 +128,8 @@ button:hover {
     transition: all 0.3s ease;
 }
 
-.add-user-btn:hover, .filters-btn:hover {
+.add-user-btn:hover,
+.filters-btn:hover {
     background-color: #1b5e20;
     box-shadow: 0 6px 10px rgba(0, 128, 0, 0.4);
     transform: translateY(-2px);
@@ -149,3 +153,231 @@ button:hover {
     box-shadow: 0 6px 10px rgba(0, 128, 0, 0.4);
     transform: translateY(-2px);
 }
+
+
+.session-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 20px;
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #219a94;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px 6px 0 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.status-badge {
+    background: #3dbb84;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin: 30px 10px;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 5%;
+    right: 5%;
+    height: 2px;
+    background: #ccc;
+    z-index: 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+
+}
+
+.circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.step.active .circle {
+    background: #219a94;
+    color: white;
+}
+
+.label {
+    margin-top: 8px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.patient-info {
+    margin-top: 30px;
+}
+
+.patient-card {
+    display: flex;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    align-items: center;
+}
+
+.avatar {
+    font-size: 48px;
+    margin-right: 20px;
+}
+
+.details h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.details h4 span {
+    font-size: 14px;
+    color: #777;
+    margin-left: 10px;
+}
+
+.details p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.google-meet-link {
+    color: #3d5afe;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.google-meet-link:hover {
+    text-decoration: underline;
+}
+
+
+.step-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    border: 2px solid #e0e0e0;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.step-circle i {
+    font-size: 18px;
+}
+
+.details-sub {
+    display: flex;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+
+/* Session details container */
+.session-details-container {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.session-details-container h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: #333;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Doctor card styles */
+.doctor-card {
+    display: flex;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.doctor-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.doctor-avatar i {
+    font-size: 30px;
+    color: #888;
+}
+
+.doctor-info {
+    flex: 1;
+}
+
+.doctor-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.doctor-info p {
+    margin: 0 0 5px 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.appointment-meta {
+    display: flex;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.meta-item i {
+    margin-right: 5px;
+    color: #888;
+}
+

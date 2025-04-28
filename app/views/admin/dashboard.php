@@ -1,7 +1,7 @@
 <?php require_once ROOT_PATH . '/app/views/admin/layouts/header.php'; ?>
 
 <body>
-    <?php require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <?php $page = 'overview'; require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
 
     <div class="main-content">
         <header>

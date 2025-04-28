@@ -15,7 +15,6 @@ class CaregiverRequest {
         return $stmt->execute();
     }
 
-    // 🟢 Get all pending/accepted/rejected requests for a caregiver
     public function getRequestsForCaregiver($caregiverId) {
         $stmt = $this->db->prepare(
             "SELECT cr.request_id, cr.status, u.first_name, u.last_name, u.email
@@ -28,14 +27,12 @@ class CaregiverRequest {
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    // 🟢 Caregiver accepts/rejects a request
     public function respondToRequest($requestId, $status) {
         $stmt = $this->db->prepare("UPDATE caregiver_requests SET status = ? WHERE request_id = ?");
         $stmt->bind_param("si", $status, $requestId);
         return $stmt->execute();
     }
 
-    // 🟢 Check if patient-caretaker relationship is accepted
     public function isAccepted($patientId, $caregiverId) {
         $stmt = $this->db->prepare("SELECT status FROM caregiver_requests WHERE patient_id = ? AND caregiver_id = ? AND status = 'Accepted'");
         $stmt->bind_param("ii", $patientId, $caregiverId);
@@ -44,7 +41,6 @@ class CaregiverRequest {
         return $result ? true : false;
     }
 
-    // 🟢 Check if patient already sent a pending request to caregiver
     public function hasPendingRequest($patientId, $caregiverId) {
         $stmt = $this->db->prepare("SELECT * FROM caregiver_requests WHERE patient_id = ? AND caregiver_id = ? AND status = 'Pending'");
         $stmt->bind_param("ii", $patientId, $caregiverId);
@@ -53,7 +49,6 @@ class CaregiverRequest {
         return $result->num_rows > 0;
     }
 
-    // 🟢 Get requests filtered by status
     public function getRequestsByStatus($caregiverId, $status) {
         $stmt = $this->db->prepare("
             SELECT cr.*, CONCAT(u.first_name, ' ', u.last_name) AS patient_name, u.phone_number, u.email

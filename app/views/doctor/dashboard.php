@@ -1,7 +1,6 @@
 <?php require_once ROOT_PATH . '/app/views/doctor/partials/header.php'; ?>
 
 <head>
-    <!-- Add the external CSS file reference -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/doctor-dashboard.css">
 </head>
 
@@ -20,7 +19,6 @@
         </div>
     </header>
 
-    <!-- Stats Cards -->
     <div class="stats-grid">
         <div class="stats-card patients-overview">
             <div class="stats-header">
@@ -62,7 +60,8 @@
                             <?php echo date('H:i', strtotime($appointment['appointment_time'])); ?>
                         </div>
                         <div class="appointment-info">
-                            <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?></h3>
+                            <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?>
+                            </h3>
                             <p><?php echo date('d/m/Y', strtotime($appointment['appointment_date'])); ?></p>
                             <span class="status <?php echo strtolower($appointment['appointment_status']); ?>">
                                 <?php echo htmlspecialchars($appointment['appointment_status']); ?>
@@ -76,22 +75,29 @@
                     </div>
 
                     <!-- Session Details Container (Initially Hidden) -->
-                    <div id="session-details-<?php echo $appointment['appointment_id']; ?>" class="medical-session session-details-container" style="display: none;">
+                    <div id="session-details-<?php echo $appointment['appointment_id']; ?>"
+                        class="medical-session session-details-container" style="display: none;">
                         <div class="session-header">
-                            <h2>Medical Session: <?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?></h2>
-                            <div class="session-status"><?php echo htmlspecialchars($appointment['appointment_status']); ?></div>
+                            <h2>Medical Session:
+                                <?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?>
+                            </h2>
+                            <div class="session-status"><?php echo htmlspecialchars($appointment['appointment_status']); ?>
+                            </div>
                         </div>
                         <div class="session-body">
                             <!-- Progress Steps -->
                             <div class="step-progress-container">
                                 <div class="step-progress-bar" style="width: <?php
-                                                                                // Calculate progress width based on session data
-                                                                                $progress = 25; // Assuming general doctor appointment is completed
-                                                                                if (isset($appointment['specialist_booked']) && $appointment['specialist_booked']) $progress += 25;
-                                                                                if (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created']) $progress += 25;
-                                                                                if (isset($appointment['transport_booked']) && $appointment['transport_booked']) $progress += 25;
-                                                                                echo $progress . '%';
-                                                                                ?>"></div>
+                                // Calculate progress width based on session data
+                                $progress = 25; // Assuming general doctor appointment is completed
+                                if (isset($appointment['specialist_booked']) && $appointment['specialist_booked'])
+                                    $progress += 25;
+                                if (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created'])
+                                    $progress += 25;
+                                if (isset($appointment['transport_booked']) && $appointment['transport_booked'])
+                                    $progress += 25;
+                                echo $progress . '%';
+                                ?>"></div>
 
                                 <!-- Step 1: General Doctor -->
                                 <div class="step-item completed">
@@ -102,7 +108,8 @@
                                 </div>
 
                                 <!-- Step 2: Specialist -->
-                                <div class="step-item <?php echo (isset($appointment['specialist_booked']) && $appointment['specialist_booked']) ? 'completed' : 'active'; ?>">
+                                <div
+                                    class="step-item <?php echo (isset($appointment['specialist_booked']) && $appointment['specialist_booked']) ? 'completed' : 'active'; ?>">
                                     <div class="step-circle">
                                         <?php if (isset($appointment['specialist_booked']) && $appointment['specialist_booked']): ?>
                                             <i class="ri-check-line"></i>
@@ -115,9 +122,11 @@
 
                                 <!-- Step 3: Treatment Plan -->
                                 <div class="step-item <?php
-                                                        if (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created']) echo 'completed';
-                                                        elseif (isset($appointment['specialist_booked']) && $appointment['specialist_booked']) echo 'active';
-                                                        ?>">
+                                if (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created'])
+                                    echo 'completed';
+                                elseif (isset($appointment['specialist_booked']) && $appointment['specialist_booked'])
+                                    echo 'active';
+                                ?>">
                                     <div class="step-circle">
                                         <?php if (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created']): ?>
                                             <i class="ri-check-line"></i>
@@ -130,9 +139,11 @@
 
                                 <!-- Step 4: Travel & Accommodation -->
                                 <div class="step-item <?php
-                                                        if (isset($appointment['transport_booked']) && $appointment['transport_booked']) echo 'completed';
-                                                        elseif (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created']) echo 'active';
-                                                        ?>">
+                                if (isset($appointment['transport_booked']) && $appointment['transport_booked'])
+                                    echo 'completed';
+                                elseif (isset($appointment['treatment_plan_created']) && $appointment['treatment_plan_created'])
+                                    echo 'active';
+                                ?>">
                                     <div class="step-circle">
                                         <?php if (isset($appointment['transport_booked']) && $appointment['transport_booked']): ?>
                                             <i class="ri-check-line"></i>
@@ -152,8 +163,11 @@
                                         <i class="ri-user-line"></i>
                                     </div>
                                     <div class="doctor-info">
-                                        <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?></h3>
-                                        <p>Patient ID: <?php echo htmlspecialchars($appointment['patient_id'] ?? 'P-' . rand(10000, 99999)); ?></p>
+                                        <h3><?php echo htmlspecialchars($appointment['patient_first_name'] . ' ' . $appointment['patient_last_name']); ?>
+                                        </h3>
+                                        <p>Patient ID:
+                                            <?php echo htmlspecialchars($appointment['patient_id'] ?? 'P-' . rand(10000, 99999)); ?>
+                                        </p>
 
                                         <div class="appointment-meta">
                                             <div class="meta-item">
@@ -166,7 +180,8 @@
                                             </div>
                                             <div class="meta-item">
                                                 <i class="ri-user-location-line"></i>
-                                                <span>Mode: <?php echo htmlspecialchars($appointment['consultation_type'] ?? 'In-Person'); ?></span>
+                                                <span>Mode:
+                                                    <?php echo htmlspecialchars($appointment['consultation_type'] ?? 'In-Person'); ?></span>
                                             </div>
                                         </div>
                                         <?php if ($appointment['consultation_type'] === 'Online'): ?>
@@ -178,7 +193,8 @@
                                                     ? $appointment['meet_link']
                                                     : 'https://meet.google.com/dyt-pdtg-xmy'; // Default link
                                                 ?>
-                                                <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank" class="meet-link-btn">
+                                                <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank"
+                                                    class="meet-link-btn">
                                                     <i class="ri-video-chat-line"></i> Join Google Meet
                                                 </a>
                                             </div>
@@ -191,8 +207,10 @@
                             <!-- Doctor Notes Section -->
                             <div class="session-details-container">
                                 <h3>Medical Notes</h3>
-                                <textarea id="doctor-notes-<?php echo $appointment['appointment_id']; ?>" class="doctor-notes" placeholder="Enter your medical notes for this patient..."><?php echo htmlspecialchars($appointment['doctor_notes'] ?? ''); ?></textarea>
-                                <button class="action-btn primary save-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <textarea id="doctor-notes-<?php echo $appointment['appointment_id']; ?>" class="doctor-notes"
+                                    placeholder="Enter your medical notes for this patient..."><?php echo htmlspecialchars($appointment['doctor_notes'] ?? ''); ?></textarea>
+                                <button class="action-btn primary save-notes-btn"
+                                    data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                                     <i class="ri-save-line"></i> Save Notes
                                 </button>
                             </div>
@@ -202,7 +220,8 @@
                                 <div class="session-details-container">
                                     <h3>Specialist Referral</h3>
                                     <p>Refer this patient to a specialist for further consultation.</p>
-                                    <a href="<?php echo $basePath; ?>/doctor/all-doctors?session_id=<?php echo $appointment['session_id'] ?? ''; ?>&patient_id=<?php echo $appointment['patient_id']; ?>" class="full-width-button find-specialist-btn">
+                                    <a href="<?php echo $basePath; ?>/doctor/all-doctors?session_id=<?php echo $appointment['session_id'] ?? ''; ?>&patient_id=<?php echo $appointment['patient_id']; ?>"
+                                        class="full-width-button find-specialist-btn">
                                         <i class="ri-user-star-line"></i> Find and Book Specialist
                                     </a>
                                 </div>
@@ -215,9 +234,14 @@
                                             <i class="ri-user-star-line"></i>
                                         </div>
                                         <div class="doctor-info">
-                                            <h3>Dr. <?php echo htmlspecialchars($appointment['specialist_name'] ?? 'Specialist Name'); ?></h3>
-                                            <p><strong><?php echo htmlspecialchars($appointment['specialist_specialty'] ?? 'Specialty'); ?></strong></p>
-                                            <p><strong>Hospital:</strong> <?php echo htmlspecialchars($appointment['specialist_hospital'] ?? 'Hospital Name'); ?></p>
+                                            <h3>Dr.
+                                                <?php echo htmlspecialchars($appointment['specialist_name'] ?? 'Specialist Name'); ?>
+                                            </h3>
+                                            <p><strong><?php echo htmlspecialchars($appointment['specialist_specialty'] ?? 'Specialty'); ?></strong>
+                                            </p>
+                                            <p><strong>Hospital:</strong>
+                                                <?php echo htmlspecialchars($appointment['specialist_hospital'] ?? 'Hospital Name'); ?>
+                                            </p>
 
                                             <div class="appointment-meta">
                                                 <div class="meta-item">
@@ -230,14 +254,20 @@
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-user-location-line"></i>
-                                                    <span>Mode: <?php echo htmlspecialchars($appointment['specialist_mode'] ?? 'In-Person'); ?></span>
+                                                    <span>Mode:
+                                                        <?php echo htmlspecialchars($appointment['specialist_mode'] ?? 'In-Person'); ?></span>
                                                 </div>
                                             </div>
 
                                             <div class="form-group">
-                                                <label for="specialist-notes-<?php echo $appointment['appointment_id']; ?>">Notes for Specialist</label>
-                                                <textarea id="specialist-notes-<?php echo $appointment['appointment_id']; ?>" class="specialist-notes" placeholder="Enter notes for the specialist..."><?php echo htmlspecialchars($appointment['specialist_notes'] ?? ''); ?></textarea>
-                                                <button class="action-btn primary save-specialist-notes-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>" data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
+                                                <label for="specialist-notes-<?php echo $appointment['appointment_id']; ?>">Notes
+                                                    for Specialist</label>
+                                                <textarea id="specialist-notes-<?php echo $appointment['appointment_id']; ?>"
+                                                    class="specialist-notes"
+                                                    placeholder="Enter notes for the specialist..."><?php echo htmlspecialchars($appointment['specialist_notes'] ?? ''); ?></textarea>
+                                                <button class="action-btn primary save-specialist-notes-btn"
+                                                    data-appointment-id="<?php echo $appointment['appointment_id']; ?>"
+                                                    data-session-id="<?php echo $appointment['session_id'] ?? ''; ?>">
                                                     <i class="ri-save-line"></i> Save Notes for Specialist
                                                 </button>
                                             </div>
@@ -252,29 +282,45 @@
                                     <h3>Create Treatment Plan</h3>
                                     <div class="treatment-plan-form">
                                         <div class="form-group">
-                                            <label for="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">Travel Restrictions</label>
-                                            <select id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>" class="travel-restrictions form-control">
+                                            <label for="travel-restrictions-<?php echo $appointment['appointment_id']; ?>">Travel
+                                                Restrictions</label>
+                                            <select id="travel-restrictions-<?php echo $appointment['appointment_id']; ?>"
+                                                class="travel-restrictions form-control">
                                                 <option value="None">No Restrictions</option>
-                                                <option value="Can travel, but avoid high altitudes">Can travel, but avoid high altitudes</option>
-                                                <option value="Can travel, but need wheelchair assistance">Can travel, but need wheelchair assistance</option>
-                                                <option value="Can travel with medical escort only">Can travel with medical escort only</option>
+                                                <option value="Can travel, but avoid high altitudes">Can travel, but avoid high
+                                                    altitudes</option>
+                                                <option value="Can travel, but need wheelchair assistance">Can travel, but need
+                                                    wheelchair assistance</option>
+                                                <option value="Can travel with medical escort only">Can travel with medical escort
+                                                    only</option>
                                                 <option value="Limited to short flights only">Limited to short flights only</option>
-                                                <option value="Not fit for air travel at this time">Not fit for air travel at this time</option>
+                                                <option value="Not fit for air travel at this time">Not fit for air travel at this
+                                                    time</option>
                                             </select>
                                         </div>
                                         <div class="form-group">
-                                            <label for="treatment-description-<?php echo $appointment['appointment_id']; ?>">Treatment Description</label>
-                                            <textarea id="treatment-description-<?php echo $appointment['appointment_id']; ?>" class="treatment-description form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
+                                            <label
+                                                for="treatment-description-<?php echo $appointment['appointment_id']; ?>">Treatment
+                                                Description</label>
+                                            <textarea id="treatment-description-<?php echo $appointment['appointment_id']; ?>"
+                                                class="treatment-description form-control" rows="4"
+                                                placeholder="Describe the recommended treatment plan..."></textarea>
                                         </div>
                                         <div class="form-group">
-                                            <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated Budget (USD)</label>
-                                            <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>" class="estimated-budget form-control" placeholder="Enter estimated cost">
+                                            <label for="estimated-budget-<?php echo $appointment['appointment_id']; ?>">Estimated
+                                                Budget (USD)</label>
+                                            <input type="number" id="estimated-budget-<?php echo $appointment['appointment_id']; ?>"
+                                                class="estimated-budget form-control" placeholder="Enter estimated cost">
                                         </div>
                                         <div class="form-group">
-                                            <label for="estimated-duration-<?php echo $appointment['appointment_id']; ?>">Estimated Duration (Days)</label>
-                                            <input type="number" id="estimated-duration-<?php echo $appointment['appointment_id']; ?>" class="estimated-duration form-control" placeholder="Enter estimated duration">
+                                            <label for="estimated-duration-<?php echo $appointment['appointment_id']; ?>">Estimated
+                                                Duration (Days)</label>
+                                            <input type="number"
+                                                id="estimated-duration-<?php echo $appointment['appointment_id']; ?>"
+                                                class="estimated-duration form-control" placeholder="Enter estimated duration">
                                         </div>
-                                        <button class="full-width-button create-treatment-plan-btn" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                        <button class="full-width-button create-treatment-plan-btn"
+                                            data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                                             <i class="ri-file-list-3-line"></i> Create Treatment Plan
                                         </button>
                                     </div>
@@ -284,14 +330,22 @@
                                 <div class="session-details-container">
                                     <h3>Treatment Information</h3>
                                     <div class="treatment-details">
-                                        <p><strong>Travel Restrictions:</strong> <?php echo htmlspecialchars($appointment['travel_restrictions'] ?? 'Can travel, but avoid high altitudes and long distance journeys.'); ?></p>
-                                        <p><strong>Treatment Description:</strong> <?php echo htmlspecialchars($appointment['treatment_description'] ?? 'Routine checkups and medication management for hypertension and early signs of cardiovascular disease.'); ?></p>
-                                        <p><strong>Estimated Budget:</strong> $<?php echo htmlspecialchars($appointment['estimated_budget'] ?? '3,900'); ?></p>
-                                        <p><strong>Estimated Duration:</strong> <?php echo htmlspecialchars($appointment['estimated_duration'] ?? '7'); ?> days</p>
+                                        <p><strong>Travel Restrictions:</strong>
+                                            <?php echo htmlspecialchars($appointment['travel_restrictions'] ?? 'Can travel, but avoid high altitudes and long distance journeys.'); ?>
+                                        </p>
+                                        <p><strong>Treatment Description:</strong>
+                                            <?php echo htmlspecialchars($appointment['treatment_description'] ?? 'Routine checkups and medication management for hypertension and early signs of cardiovascular disease.'); ?>
+                                        </p>
+                                        <p><strong>Estimated Budget:</strong>
+                                            $<?php echo htmlspecialchars($appointment['estimated_budget'] ?? '3,900'); ?></p>
+                                        <p><strong>Estimated Duration:</strong>
+                                            <?php echo htmlspecialchars($appointment['estimated_duration'] ?? '7'); ?> days</p>
                                     </div>
 
                                     <div class="action-buttons">
-                                        <button class="action-btn secondary" id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                        <button class="action-btn secondary"
+                                            id="editTreatmentPlanBtn-<?php echo $appointment['appointment_id']; ?>"
+                                            data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                                             <i class="ri-edit-line"></i> Edit Treatment Plan
                                         </button>
                                     </div>
@@ -300,10 +354,14 @@
 
                             <!-- Medical Request & Cancel Buttons -->
                             <div class="session-actions">
-                                <button class="action-btn primary request-medical-btn" id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <button class="action-btn primary request-medical-btn"
+                                    id="requestMedicalBtn-<?php echo $appointment['appointment_id']; ?>"
+                                    data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                                     <i class="ri-test-tube-line"></i> Request Medical Tests
                                 </button>
-                                <button class="action-btn secondary cancel-treatment-btn" id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>" data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
+                                <button class="action-btn secondary cancel-treatment-btn"
+                                    id="cancelTreatmentBtn-<?php echo $appointment['appointment_id']; ?>"
+                                    data-appointment-id="<?php echo $appointment['appointment_id']; ?>">
                                     <i class="ri-close-circle-line"></i> Cancel Treatment
                                 </button>
                             </div>
@@ -345,7 +403,8 @@
             </div>
             <div class="form-group">
                 <label for="testDescription">Test Description</label>
-                <textarea id="testDescription" class="form-control" rows="3" placeholder="Provide specific instructions for the test..."></textarea>
+                <textarea id="testDescription" class="form-control" rows="3"
+                    placeholder="Provide specific instructions for the test..."></textarea>
             </div>
             <div class="form-group">
                 <label for="testRequiredFasting">Requires Fasting</label>
@@ -381,7 +440,8 @@
             </div>
             <div class="form-group">
                 <label for="cancellationReason">Reason for Cancellation</label>
-                <textarea id="cancellationReason" class="form-control" rows="3" placeholder="Please provide a reason for cancellation..."></textarea>
+                <textarea id="cancellationReason" class="form-control" rows="3"
+                    placeholder="Please provide a reason for cancellation..."></textarea>
             </div>
             <button id="confirmCancelTreatment" class="full-width-button">Confirm Cancellation</button>
         </div>
@@ -401,7 +461,8 @@
                 <select id="editTravelRestrictions" class="form-control">
                     <option value="None">No Restrictions</option>
                     <option value="Can travel, but avoid high altitudes">Can travel, but avoid high altitudes</option>
-                    <option value="Can travel, but need wheelchair assistance">Can travel, but need wheelchair assistance</option>
+                    <option value="Can travel, but need wheelchair assistance">Can travel, but need wheelchair
+                        assistance</option>
                     <option value="Can travel with medical escort only">Can travel with medical escort only</option>
                     <option value="Limited to short flights only">Limited to short flights only</option>
                     <option value="Not fit for air travel at this time">Not fit for air travel at this time</option>
@@ -409,7 +470,8 @@
             </div>
             <div class="form-group">
                 <label for="editTreatmentDescription">Treatment Description</label>
-                <textarea id="editTreatmentDescription" class="form-control" rows="4" placeholder="Describe the recommended treatment plan..."></textarea>
+                <textarea id="editTreatmentDescription" class="form-control" rows="4"
+                    placeholder="Describe the recommended treatment plan..."></textarea>
             </div>
             <div class="form-group">
                 <label for="editEstimatedBudget">Estimated Budget (LKR)</label>
@@ -417,7 +479,8 @@
             </div>
             <div class="form-group">
                 <label for="editEstimatedDuration">Estimated Duration (Days)</label>
-                <input type="number" id="editEstimatedDuration" class="form-control" placeholder="Enter estimated duration">
+                <input type="number" id="editEstimatedDuration" class="form-control"
+                    placeholder="Enter estimated duration">
             </div>
             <button id="updateTreatmentPlan" class="full-width-button">Update Treatment Plan</button>
         </div>
@@ -429,7 +492,7 @@
     const basePath = '<?php echo $basePath; ?>';
 
     // Function to handle specialist booking updates
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Check if we're returning from a successful specialist booking
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('specialist_booked') && urlParams.has('appointment_id')) {

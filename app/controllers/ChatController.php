@@ -50,10 +50,10 @@ class ChatController extends BaseController
 
             // Handle chat based on user role
             $viewData = null;
-            if ($userRole == 1) { // Patient
+            if ($userRole == 1) { 
                 error_log("Handling patient chat");
                 $viewData = $this->handlePatientChat($userId, $receiverId);
-            } elseif ($userRole == 2 || $userRole == 3) { // Doctor or Specialist
+            } elseif ($userRole == 2 || $userRole == 3) { 
                 error_log("Handling doctor chat");
                 $viewData = $this->handleDoctorChat($userId, $receiverId);
             } else {
@@ -72,7 +72,7 @@ class ChatController extends BaseController
             if ($userRole == 1) {
                 $viewPath = 'patient/chat';
             } elseif ($userRole == 3) {
-                $viewPath = 'vpdoctor/chat'; // Use the VPDoctor chat view
+                $viewPath = 'vpdoctor/chat';
             } else {
                 $viewPath = 'doctor/chat';
             }

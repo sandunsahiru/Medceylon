@@ -178,35 +178,38 @@
     </section>
 
     <!-- Availability Section -->
-    <section id="availabilityTab" class="appointments-wrapper" style="display: none;">
-        <div class="availability-grid">
-            <?php if ($availability->num_rows > 0): ?>
-                <?php while ($slot = $availability->fetch_assoc()): ?>
-                    <div class="time-slot-card">
-                        <div class="time-slot-info">
-                            <h3><?php echo htmlspecialchars($slot['day_of_week']); ?></h3>
-                            <div class="time">
-                                <i class="ri-time-line"></i>
-                                <span><?php echo date('H:i', strtotime($slot['start_time'])) . ' - ' . date('H:i', strtotime($slot['end_time'])); ?></span>
-                            </div>
-                        </div>
-                        <div class="slot-actions">
-                            <button class="edit-btn" onclick="editAvailability(<?php echo $slot['availability_id']; ?>)">
-                                <i class="ri-pencil-line"></i>
-                            </button>
-                            <button class="cancel-btn" onclick="deleteAvailability(<?php echo $slot['availability_id']; ?>)">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
+<section id="availabilityTab" class="appointments-wrapper" style="display: none;">
+    <div class="availability-grid">
+        <?php if (is_array($availability) && count($availability) > 0): ?>
+            <?php foreach ($availability as $slot): ?>
+                <div class="time-slot-card" data-availability-id="<?php echo $slot['availability_id']; ?>" 
+                     data-day="<?php echo htmlspecialchars($slot['day_of_week']); ?>"
+                     data-start-time="<?php echo htmlspecialchars($slot['start_time']); ?>"
+                     data-end-time="<?php echo htmlspecialchars($slot['end_time']); ?>">
+                    <div class="time-slot-info">
+                        <h3><?php echo htmlspecialchars($slot['day_of_week']); ?></h3>
+                        <div class="time">
+                            <i class="ri-time-line"></i>
+                            <span><?php echo date('H:i', strtotime($slot['start_time'])) . ' - ' . date('H:i', strtotime($slot['end_time'])); ?></span>
                         </div>
                     </div>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <div class="no-results">
-                    <p>No availability slots set.</p>
+                    <div class="slot-actions">
+                        <button class="edit-btn" onclick="editAvailability(<?php echo $slot['availability_id']; ?>)">
+                            <i class="ri-pencil-line"></i>
+                        </button>
+                        <button class="cancel-btn" onclick="deleteAvailability(<?php echo $slot['availability_id']; ?>)">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
                 </div>
-            <?php endif; ?>
-        </div>
-    </section>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="no-results">
+                <p>No availability slots set.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
 
     <!-- Add Availability Modal -->
     <div id="availabilityModal" class="modal" style="display: none;">

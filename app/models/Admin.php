@@ -174,7 +174,7 @@ class Admin
     {
         try {
             $query_patients = "SELECT COUNT(*) AS total_patients FROM users WHERE role_id = 1";
-            $stmt = $this->db->prepare($query_patients); // Prepare the SQL query
+            $stmt = $this->db->prepare($query_patients);
             $stmt->execute(); // Execute the query
             $result = $stmt->get_result(); // Fetch the result set
             $patients_count = 0;
@@ -369,16 +369,29 @@ class Admin
             throw $e;
         }
     }
+   
+
+
     public function getPatientPlan($status)
     {
-        $query = "SELECT p.plan_name, u.* FROM users u
-                  JOIN payment_plans p ON u.payment_plan_id = p.id
-                  WHERE u.payment_plan_id IS NOT NULL AND plan_name = ? AND u.is_active = 1;";
+        try {
+            $query = "SELECT t.*, u.*, p.plan_name FROM treatment_plans t
+            JOIN payment_plans p ON t.payment_plan_id = p.id
+            JOIN users u ON t.patient_id = u.user_id
+            WHERE u.is_active = 1 AND t.payment_plan_id IS NOT NULL
+            AND plan_name = ?
+            ORDER BY created_at DESC;";
+            $stmt = $this->db->prepare($query);
+            $stmt->bind_param("s", $status);
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param("s",$status);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC); 
+
+
+        } catch (\Exception $e) {
+            error_log("Error getting treatment plan by patient ID: " . $e->getMessage());
+            return false;
+        }
     }
 
 }
