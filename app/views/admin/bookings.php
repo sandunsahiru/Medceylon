@@ -1,7 +1,8 @@
 <?php require_once ROOT_PATH . '/app/views/admin/layouts/header.php'; ?>
 
 <body>
-    <?php $page = 'bookings'; require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <?php $page = 'bookings';
+    require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/bookings.css">
 
     <div class="main-content">
@@ -20,33 +21,86 @@
                 </div>
                 <div>
                     <!-- <span>All users <strong>44</strong></span> -->
-                    <button class="add-user-btn" onclick="window.location.href='<?= $basePath ?>/admin/adduser'">+
-                        Add a hotel</button>
+                    <button class="add-user-btn">/admin/adduser'">+
+                        </button>
                 </div>
             </div>
 
 
             <?php if (!empty($plans)): ?>
                 <?php foreach ($plans as $plan): ?>
-                    <div class="request-card">
-                        <div class="request-details">
-                            <div class="left-details">
-                                <p><b>Patient:</b>
-                                    <?php echo htmlspecialchars($plan['first_name']) . ' ' . htmlspecialchars($plan['last_name'] ?? '') ?>
-                                </p>
-                                <p><b>Plan Type:</b> <?php echo htmlspecialchars($plan['plan_name']) ?></p>
-                                <p><b>Check-in:</b> <?php echo htmlspecialchars($plan['check_in_date'] ?? '') ?></p>
-                                <p><b>Check-out:</b> <?php echo htmlspecialchars($plan['check_out_date'] ?? '') ?></p>
+
+                    <div class="session-card">
+                        <div class="session-header">
+                            <div>Medical Session:
+                                <strong><?= htmlspecialchars($plan['first_name'] . ' ' . $plan['last_name']) ?></strong>
                             </div>
-                            <div class="right-details">
-                                <!-- buttons etc -->
+                            <span class="status-badge">Scheduled</span>
+                        </div>
+
+                        <div class="progress-steps">
+                            <div class="step active">
+                                <div class="step-circle"><i class="ri-check-line"></i></div>
+                                <div class="label">General Doctor</div>
+                            </div>
+                            <div class="step">
+                                <div class="circle"><i class="ri-user-star-line"></i></div>
+                                <div class="label">Specialist Doctor</div>
+                            </div>
+                            <div class="step">
+                                <div class="circle"><i class="ri-file-list-line"></i></div>
+                                <div class="label">Treatment Plan</div>
+                            </div>
+                            <div class="step">
+                                <div class="circle"><i class="ri-building-line"></i></div>
+                                <div class="label">Travel & Accommodation</div>
                             </div>
                         </div>
+
+                        <div class="session-details-container">
+                            <h3>Patient Information</h3>
+                            <div class="doctor-card">
+                                <div class="doctor-avatar">
+                                    <i class="ri-user-line"></i>
+                                </div>
+                                <div class="doctor-info">
+                                    <h3><?php echo htmlspecialchars($plan['first_name'] . ' ' . $plan['last_name']); ?>
+                                    </h3>
+                                    <p>Patient ID:
+                                        <?php echo htmlspecialchars($plan['patient_id'] ?? 'P-' . rand(10000, 99999)); ?>
+                                    </p>
+
+                                    <div class="appointment-meta">
+                                        <div class="meta-item">
+                                            <i class="ri-calendar-line"></i>
+                                            <span><b>Plan
+                                                    Type:</b><?php echo htmlspecialchars($plan['plan_name']) ?? ' ' ?></span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="ri-user-location-line"></i>
+                                            <span><b>Gender:</b><?php echo htmlspecialchars($plan['gender']) ?? ' ' ?></span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="ri-error-warning-line"></i>
+                                            <span><b>Restrictions:</b>
+                                                <p><?php echo htmlspecialchars($plan['travel_restrictions'] ?? '') ?>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+
+
                     </div>
+
+
                 <?php endforeach; ?>
             <?php else: ?>
                 <p>No Patient Plans</p>
             <?php endif; ?>
+
 
 
             <div id="bookingModal" class="modal" style="display:none;">

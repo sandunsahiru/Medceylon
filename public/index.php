@@ -35,8 +35,8 @@ try {
     $router->get('/legal-agreements', 'HomeController', 'legalAgreements');
     $router->get('/faq', 'HomeController', 'faq');
     $router->get('/visa-guidance', 'HomeController', 'visaGuidance');
-    $router->get('/about-us','HomeController','aboutUs');
-    $router->get('/partner-hospitals','HomeController','partnerHospitals');
+    $router->get('/about-us', 'HomeController', 'aboutUs');
+    $router->get('/partner-hospitals', 'HomeController', 'partnerHospitals');
 
     // Auth routes
     $router->get('/login', 'AuthController', 'login');
@@ -205,7 +205,7 @@ try {
     $router->get('/patient/paymentPlan', 'PatientController', 'paymentPlan', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/patient/payment-plans', 'PatientController', 'showPaymentPlans');
     $router->post('/patient/choose-plan', 'PatientController', 'choosePlan');
-    
+
     // Caregiver routes
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/patients', 'CaregiverController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
@@ -225,10 +225,10 @@ try {
     $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/provinces', 'TravelPlanController', 'provinces', \App\Core\Middleware\AuthMiddleware::class);
 
-    $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController','calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
-    $router->post('/travelplan/save-plan', 'TravelPlanController','savePlan', \App\Core\Middleware\AuthMiddleware::class);
-    $router->get('/travelplan/view-plan', 'TravelPlanController', 'viewPlan',    \App\Core\Middleware\AuthMiddleware::class);
-    
+    $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController', 'calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/save-plan', 'TravelPlanController', 'savePlan', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/travelplan/view-plan', 'TravelPlanController', 'viewPlan', \App\Core\Middleware\AuthMiddleware::class);
+
     $router->get('/forgot-password', 'ForgotPasswordController', 'showForm');
     $router->post('/forgot-password', 'ForgotPasswordController', 'handleForm');
     $router->get('/reset-password', 'ForgotPasswordController', 'showResetForm');
@@ -277,16 +277,16 @@ try {
     $router->get('/accommodation/get-booking-details', 'AccommodationController', 'getBookingDetails', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
     // Navigate to specific medical session tab
-$router->get('/patient/session/tab/:tab', 'PatientController', 'navigateSessionTab', \App\Core\Middleware\AuthMiddleware::class);
+    $router->get('/patient/session/tab/:tab', 'PatientController', 'navigateSessionTab', \App\Core\Middleware\AuthMiddleware::class);
 
-// Book hotel and transport routes
-$router->get('/patient/book-hotel-transport', 'PatientController', 'bookHotelTransport', \App\Core\Middleware\AuthMiddleware::class);
+    // Book hotel and transport routes
+    $router->get('/patient/book-hotel-transport', 'PatientController', 'bookHotelTransport', \App\Core\Middleware\AuthMiddleware::class);
 
-// Select travel plan route
-$router->get('/patient/select-travel-plan', 'PatientController', 'selectTravelPlan', \App\Core\Middleware\AuthMiddleware::class);
+    // Select travel plan route
+    $router->get('/patient/select-travel-plan', 'PatientController', 'selectTravelPlan', \App\Core\Middleware\AuthMiddleware::class);
 
-// View session summary route
-$router->get('/patient/session-summary', 'PatientController', 'sessionSummary', \App\Core\Middleware\AuthMiddleware::class);
+    // View session summary route
+    $router->get('/patient/session-summary', 'PatientController', 'sessionSummary', \App\Core\Middleware\AuthMiddleware::class);
 
 
     // Set 404 handler

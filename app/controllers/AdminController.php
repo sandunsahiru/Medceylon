@@ -71,6 +71,8 @@ class AdminController extends BaseController
 
     }
 
+    
+
 
     public function editProfile()
     {
@@ -274,6 +276,8 @@ class AdminController extends BaseController
             exit(); // Make sure the script stops after sending the response
         }
     }
+
+
 
 }
 ?>
