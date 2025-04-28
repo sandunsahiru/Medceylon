@@ -1,12 +1,4 @@
-<?php
 
-/**
- * Patient Dashboard View
- * 
- * This file displays the patient dashboard with appointment information
- * and medical session management.
- */
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -629,7 +621,7 @@
 
 <body>
     <div class="container">
-        <!-- Sidebar - Kept exactly as original -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
                 <a href="<?php echo $basePath; ?>" style="text-decoration: none; color: var(--primary-color);">
@@ -667,7 +659,7 @@
         </aside>
 
         <main class="main-content">
-            <!-- Header - Kept exactly as original -->
+            <!-- Header-->
             <header class="top-bar">
                 <h1>Dashboard</h1>
                 <div class="header-right">
@@ -729,6 +721,15 @@
                                 $progress += 10;
                             echo $progress . '%';
                             ?>"></div>
+                                                                            
+                                                                            $progress = 0;
+                                                                            if ($sessionData['generalDoctorBooked']) $progress += 25;
+                                                                            if ($sessionData['specialistBooked']) $progress += 25;
+                                                                            if ($sessionData['treatmentPlanCreated']) $progress += 25;
+                                                                            if ($sessionData['transportBooked']) $progress += 15;
+                                                                            if ($sessionData['travelPlanSelected']) $progress += 10;
+                                                                            echo $progress . '%';
+                                                                            ?>"></div>
 
                             <!-- Step 1: General Doctor -->
                             <div
@@ -834,22 +835,22 @@
                                                 <div class="meta-item">
                                                     <i class="ri-calendar-line"></i>
                                                     <span><?php
-                                                    if (isset($sessionData['generalDoctor']['appointmentDate'])) {
-                                                        echo htmlspecialchars(date('d/m/Y', strtotime($sessionData['generalDoctor']['appointmentDate'])));
-                                                    } else {
-                                                        echo '28/04/2025'; // Default from your existing appointment
-                                                    }
-                                                    ?></span>
+                                                            if (isset($sessionData['generalDoctor']['appointmentDate'])) {
+                                                                echo htmlspecialchars(date('d/m/Y', strtotime($sessionData['generalDoctor']['appointmentDate'])));
+                                                            } else {
+                                                                echo '28/04/2025'; 
+                                                            }
+                                                            ?></span>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-time-line"></i>
                                                     <span><?php
-                                                    if (isset($sessionData['generalDoctor']['appointmentDate'])) {
-                                                        echo htmlspecialchars(date('H:i', strtotime($sessionData['generalDoctor']['appointmentDate'])));
-                                                    } else {
-                                                        echo '19:00'; // Default from your existing appointment
-                                                    }
-                                                    ?></span>
+                                                            if (isset($sessionData['generalDoctor']['appointmentDate'])) {
+                                                                echo htmlspecialchars(date('H:i', strtotime($sessionData['generalDoctor']['appointmentDate'])));
+                                                            } else {
+                                                                echo '19:00'; 
+                                                            }
+                                                            ?></span>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-building-line"></i>
@@ -1432,6 +1433,35 @@
             // Close modal when clicking outside
             window.addEventListener('click', function (event) {
                 if (event.target === rescheduleModal) {
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === rescheduleModal) {
+                rescheduleModal.style.display = 'none';
+            }
+            if (event.target === itineraryModal) {
+                itineraryModal.style.display = 'none';
+            }
+        });
+
+        // Reschedule appointment button
+        const rescheduleAppointmentBtn = document.getElementById('rescheduleAppointmentBtn');
+        if (rescheduleAppointmentBtn) {
+            rescheduleAppointmentBtn.addEventListener('click', function() {
+                if (rescheduleModal) rescheduleModal.style.display = 'block';
+            });
+        }
+
+        // Submit reschedule request
+        const submitRescheduleBtn = document.getElementById('submitReschedule');
+        if (submitRescheduleBtn) {
+            submitRescheduleBtn.addEventListener('click', async function() {
+                const date = document.getElementById('rescheduleDate').value;
+                const time = document.getElementById('rescheduleTime').value;
+                const reason = document.getElementById('rescheduleReason').value;
+
+                try {
+                    
+                    alert("Reschedule request submitted successfully. Waiting for doctor's approval.");
                     rescheduleModal.style.display = 'none';
                 }
                 if (event.target === itineraryModal) {
@@ -1501,6 +1531,22 @@
             }
         });
     </script>
+
+        const selectTravelPlanBtn = document.getElementById('selectTravelPlan');
+        if (selectTravelPlanBtn) {
+            selectTravelPlanBtn.addEventListener('click', function() {
+                if (!selectedPlan) {
+                    alert("Please select a travel plan");
+                    return;
+                }
+
+              
+                alert(`${selectedPlan === 'premium' ? 'Premium' : 'Basic'} plan selected successfully!`);
+                window.location.reload();
+            });
+        }
+    });
+</script>
 </body>
 
 </html>

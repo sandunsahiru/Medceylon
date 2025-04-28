@@ -30,7 +30,7 @@ class AuthController extends BaseController
                 'experience_years' => $_POST['experience_years'] ?? null
             ];
 
-
+            // CAREGIVERS CANNOT REGISTER
             if ($userData['user_type'] === 'caregiver') {
                 $error = "Caregivers cannot register directly.";
                 echo $this->view('auth/register', [
@@ -66,7 +66,7 @@ class AuthController extends BaseController
                 return;
             }
 
-
+            // Register logic
             $result = $this->userModel->register($userData);
 
             if ($result['success']) {

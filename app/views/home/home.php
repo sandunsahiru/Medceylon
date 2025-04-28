@@ -31,14 +31,14 @@
         </div>
         <div
             class="service <?= ($paymentPlan['plan_name'] != 'Platinum' && $paymentPlan['plan_name'] != 'Gold') ? 'disabled' : '' ?>">
-            <a href="<?php echo $basePath; ?>/transportation">
+            <a href="<?php echo $basePath; ?>/patient/transport">
                 <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle221523.jpg"
                     alt="Explore transport options">
                 <h3>Explore transport options</h3>
             </a>
         </div>
         <div class="service <?= ($paymentPlan['plan_name'] != 'Platinum') ? 'disabled' : '' ?>">
-            <a href="<?php echo $basePath; ?>/caregivers">
+            <a href="<?php echo $basePath; ?>/caregiver">
                 <img src="<?php echo $basePath; ?>/public/assets/images/Rectangle231573.jpg"
                     alt="Connect with caregivers">
                 <h3>Connect with caregivers</h3>

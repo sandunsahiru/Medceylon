@@ -466,3 +466,259 @@ public function updateProfile($userId, $data)
     }
 }
 
+<!--Search Bar-->
+<div class="search-container">
+    <form id="searchForm" method="GET" action="<?php echo $basePath; ?>/search">
+        <div class="search-input-wrapper">
+            <input type="text" id="searchInput" name="query" placeholder="Search..." 
+                value="<?php echo isset($_GET['query']) ? htmlspecialchars($_GET['query']) : ''; ?>">
+            <button type="submit" class="search-btn">
+                <i class="ri-search-line"></i>
+            </button>
+        </div>
+    </form>
+    <div id="searchResults" class="search-results" style="display: none;"></div>
+</div>
+
+public function search()
+{
+    try {
+        
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+        
+        
+        $query = isset($_GET['query']) ? trim($_GET['query']) : '';
+        
+        if (empty($query)) {
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Empty search query']);
+                exit();
+            } else {
+                $this->session->setFlash('error', 'Please enter a search term');
+                header('Location: ' . $this->basePath . '/');
+                exit();
+            }
+        }
+        
+        
+        if (strlen($query) > 100) {
+            $query = substr($query, 0, 100);
+        }
+        
+        
+        $results = $this->searchModel->performSearch($query);
+        
+        
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'results' => $results
+            ]);
+            exit();
+        } else {
+            // Render full page results
+            $data = [
+                'query' => $query,
+                'results' => $results,
+                'basePath' => $this->basePath
+            ];
+            
+            echo $this->view('search/results', $data);
+            exit();
+        }
+    } catch (\Exception $e) {
+        error_log("Error in search: " . $e->getMessage());
+        
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error performing search']);
+            exit();
+        } else {
+            $this->session->setFlash('error', 'An error occurred while searching');
+            header('Location: ' . $this->basePath . '/');
+            exit();
+        }
+    }
+}
+
+/**
+ * Perform search across database
+ * 
+ * @param string $query
+ * @return array
+ */
+public function performSearch($query)
+{
+    try {
+        // Sanitize the search query
+        $searchTerm = '%' . $this->db->real_escape_string($query) . '%';
+        
+        // Search in doctors
+        $doctorsQuery = "SELECT 
+            d.doctor_id, 
+            u.first_name, 
+            u.last_name, 
+            'doctor' as result_type,
+            s.name as sub_text
+            FROM doctors d
+            JOIN users u ON d.user_id = u.user_id
+            LEFT JOIN doctorspecializations ds ON d.doctor_id = ds.doctor_id
+            LEFT JOIN specializations s ON ds.specialization_id = s.specialization_id
+            WHERE (u.first_name LIKE ? OR u.last_name LIKE ?)
+            AND d.is_active = 1
+            GROUP BY d.doctor_id
+            LIMIT 5";
+        
+        $stmt = $this->db->prepare($doctorsQuery);
+        $stmt->bind_param("ss", $searchTerm, $searchTerm);
+        $stmt->execute();
+        $doctorResults = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        // Search in hospitals
+        $hospitalsQuery = "SELECT 
+            hospital_id, 
+            name, 
+            'hospital' as result_type,
+            location as sub_text
+            FROM hospitals
+            WHERE name LIKE ?
+            AND is_active = 1
+            LIMIT 5";
+        
+        $stmt = $this->db->prepare($hospitalsQuery);
+        $stmt->bind_param("s", $searchTerm);
+        $stmt->execute();
+        $hospitalResults = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        // Combine results
+        $results = [
+            'doctors' => $doctorResults,
+            'hospitals' => $hospitalResults,
+            'total_count' => count($doctorResults) + count($hospitalResults)
+        ];
+        
+        return $results;
+    } catch (\Exception $e) {
+        error_log("Error in performSearch: " . $e->getMessage());
+        return [
+            'doctors' => [],
+            'hospitals' => [],
+            'total_count' => 0
+        ];
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchForm = document.getElementById('searchForm');
+    const searchResults = document.getElementById('searchResults');
+    let searchTimeout;
+    
+    // Live search as user types
+    searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+        
+        // Hide results if query is too short
+        if (query.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+        
+        // Set timeout to avoid too many requests
+        searchTimeout = setTimeout(() => {
+            fetchSearchResults(query);
+        }, 300);
+    });
+    
+    // Hide results when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+    
+    // Function to fetch search results
+    function fetchSearchResults(query) {
+        fetch(`${basePath}/search?query=${encodeURIComponent(query)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.results.total_count > 0) {
+                displayResults(data.results);
+                searchResults.style.display = 'block';
+            } else {
+                searchResults.innerHTML = '<div class="no-results">No results found</div>';
+                searchResults.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            searchResults.innerHTML = '<div class="no-results error">Error searching</div>';
+            searchResults.style.display = 'block';
+        });
+    }
+    
+    // Function to display search results
+    function displayResults(results) {
+        let html = '<ul>';
+        
+        // Add doctor results
+        if (results.doctors.length > 0) {
+            html += '<li class="result-category">Doctors</li>';
+            results.doctors.forEach(doctor => {
+                html += `
+                <li class="result-item">
+                    <a href="${basePath}/doctor/profile/${doctor.doctor_id}">
+                        <div class="result-main">Dr. ${doctor.first_name} ${doctor.last_name}</div>
+                        <div class="result-sub">${doctor.sub_text || ''}</div>
+                    </a>
+                </li>`;
+            });
+        }
+        
+        // Add hospital results
+        if (results.hospitals.length > 0) {
+            html += '<li class="result-category">Hospitals</li>';
+            results.hospitals.forEach(hospital => {
+                html += `
+                <li class="result-item">
+                    <a href="${basePath}/hospital/detail/${hospital.hospital_id}">
+                        <div class="result-main">${hospital.name}</div>
+                        <div class="result-sub">${hospital.sub_text || ''}</div>
+                    </a>
+                </li>`;
+            });
+        }
+        
+        html += '</ul>';
+        
+        // Add "View all results" link
+        html += `
+        <div class="view-all">
+            <a href="${basePath}/search?query=${encodeURIComponent(searchInput.value)}">
+                View all results
+            </a>
+        </div>`;
+        
+        searchResults.innerHTML = html;
+    }
+    
+    // Normal form submission for full page results
+    searchForm.addEventListener('submit', function(e) {
+        const query = searchInput.value.trim();
+        
+        if (query.length < 2) {
+            e.preventDefault();
+            alert('Please enter at least 2 characters to search');
+        }
+    });
+});

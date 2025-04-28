@@ -103,7 +103,6 @@ try {
     $router->post('/doctor/availability/update', 'DoctorController', 'updateAvailability', \App\Core\Middleware\DoctorAuthMiddleware::class);
 
     // Doctor API routes
-    // Doctor API routes
     $router->get('/doctor/getTimeSlots', 'DoctorController', 'getTimeSlots', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->get('/doctor/getDocProfile', 'DoctorController', 'getDocProfile', \App\Core\Middleware\DoctorAuthMiddleware::class);
     $router->get('/doctor/getPatients', 'DoctorController', 'getPatients', \App\Core\Middleware\DoctorAuthMiddleware::class);
@@ -210,7 +209,7 @@ try {
     $router->get('/caregiver/dashboard', 'CaregiverController', 'dashboard', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/caregiver/patients', 'CaregiverController', 'patients', \App\Core\Middleware\AuthMiddleware::class);
 
-
+    $router->get('/caregiver', 'CaregiverController', 'list');
 
 
     //travel routes
@@ -256,7 +255,7 @@ try {
     $router->get('/debug/test-meet', 'DebugController', 'testMeet');
     $router->get('/debug/check-calendar', 'DebugController', 'checkCalendarAccess');
 
-    // TEMP TEST (Remove later)
+    // TEMP TEST 
     $router->get('/agent/test', 'AgentTransportationController', 'index');
     // Add these debug routes
     $router->get('/debug/test-meet', 'DebugController', 'testMeet');
@@ -278,6 +277,8 @@ try {
     $router->get('/accommodation/get-accommodation-details', 'AccommodationController', 'getAccommodationDetails', \App\Core\Middleware\AuthMiddleware::class);
     // Navigate to specific medical session tab
     $router->get('/patient/session/tab/:tab', 'PatientController', 'navigateSessionTab', \App\Core\Middleware\AuthMiddleware::class);
+    
+$router->get('/patient/session/tab/:tab', 'PatientController', 'navigateSessionTab', \App\Core\Middleware\AuthMiddleware::class);
 
     // Book hotel and transport routes
     $router->get('/patient/book-hotel-transport', 'PatientController', 'bookHotelTransport', \App\Core\Middleware\AuthMiddleware::class);

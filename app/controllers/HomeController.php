@@ -6,6 +6,7 @@ use App\Models\Patient;
 class HomeController extends BaseController
 {
     private $patientModel;
+    
     public function __construct()
     {
         parent::__construct();
@@ -90,7 +91,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in rateDoctor: " . $e->getMessage());
             throw $e;
         }
     }
@@ -104,7 +105,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in contactUs: " . $e->getMessage());
             throw $e;
         }
     }
@@ -118,7 +119,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in legalAgreements: " . $e->getMessage());
             throw $e;
         }
     }
@@ -132,7 +133,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in faq: " . $e->getMessage());
             throw $e;
         }
     }
@@ -140,15 +141,146 @@ class HomeController extends BaseController
     public function visaGuidance()
     {
         try {
-
-            echo $this->view('home/visa_guidance', [
+            // Debug info
+            error_log("Starting visaGuidance method in HomeController");
+            
+            // Get database connection from parent class (BaseController)
+            $db = $this->db;
+            
+            if (!$db) {
+                // Try to create a new connection directly
+                error_log("Database connection is null, trying direct connection");
+                
+                // Include database config
+                require_once ROOT_PATH . '/app/config/database.php';
+                
+                // Create connection using globals from database.php
+                if (isset($DB_HOST) && isset($DB_USER) && isset($DB_PASS) && isset($DB_NAME)) {
+                    error_log("Creating direct database connection");
+                    $db = new \mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+                    
+                    if ($db->connect_error) {
+                        error_log("Direct connection failed: " . $db->connect_error);
+                    } else {
+                        error_log("Direct connection successful");
+                    }
+                } else {
+                    error_log("Database config variables not available");
+                }
+            }
+            
+            // If we still don't have a connection, show error
+            if (!$db || ($db instanceof \mysqli && $db->connect_error)) {
+                error_log("Unable to establish database connection for visa guidance");
+                
+                // First check if the error view exists
+                $errorViewPath = ROOT_PATH . '/app/views/errors/database_error.php';
+                if (!file_exists($errorViewPath)) {
+                    error_log("Error view not found at: " . $errorViewPath);
+                    
+                    // Simple direct error output
+                    echo '<h1>Database Error</h1>';
+                    echo '<p>Unable to connect to the database. Please try again later.</p>';
+                    echo '<p><a href="' . $this->basePath . '/">Return to Home</a></p>';
+                    exit();
+                }
+                
+                // Show error view
+                echo $this->view('errors/database_error', [
+                    'message' => 'Unable to connect to the database',
+                    'basePath' => $this->basePath,
+                    'title' => 'Database Error'
+                ]);
+                exit();
+            }
+            
+            error_log("Database connection successful");
+            
+            // Initialize variables
+            $countries = [];
+            $country_details = null;
+            
+            // Process form submission if POST request
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['country_code'])) {
+                $country_code = $_POST['country_code'];
+                error_log("Processing form submission for country: " . $country_code);
+                
+                // Get country details
+                $query = "SELECT country_code, country_name, visa_required, application_steps, embassy_link FROM countries WHERE country_code = ?";
+                $stmt = $db->prepare($query);
+                
+                if (!$stmt) {
+                    error_log("Prepare failed: " . $db->error);
+                } else {
+                    $stmt->bind_param("s", $country_code);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $country_details = $result->fetch_assoc();
+                    $stmt->close();
+                    
+                    // Log the country details
+                    if ($country_details) {
+                        error_log("Found country details for: " . $country_details['country_name']);
+                    } else {
+                        error_log("No country details found for code: " . $country_code);
+                    }
+                }
+            }
+            
+            // Get all countries for dropdown
+            error_log("Fetching all countries for dropdown");
+            $query = "SELECT country_code, country_name FROM countries ORDER BY country_name";
+            $result = $db->query($query);
+            
+            if (!$result) {
+                error_log("Error fetching countries: " . $db->error);
+            } else {
+                while ($row = $result->fetch_assoc()) {
+                    $countries[] = $row;
+                }
+                error_log("Fetched " . count($countries) . " countries");
+            }
+            
+            // Check if view file exists
+            $viewPath = ROOT_PATH . '/app/views/home/visa_guidance.php';
+            if (!file_exists($viewPath)) {
+                error_log("View file not found at: " . $viewPath);
+                echo '<h1>Error</h1>';
+                echo '<p>View file not found: /app/views/home/visa_guidance.php</p>';
+                exit();
+            }
+            
+            error_log("View file exists, rendering visa_guidance view");
+            
+            // Pass data to view
+            $data = [
+                'countries' => $countries,
+                'country_details' => $country_details,
                 'basePath' => $this->basePath,
                 'title' => 'Sri Lanka Visa Information'
-            ]);
+            ];
+            
+            echo $this->view('home/visa_guidance', $data);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
-            throw $e;
+            error_log("Error in visaGuidance: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            // Show simple error if the error view is not available
+            if (!file_exists(ROOT_PATH . '/app/views/errors/database_error.php')) {
+                echo '<h1>Application Error</h1>';
+                echo '<p>An error occurred: ' . $e->getMessage() . '</p>';
+                echo '<p><a href="' . $this->basePath . '/">Return to Home</a></p>';
+                exit();
+            }
+            
+            // Show error view
+            echo $this->view('errors/database_error', [
+                'message' => 'An error occurred while retrieving visa information',
+                'basePath' => $this->basePath,
+                'title' => 'Database Error'
+            ]);
+            exit();
         }
     }
 
@@ -161,7 +293,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in aboutUs: " . $e->getMessage());
             throw $e;
         }
     }
@@ -209,7 +341,7 @@ class HomeController extends BaseController
             ]);
             exit();
         } catch (\Exception $e) {
-            error_log("Error in index: " . $e->getMessage());
+            error_log("Error in partnerHospitals: " . $e->getMessage());
             throw $e;
         }
     }
