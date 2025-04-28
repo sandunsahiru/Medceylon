@@ -1,7 +1,8 @@
 <?php require_once ROOT_PATH . '/app/views/admin/layouts/header.php'; ?>
 
+
 <body>
-    <?php require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <?php $page = 'appointments'; require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/appointment.css">
 
     <div class="main-content">
@@ -9,7 +10,7 @@
             <h1>Appointments</h1>
         </header>
 
-        <div class="container">
+        <div class="calendar-container">
 
             <!-- Appointment Schedule -->
             <!-- <div class="follow-up">
@@ -26,41 +27,6 @@
             </div>
             <div class="appointments" id="appointments"></div>
 
-        </div>
-        <div class="upper">
-            <div class="ongoing-appointments">
-                <h2>Upcoming Appointments</h2>
-
-                <?php if (!empty($appointments)): ?>
-                    <?php foreach ($appointments as $appointment): ?>
-                        <div class="appointment-card">
-                            <div class="appointment-upper-details">
-                                <div class="details">
-                                    <p>Doctor: Dr.
-                                        <?= htmlspecialchars($appointment['doctor']['first_name'] . ' ' . $appointment['doctor']['last_name']) ?>
-                                    </p>
-                                </div>
-                                <div class="details">
-                                    <p>Patient:
-                                        <?= htmlspecialchars($appointment['patient']['first_name'] . ' ' . $appointment['patient']['last_name']) ?>
-                                    </p>
-                                </div>
-                                <div class="details">
-                                    <p>Date: <?= htmlspecialchars($appointment['appointment']['date']) ?></p>
-                                </div>
-                                <div class="details">
-                                    <p>Time: <?= htmlspecialchars($appointment['appointment']['time']) ?></p>
-                                </div>
-                                <div class="details">
-                                    <p>Status: <?= htmlspecialchars($appointment['appointment']['status']) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p>No upcoming appointments.</p>
-                <?php endif; ?>
-            </div>
         </div>
 
 

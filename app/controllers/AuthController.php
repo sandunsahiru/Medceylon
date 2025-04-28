@@ -30,7 +30,7 @@ class AuthController extends BaseController
                 'experience_years' => $_POST['experience_years'] ?? null
             ];
 
-            // 🚫 CAREGIVERS CANNOT REGISTER
+
             if ($userData['user_type'] === 'caregiver') {
                 $error = "Caregivers cannot register directly.";
                 echo $this->view('auth/register', [
@@ -41,7 +41,6 @@ class AuthController extends BaseController
                 return;
             }
 
-            // 🔒 BACKEND VALIDATION
             if (!preg_match("/^[a-zA-Z\s]+$/", $userData['name'])) {
                 $error = "Name can only contain letters and spaces.";
             } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
@@ -67,7 +66,7 @@ class AuthController extends BaseController
                 return;
             }
 
-            // ✅ Register logic
+
             $result = $this->userModel->register($userData);
 
             if ($result['success']) {
@@ -223,7 +222,8 @@ class AuthController extends BaseController
             3 => $this->basePath . '/vpdoctor/dashboard',
             4 => $this->basePath . '/admin/dashboard',
             5 => $this->basePath . '/agent/transport-requests',
-            6 => $this->basePath . '/hospital/dashboard'
+            6 => $this->basePath . '/hospital/dashboard',
+            7 => $this->basePath . '/caregiver/dashboard',
         ];
 
         header("Location: " . ($redirects[$roleId] ?? $this->basePath . '/home'));

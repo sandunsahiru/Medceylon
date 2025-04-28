@@ -152,13 +152,6 @@ class Doctor
         }
     }
 
-    /**
-     * Get available time slots for a doctor on a specified date
-     * 
-     * @param int $doctorId
-     * @param string $date
-     * @return array
-     */
     public function getAvailableTimeSlots($doctorId, $date) {
         try {
             // Convert numeric day of week to day name
@@ -234,12 +227,7 @@ class Doctor
         }
     }
 
-    /**
-     * Get dashboard statistics for a doctor
-     * 
-     * @param int $doctorId
-     * @return array
-     */
+   
     public function getDoctorDashboardStats($doctorId)
     {
         try {

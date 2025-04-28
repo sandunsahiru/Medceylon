@@ -708,24 +708,31 @@
                 <section class="medical-session">
                     <div class="session-header">
                         <h2>Ongoing Medical Session</h2>
-                        <div class="session-status"><?php echo htmlspecialchars($sessionData['status'] ?? 'Active'); ?></div>
+                        <div class="session-status"><?php echo htmlspecialchars($sessionData['status'] ?? 'Active'); ?>
+                        </div>
                     </div>
                     <div class="session-body">
                         <!-- Enhanced Progress Steps -->
                         <div class="step-progress-container">
                             <div class="step-progress-bar" style="width: <?php
-                                                                            // Calculate progress width
-                                                                            $progress = 0;
-                                                                            if ($sessionData['generalDoctorBooked']) $progress += 25;
-                                                                            if ($sessionData['specialistBooked']) $progress += 25;
-                                                                            if ($sessionData['treatmentPlanCreated']) $progress += 25;
-                                                                            if ($sessionData['transportBooked']) $progress += 15;
-                                                                            if ($sessionData['travelPlanSelected']) $progress += 10;
-                                                                            echo $progress . '%';
-                                                                            ?>"></div>
+                            // Calculate progress width
+                            $progress = 0;
+                            if ($sessionData['generalDoctorBooked'])
+                                $progress += 25;
+                            if ($sessionData['specialistBooked'])
+                                $progress += 25;
+                            if ($sessionData['treatmentPlanCreated'])
+                                $progress += 25;
+                            if ($sessionData['transportBooked'])
+                                $progress += 15;
+                            if ($sessionData['travelPlanSelected'])
+                                $progress += 10;
+                            echo $progress . '%';
+                            ?>"></div>
 
                             <!-- Step 1: General Doctor -->
-                            <div class="step-item <?php echo $sessionData['generalDoctorBooked'] ? 'completed' : 'active'; ?>">
+                            <div
+                                class="step-item <?php echo $sessionData['generalDoctorBooked'] ? 'completed' : 'active'; ?>">
                                 <div class="step-circle" data-tab="general-doctor-tab">
                                     <?php if ($sessionData['generalDoctorBooked']): ?>
                                         <i class="ri-check-line"></i>
@@ -738,9 +745,11 @@
 
                             <!-- Step 2: Specialist -->
                             <div class="step-item <?php
-                                                    if ($sessionData['specialistBooked']) echo 'completed';
-                                                    elseif ($sessionData['generalDoctorBooked']) echo 'active';
-                                                    ?>">
+                            if ($sessionData['specialistBooked'])
+                                echo 'completed';
+                            elseif ($sessionData['generalDoctorBooked'])
+                                echo 'active';
+                            ?>">
                                 <div class="step-circle" data-tab="specialist-tab">
                                     <?php if ($sessionData['specialistBooked']): ?>
                                         <i class="ri-check-line"></i>
@@ -753,9 +762,11 @@
 
                             <!-- Step 3: Treatment Plan -->
                             <div class="step-item <?php
-                                                    if ($sessionData['treatmentPlanCreated']) echo 'completed';
-                                                    elseif ($sessionData['specialistBooked']) echo 'active';
-                                                    ?>">
+                            if ($sessionData['treatmentPlanCreated'])
+                                echo 'completed';
+                            elseif ($sessionData['specialistBooked'])
+                                echo 'active';
+                            ?>">
                                 <div class="step-circle" data-tab="treatment-plan-tab">
                                     <?php if ($sessionData['treatmentPlanCreated']): ?>
                                         <i class="ri-check-line"></i>
@@ -768,9 +779,11 @@
 
                             <!-- Step 4: Hotel & Transport -->
                             <div class="step-item <?php
-                                                    if ($sessionData['transportBooked']) echo 'completed';
-                                                    elseif ($sessionData['treatmentPlanCreated']) echo 'active';
-                                                    ?>">
+                            if ($sessionData['transportBooked'])
+                                echo 'completed';
+                            elseif ($sessionData['treatmentPlanCreated'])
+                                echo 'active';
+                            ?>">
                                 <div class="step-circle" data-tab="hotel-transport-tab">
                                     <?php if ($sessionData['transportBooked']): ?>
                                         <i class="ri-check-line"></i>
@@ -783,9 +796,11 @@
 
                             <!-- Step 5: Travel Plan -->
                             <div class="step-item <?php
-                                                    if ($sessionData['travelPlanSelected']) echo 'completed';
-                                                    elseif ($sessionData['transportBooked']) echo 'active';
-                                                    ?>">
+                            if ($sessionData['travelPlanSelected'])
+                                echo 'completed';
+                            elseif ($sessionData['transportBooked'])
+                                echo 'active';
+                            ?>">
                                 <div class="step-circle" data-tab="travel-plan-tab">
                                     <?php if ($sessionData['travelPlanSelected']): ?>
                                         <i class="ri-check-line"></i>
@@ -799,7 +814,8 @@
 
                         <!-- Tab Content Section -->
                         <!-- General Doctor Tab -->
-                        <div id="general-doctor-tab" class="tab-content <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'general-doctor') ? 'active' : ''; ?>">
+                        <div id="general-doctor-tab"
+                            class="tab-content <?php echo (!isset($_GET['tab']) || $_GET['tab'] == 'general-doctor') ? 'active' : ''; ?>">
                             <?php if ($sessionData['generalDoctorBooked']): ?>
                                 <div class="session-details-container">
                                     <h3>General Doctor Consultation</h3>
@@ -808,29 +824,32 @@
                                             <i class="ri-user-line"></i>
                                         </div>
                                         <div class="doctor-info">
-                                            <h3>Dr. <?php echo htmlspecialchars($sessionData['generalDoctor']['name'] ?? 'Sahiru Bandara'); ?></h3>
-                                            <p><?php echo htmlspecialchars($sessionData['generalDoctor']['specialty'] ?? 'General Medicine'); ?></p>
+                                            <h3>Dr.
+                                                <?php echo htmlspecialchars($sessionData['generalDoctor']['name'] ?? 'Sahiru Bandara'); ?>
+                                            </h3>
+                                            <p><?php echo htmlspecialchars($sessionData['generalDoctor']['specialty'] ?? 'General Medicine'); ?>
+                                            </p>
 
                                             <div class="appointment-meta">
                                                 <div class="meta-item">
                                                     <i class="ri-calendar-line"></i>
                                                     <span><?php
-                                                            if (isset($sessionData['generalDoctor']['appointmentDate'])) {
-                                                                echo htmlspecialchars(date('d/m/Y', strtotime($sessionData['generalDoctor']['appointmentDate'])));
-                                                            } else {
-                                                                echo '28/04/2025'; // Default from your existing appointment
-                                                            }
-                                                            ?></span>
+                                                    if (isset($sessionData['generalDoctor']['appointmentDate'])) {
+                                                        echo htmlspecialchars(date('d/m/Y', strtotime($sessionData['generalDoctor']['appointmentDate'])));
+                                                    } else {
+                                                        echo '28/04/2025'; // Default from your existing appointment
+                                                    }
+                                                    ?></span>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-time-line"></i>
                                                     <span><?php
-                                                            if (isset($sessionData['generalDoctor']['appointmentDate'])) {
-                                                                echo htmlspecialchars(date('H:i', strtotime($sessionData['generalDoctor']['appointmentDate'])));
-                                                            } else {
-                                                                echo '19:00'; // Default from your existing appointment
-                                                            }
-                                                            ?></span>
+                                                    if (isset($sessionData['generalDoctor']['appointmentDate'])) {
+                                                        echo htmlspecialchars(date('H:i', strtotime($sessionData['generalDoctor']['appointmentDate'])));
+                                                    } else {
+                                                        echo '19:00'; // Default from your existing appointment
+                                                    }
+                                                    ?></span>
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-building-line"></i>
@@ -838,7 +857,8 @@
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-user-location-line"></i>
-                                                    <span>Mode: <?php echo htmlspecialchars($sessionData['generalDoctor']['appointmentMode'] ?? 'In-Person'); ?></span>
+                                                    <span>Mode:
+                                                        <?php echo htmlspecialchars($sessionData['generalDoctor']['appointmentMode'] ?? 'In-Person'); ?></span>
                                                 </div>
                                             </div>
 
@@ -847,7 +867,8 @@
                                                     <i class="ri-message-3-line"></i> Chat with Doctor
                                                 </a>
                                                 <?php if (($sessionData['generalDoctor']['appointmentMode'] ?? '') === 'In-Person'): ?>
-                                                    <a href="https://maps.google.com/?q=Kandy+Teaching+Hospital" target="_blank" class="action-btn secondary">
+                                                    <a href="https://maps.google.com/?q=Kandy+Teaching+Hospital" target="_blank"
+                                                        class="action-btn secondary">
                                                         <i class="ri-map-pin-line"></i> Get Directions
                                                     </a>
                                                 <?php endif; ?>
@@ -862,7 +883,8 @@
                                                         ? $sessionData['generalDoctor']['meetLink']
                                                         : 'https://meet.google.com/dyt-pdtg-xmy';
                                                     ?>
-                                                    <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank" class="meet-link-btn">
+                                                    <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank"
+                                                        class="meet-link-btn">
                                                         <i class="ri-video-chat-line"></i> Join Google Meet
                                                     </a>
                                                 </div>
@@ -872,7 +894,8 @@
 
                                     <div class="alert-box alert-info">
                                         <i class="ri-information-line"></i>
-                                        <p>Your general doctor will refer you to a specialist if needed after your consultation.</p>
+                                        <p>Your general doctor will refer you to a specialist if needed after your consultation.
+                                        </p>
                                     </div>
 
                                     <div class="tab-navigation">
@@ -888,13 +911,15 @@
                         </div>
 
                         <!-- Specialist Tab -->
-                        <div id="specialist-tab" class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'specialist') ? 'active' : ''; ?>">
+                        <div id="specialist-tab"
+                            class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'specialist') ? 'active' : ''; ?>">
                             <?php if ($sessionData['generalDoctorBooked'] && !$sessionData['specialistBooked'] && isset($sessionData['waitingForSpecialist']) && $sessionData['waitingForSpecialist']): ?>
                                 <div class="session-details-container">
                                     <h3>Specialist Referral</h3>
                                     <div class="alert-box alert-warning">
                                         <i class="ri-time-line"></i>
-                                        <p>Your general doctor is in the process of booking a specialist for you. You will be notified once the booking is confirmed.</p>
+                                        <p>Your general doctor is in the process of booking a specialist for you. You will be
+                                            notified once the booking is confirmed.</p>
                                     </div>
 
                                     <div class="tab-navigation">
@@ -915,8 +940,10 @@
                                         </div>
                                         <div class="doctor-info">
                                             <h3>Dr. <?php echo htmlspecialchars($sessionData['specialist']['name']); ?></h3>
-                                            <p><strong><?php echo htmlspecialchars($sessionData['specialist']['specialty']); ?></strong></p>
-                                            <p><strong>Hospital:</strong> <?php echo htmlspecialchars($sessionData['specialist']['hospital']); ?></p>
+                                            <p><strong><?php echo htmlspecialchars($sessionData['specialist']['specialty']); ?></strong>
+                                            </p>
+                                            <p><strong>Hospital:</strong>
+                                                <?php echo htmlspecialchars($sessionData['specialist']['hospital']); ?></p>
 
                                             <div class="appointment-meta">
                                                 <div class="meta-item">
@@ -929,7 +956,8 @@
                                                 </div>
                                                 <div class="meta-item">
                                                     <i class="ri-user-location-line"></i>
-                                                    <span>Mode: <?php echo htmlspecialchars($sessionData['specialist']['appointmentMode']); ?></span>
+                                                    <span>Mode:
+                                                        <?php echo htmlspecialchars($sessionData['specialist']['appointmentMode']); ?></span>
                                                 </div>
                                             </div>
 
@@ -937,11 +965,13 @@
                                                 <a href="<?php echo $basePath; ?>/patient/chat" class="action-btn secondary">
                                                     <i class="ri-message-3-line"></i> Chat
                                                 </a>
-                                                <button class="action-btn secondary reschedule-btn" id="rescheduleAppointmentBtn">
+                                                <button class="action-btn secondary reschedule-btn"
+                                                    id="rescheduleAppointmentBtn">
                                                     <i class="ri-calendar-event-line"></i> Reschedule
                                                 </button>
                                                 <?php if ($sessionData['specialist']['appointmentMode'] === 'In-Person'): ?>
-                                                    <a href="https://maps.google.com/?q=<?php echo urlencode($sessionData['specialist']['hospital']); ?>" target="_blank" class="action-btn secondary">
+                                                    <a href="https://maps.google.com/?q=<?php echo urlencode($sessionData['specialist']['hospital']); ?>"
+                                                        target="_blank" class="action-btn secondary">
                                                         <i class="ri-map-pin-line"></i> Get Directions
                                                     </a>
                                                 <?php endif; ?>
@@ -956,7 +986,8 @@
                                                         ? $sessionData['specialist']['meetLink']
                                                         : 'https://meet.google.com/dyt-pdtg-xmy';
                                                     ?>
-                                                    <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank" class="meet-link-btn">
+                                                    <a href="<?php echo htmlspecialchars($meetLink); ?>" target="_blank"
+                                                        class="meet-link-btn">
                                                         <i class="ri-video-chat-line"></i> Join Google Meet
                                                     </a>
                                                 </div>
@@ -977,19 +1008,23 @@
                         </div>
 
                         <!-- Treatment Plan Tab -->
-                        <div id="treatment-plan-tab" class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'treatment-plan') ? 'active' : ''; ?>">
+                        <div id="treatment-plan-tab"
+                            class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'treatment-plan') ? 'active' : ''; ?>">
                             <?php if ($sessionData['treatmentPlanCreated']): ?>
                                 <div class="session-details-container">
                                     <h3>Treatment Plan</h3>
 
                                     <p><strong>Diagnosis:</strong>
-                                        <?= !empty($sessionData['treatmentPlan']['diagnosis']) ? htmlspecialchars($sessionData['treatmentPlan']['diagnosis']) : 'Not specified' ?></p>
+                                        <?= !empty($sessionData['treatmentPlan']['diagnosis']) ? htmlspecialchars($sessionData['treatmentPlan']['diagnosis']) : 'Not specified' ?>
+                                    </p>
 
                                     <p><strong>Treatment description:</strong><br>
-                                        <?= !empty($sessionData['treatmentPlan']['treatment_description']) ? nl2br(htmlspecialchars($sessionData['treatmentPlan']['treatment_description'])) : 'Not specified' ?></p>
+                                        <?= !empty($sessionData['treatmentPlan']['treatment_description']) ? nl2br(htmlspecialchars($sessionData['treatmentPlan']['treatment_description'])) : 'Not specified' ?>
+                                    </p>
 
                                     <p><strong>Medications:</strong>
-                                        <?= !empty($sessionData['treatmentPlan']['medications']) ? htmlspecialchars($sessionData['treatmentPlan']['medications']) : 'None prescribed' ?></p>
+                                        <?= !empty($sessionData['treatmentPlan']['medications']) ? htmlspecialchars($sessionData['treatmentPlan']['medications']) : 'None prescribed' ?>
+                                    </p>
 
                                     <p><strong>Duration:</strong>
                                         <?php
@@ -1000,16 +1035,21 @@
                                         } else {
                                             echo 'Not specified';
                                         }
-                                        ?></p>
+                                        ?>
+                                    </p>
 
                                     <p><strong>Follow-up:</strong>
-                                        <?= !empty($sessionData['treatmentPlan']['follow_up']) ? nl2br(htmlspecialchars($sessionData['treatmentPlan']['follow_up'])) : 'No follow-up scheduled' ?></p>
+                                        <?= !empty($sessionData['treatmentPlan']['follow_up']) ? nl2br(htmlspecialchars($sessionData['treatmentPlan']['follow_up'])) : 'No follow-up scheduled' ?>
+                                    </p>
 
                                     <p><strong>Travel restrictions:</strong>
-                                        <?= !empty($sessionData['treatmentPlan']['travel_restrictions']) ? htmlspecialchars($sessionData['treatmentPlan']['travel_restrictions']) : 'None' ?></p>
+                                        <?= !empty($sessionData['treatmentPlan']['travel_restrictions']) ? htmlspecialchars($sessionData['treatmentPlan']['travel_restrictions']) : 'None' ?>
+                                    </p>
 
                                     <p><strong>Estimated budget:</strong>
-                                        LKR <?= isset($sessionData['treatmentPlan']['estimated_budget']) ? number_format((float)$sessionData['treatmentPlan']['estimated_budget'], 2) : '0.00' ?></p>
+                                        LKR
+                                        <?= isset($sessionData['treatmentPlan']['estimated_budget']) ? number_format((float) $sessionData['treatmentPlan']['estimated_budget'], 2) : '0.00' ?>
+                                    </p>
 
                                     <div class="tab-navigation">
                                         <button class="nav-btn prev" data-prev-tab="specialist-tab">
@@ -1041,7 +1081,8 @@
                         </div>
 
                         <!-- Hotel & Transport Tab -->
-                        <div id="hotel-transport-tab" class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'hotel-transport') ? 'active' : ''; ?>">
+                        <div id="hotel-transport-tab"
+                            class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'hotel-transport') ? 'active' : ''; ?>">
                             <div class="hotel-transport-section">
                                 <h3>Hotel & Transportation</h3>
 
@@ -1081,7 +1122,8 @@
                         </div>
 
                         <!-- Travel Plan Tab -->
-                        <div id="travel-plan-tab" class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'travel-plan') ? 'active' : ''; ?>">
+                        <div id="travel-plan-tab"
+                            class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'travel-plan') ? 'active' : ''; ?>">
                             <div class="travel-plan-section">
                                 <h3>Travel Plan</h3>
 
@@ -1092,10 +1134,15 @@
                                     </div>
 
                                     <div class="travel-plan-details">
-                                        <p><strong>Trip Name:</strong> <?= htmlspecialchars($sessionData['travelPlan']['trip']['name']) ?></p>
-                                        <p><strong>Travel Date:</strong> <?= date('F j, Y', strtotime($sessionData['travelPlan']['trip']['start_date'])) ?></p>
-                                        <p><strong>Return Date:</strong> <?= date('F j, Y', strtotime($sessionData['travelPlan']['trip']['end_date'])) ?></p>
-                                        <p><strong>Duration:</strong> <?= htmlspecialchars($sessionData['travelPlan']['trip']['travel_days']) ?> days</p>
+                                        <p><strong>Trip Name:</strong>
+                                            <?= htmlspecialchars($sessionData['travelPlan']['trip']['name']) ?></p>
+                                        <p><strong>Travel Date:</strong>
+                                            <?= date('F j, Y', strtotime($sessionData['travelPlan']['trip']['start_date'])) ?>
+                                        </p>
+                                        <p><strong>Return Date:</strong>
+                                            <?= date('F j, Y', strtotime($sessionData['travelPlan']['trip']['end_date'])) ?></p>
+                                        <p><strong>Duration:</strong>
+                                            <?= htmlspecialchars($sessionData['travelPlan']['trip']['travel_days']) ?> days</p>
 
                                         <?php if ($sessionData['travelPlan']['hasDestinations']): ?>
                                             <p><strong>Destinations:</strong></p>
@@ -1149,7 +1196,9 @@
                                     <?php if (isset($sessionData['travelPlan']) && $sessionData['travelPlan']['hasTrip'] && $sessionData['travelPlan']['hasDestinations']): ?>
                                         <div class="itinerary-container">
                                             <h3><?= htmlspecialchars($sessionData['travelPlan']['trip']['name']) ?></h3>
-                                            <p><strong>Total Duration:</strong> <?= htmlspecialchars($sessionData['travelPlan']['trip']['total_duration_hours']) ?> hours</p>
+                                            <p><strong>Total Duration:</strong>
+                                                <?= htmlspecialchars($sessionData['travelPlan']['trip']['total_duration_hours']) ?>
+                                                hours</p>
 
                                             <div class="itinerary-timeline">
                                                 <?php foreach ($sessionData['travelPlan']['destinations'] as $index => $destination): ?>
@@ -1157,13 +1206,17 @@
                                                         <div class="itinerary-day">Day <?= $index + 1 ?></div>
                                                         <div class="itinerary-content">
                                                             <h4><?= htmlspecialchars($destination['destination_name']) ?></h4>
-                                                            <p><strong>Date:</strong> <?= date('F j, Y', strtotime($destination['check_in'])) ?></p>
-                                                            <p><strong>Travel Time:</strong> <?= htmlspecialchars($destination['travel_time_hours']) ?> hours</p>
-                                                            <p><strong>Time at Location:</strong> <?= htmlspecialchars($destination['time_spent_hours']) ?> hours</p>
+                                                            <p><strong>Date:</strong>
+                                                                <?= date('F j, Y', strtotime($destination['check_in'])) ?></p>
+                                                            <p><strong>Travel Time:</strong>
+                                                                <?= htmlspecialchars($destination['travel_time_hours']) ?> hours</p>
+                                                            <p><strong>Time at Location:</strong>
+                                                                <?= htmlspecialchars($destination['time_spent_hours']) ?> hours</p>
                                                             <p><?= htmlspecialchars($destination['description']) ?></p>
 
                                                             <?php if ($destination['entry_fee'] > 0): ?>
-                                                                <p><strong>Entry Fee:</strong> LKR <?= number_format($destination['entry_fee'], 2) ?></p>
+                                                                <p><strong>Entry Fee:</strong> LKR
+                                                                    <?= number_format($destination['entry_fee'], 2) ?></p>
                                                             <?php endif; ?>
 
                                                             <p>
@@ -1176,7 +1229,8 @@
                                                                 <?php endif; ?>
                                                             </p>
 
-                                                            <p><strong>Wheelchair Accessible:</strong> <?= $destination['wheelchair_accessibility'] ?></p>
+                                                            <p><strong>Wheelchair Accessible:</strong>
+                                                                <?= $destination['wheelchair_accessibility'] ?></p>
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
@@ -1189,78 +1243,86 @@
                             </div>
                         </div>
                     </div>
-    
 
-    <!-- Summary Tab Content -->
-<div id="summary-tab" class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'summary') ? 'active' : ''; ?>">
-    <div class="session-details-container">
-        <h3>Medical Session Summary</h3>
 
-        <div class="alert-box alert-success">
-            <i class="ri-check-line"></i>
-            <p>Your medical session is complete. Below is a summary of your treatment journey.</p>
+                    <!-- Summary Tab Content -->
+                    <div id="summary-tab"
+                        class="tab-content <?php echo (isset($_GET['tab']) && $_GET['tab'] == 'summary') ? 'active' : ''; ?>">
+                        <div class="session-details-container">
+                            <h3>Medical Session Summary</h3>
+
+                            <div class="alert-box alert-success">
+                                <i class="ri-check-line"></i>
+                                <p>Your medical session is complete. Below is a summary of your treatment journey.</p>
+                            </div>
+
+                            <div class="summary-details">
+                                <h4>Medical Journey</h4>
+                                <ul>
+                                    <?php if (isset($sessionData['generalDoctor'])): ?>
+                                        <li><strong>General Doctor:</strong> Dr.
+                                            <?php echo htmlspecialchars($sessionData['generalDoctor']['name']); ?></li>
+                                    <?php endif; ?>
+
+                                    <?php if ($sessionData['specialistBooked'] && isset($sessionData['specialist'])): ?>
+                                        <li><strong>Specialist:</strong> Dr.
+                                            <?php echo htmlspecialchars($sessionData['specialist']['name']); ?>
+                                            (<?php echo htmlspecialchars($sessionData['specialist']['specialty']); ?>)</li>
+                                    <?php endif; ?>
+
+                                    <?php if ($sessionData['treatmentPlanCreated'] && isset($sessionData['treatmentPlan'])): ?>
+                                        <li><strong>Diagnosis:</strong>
+                                            <?php echo htmlspecialchars($sessionData['treatmentPlan']['diagnosis'] ?? 'Not specified'); ?>
+                                        </li>
+                                        <li><strong>Treatment Cost:</strong> LKR
+                                            <?php echo number_format($sessionData['treatmentPlan']['estimated_budget'] ?? 0, 2); ?>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+
+                                <h4>Travel & Accommodation</h4>
+                                <ul>
+                                    <?php if ($sessionData['transportBooked']): ?>
+                                        <li><strong>Accommodation:</strong> Cinnamon Grand Colombo</li>
+                                        <li><strong>Transportation:</strong> Private Airport Transfer</li>
+                                    <?php else: ?>
+                                        <li><em>No hotel or transportation booked yet</em></li>
+                                    <?php endif; ?>
+
+                                    <?php if ($sessionData['travelPlanSelected'] && isset($sessionData['travelPlan']) && $sessionData['travelPlan']['hasTrip']): ?>
+                                        <li><strong>Travel Plan:</strong>
+                                            <?php echo htmlspecialchars($sessionData['travelPlan']['trip']['name']); ?></li>
+                                    <?php else: ?>
+                                        <li><em>No travel plan selected yet</em></li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
+
+                            <div class="future-steps">
+                                <h4>Next Steps</h4>
+                                <p>Your medical journey with us doesn't end here. Here are some important next steps:</p>
+                                <ul>
+                                    <li>Follow up with your specialist as prescribed in your treatment plan</li>
+                                    <li>Keep all your medical documents organized for future reference</li>
+                                    <li>Contact us if you need any assistance during your recovery</li>
+                                </ul>
+                            </div>
+
+                            <div class="tab-navigation">
+                                <button class="nav-btn prev" data-prev-tab="travel-plan-tab">
+                                    <i class="ri-arrow-left-line"></i> Previous
+                                </button>
+                                <a href="<?php echo $basePath; ?>/patient/dashboard" class="nav-btn">
+                                    <i class="ri-home-line"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
         </div>
-
-        <div class="summary-details">
-            <h4>Medical Journey</h4>
-            <ul>
-                <?php if (isset($sessionData['generalDoctor'])): ?>
-                <li><strong>General Doctor:</strong> Dr. <?php echo htmlspecialchars($sessionData['generalDoctor']['name']); ?></li>
-                <?php endif; ?>
-
-                <?php if ($sessionData['specialistBooked'] && isset($sessionData['specialist'])): ?>
-                <li><strong>Specialist:</strong> Dr. <?php echo htmlspecialchars($sessionData['specialist']['name']); ?> 
-                    (<?php echo htmlspecialchars($sessionData['specialist']['specialty']); ?>)</li>
-                <?php endif; ?>
-
-                <?php if ($sessionData['treatmentPlanCreated'] && isset($sessionData['treatmentPlan'])): ?>
-                <li><strong>Diagnosis:</strong> <?php echo htmlspecialchars($sessionData['treatmentPlan']['diagnosis'] ?? 'Not specified'); ?></li>
-                <li><strong>Treatment Cost:</strong> LKR <?php echo number_format($sessionData['treatmentPlan']['estimated_budget'] ?? 0, 2); ?></li>
-                <?php endif; ?>
-            </ul>
-
-            <h4>Travel & Accommodation</h4>
-            <ul>
-                <?php if ($sessionData['transportBooked']): ?>
-                <li><strong>Accommodation:</strong> Cinnamon Grand Colombo</li>
-                <li><strong>Transportation:</strong> Private Airport Transfer</li>
-                <?php else: ?>
-                <li><em>No hotel or transportation booked yet</em></li>
-                <?php endif; ?>
-
-                <?php if ($sessionData['travelPlanSelected'] && isset($sessionData['travelPlan']) && $sessionData['travelPlan']['hasTrip']): ?>
-                <li><strong>Travel Plan:</strong> <?php echo htmlspecialchars($sessionData['travelPlan']['trip']['name']); ?></li>
-                <?php else: ?>
-                <li><em>No travel plan selected yet</em></li>
-                <?php endif; ?>
-            </ul>
         </div>
+        </section>
 
-        <div class="future-steps">
-            <h4>Next Steps</h4>
-            <p>Your medical journey with us doesn't end here. Here are some important next steps:</p>
-            <ul>
-                <li>Follow up with your specialist as prescribed in your treatment plan</li>
-                <li>Keep all your medical documents organized for future reference</li>
-                <li>Contact us if you need any assistance during your recovery</li>
-            </ul>
-        </div>
-
-        <div class="tab-navigation">
-            <button class="nav-btn prev" data-prev-tab="travel-plan-tab">
-                <i class="ri-arrow-left-line"></i> Previous
-            </button>
-            <a href="<?php echo $basePath; ?>/patient/dashboard" class="nav-btn">
-                <i class="ri-home-line"></i> Back to Dashboard
-            </a>
-        </div>
-    </div>
-</div>
-    </div>
-    </div>
-    </section>
-
-    <!-- Start Medical Session Section
+        <!-- Start Medical Session Section
                 <section class="appointments-section">
                     <div class="section-header">
                         <h2>Start New Medical Session</h2>
@@ -1278,167 +1340,167 @@
                         <p>You already have a general doctor appointment. You can start your medical session with this appointment.</p>
                     </div>
                 </section> -->
-<?php endif; ?>
+    <?php endif; ?>
 
-</main>
-</div>
+    </main>
+    </div>
 
-<!-- Modal for Reschedule -->
-<div id="rescheduleModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Reschedule Appointment</h2>
-            <button class="close-btn">&times;</button>
-        </div>
-        <div class="reschedule-form">
-            <div class="form-group">
-                <label for="rescheduleDate">New Date</label>
-                <input type="date" id="rescheduleDate" class="form-control">
+    <!-- Modal for Reschedule -->
+    <div id="rescheduleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reschedule Appointment</h2>
+                <button class="close-btn">&times;</button>
             </div>
-            <div class="form-group">
-                <label for="rescheduleTime">New Time</label>
-                <input type="time" id="rescheduleTime" class="form-control">
+            <div class="reschedule-form">
+                <div class="form-group">
+                    <label for="rescheduleDate">New Date</label>
+                    <input type="date" id="rescheduleDate" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="rescheduleTime">New Time</label>
+                    <input type="time" id="rescheduleTime" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="rescheduleReason">Reason for Rescheduling</label>
+                    <textarea id="rescheduleReason" class="form-control" rows="3"></textarea>
+                </div>
+                <button id="submitReschedule" class="full-width-button">Submit Request</button>
             </div>
-            <div class="form-group">
-                <label for="rescheduleReason">Reason for Rescheduling</label>
-                <textarea id="rescheduleReason" class="form-control" rows="3"></textarea>
-            </div>
-            <button id="submitReschedule" class="full-width-button">Submit Request</button>
         </div>
     </div>
-</div>
 
 
 
-<script>
-    const basePath = '<?php echo $basePath; ?>';
+    <script>
+        const basePath = '<?php echo $basePath; ?>';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const rescheduleModal = document.getElementById('rescheduleModal');
-        const itineraryModal = document.getElementById('itineraryModal');
+        document.addEventListener('DOMContentLoaded', function () {
+            const rescheduleModal = document.getElementById('rescheduleModal');
+            const itineraryModal = document.getElementById('itineraryModal');
 
-        // Tab navigation
-        function showTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Show the selected tab
-            const activeTab = document.getElementById(tabId);
-            if (activeTab) {
-                activeTab.classList.add('active');
-
-                // Update URL with tab parameter
-                const params = new URLSearchParams(window.location.search);
-                params.set('tab', tabId.replace('-tab', ''));
-                const newUrl = window.location.pathname + '?' + params.toString();
-                history.pushState({}, '', newUrl);
-            }
-        }
-
-        // Set up navigation buttons
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            if (btn.classList.contains('prev') && btn.dataset.prevTab) {
-                btn.addEventListener('click', function() {
-                    showTab(this.dataset.prevTab);
+            // Tab navigation
+            function showTab(tabId) {
+                // Hide all tab contents
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.remove('active');
                 });
+
+                // Show the selected tab
+                const activeTab = document.getElementById(tabId);
+                if (activeTab) {
+                    activeTab.classList.add('active');
+
+                    // Update URL with tab parameter
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('tab', tabId.replace('-tab', ''));
+                    const newUrl = window.location.pathname + '?' + params.toString();
+                    history.pushState({}, '', newUrl);
+                }
             }
 
-            if (btn.classList.contains('next') && btn.dataset.nextTab) {
-                btn.addEventListener('click', function() {
-                    showTab(this.dataset.nextTab);
+            // Set up navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.classList.contains('prev') && btn.dataset.prevTab) {
+                    btn.addEventListener('click', function () {
+                        showTab(this.dataset.prevTab);
+                    });
+                }
+
+                if (btn.classList.contains('next') && btn.dataset.nextTab) {
+                    btn.addEventListener('click', function () {
+                        showTab(this.dataset.nextTab);
+                    });
+                }
+            });
+
+            // Make step circles clickable for navigation
+            document.querySelectorAll('.step-circle[data-tab]').forEach(circle => {
+                circle.addEventListener('click', function () {
+                    showTab(this.dataset.tab);
                 });
-            }
-        });
-
-        // Make step circles clickable for navigation
-        document.querySelectorAll('.step-circle[data-tab]').forEach(circle => {
-            circle.addEventListener('click', function() {
-                showTab(this.dataset.tab);
             });
-        });
 
-        // Close modals
-        document.querySelectorAll('.close-btn').forEach(element => {
-            element.addEventListener('click', function() {
-                if (rescheduleModal) rescheduleModal.style.display = 'none';
-                if (itineraryModal) itineraryModal.style.display = 'none';
+            // Close modals
+            document.querySelectorAll('.close-btn').forEach(element => {
+                element.addEventListener('click', function () {
+                    if (rescheduleModal) rescheduleModal.style.display = 'none';
+                    if (itineraryModal) itineraryModal.style.display = 'none';
+                });
             });
-        });
 
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            if (event.target === rescheduleModal) {
-                rescheduleModal.style.display = 'none';
-            }
-            if (event.target === itineraryModal) {
-                itineraryModal.style.display = 'none';
-            }
-        });
-
-        // Reschedule appointment button
-        const rescheduleAppointmentBtn = document.getElementById('rescheduleAppointmentBtn');
-        if (rescheduleAppointmentBtn) {
-            rescheduleAppointmentBtn.addEventListener('click', function() {
-                if (rescheduleModal) rescheduleModal.style.display = 'block';
-            });
-        }
-
-        // Submit reschedule request
-        const submitRescheduleBtn = document.getElementById('submitReschedule');
-        if (submitRescheduleBtn) {
-            submitRescheduleBtn.addEventListener('click', async function() {
-                const date = document.getElementById('rescheduleDate').value;
-                const time = document.getElementById('rescheduleTime').value;
-                const reason = document.getElementById('rescheduleReason').value;
-
-                try {
-                    // In real implementation, send to server
-                    alert("Reschedule request submitted successfully. Waiting for doctor's approval.");
+            // Close modal when clicking outside
+            window.addEventListener('click', function (event) {
+                if (event.target === rescheduleModal) {
                     rescheduleModal.style.display = 'none';
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert("Failed to submit request. Please try again.");
+                }
+                if (event.target === itineraryModal) {
+                    itineraryModal.style.display = 'none';
                 }
             });
-        }
 
-        // View itinerary
-        const viewItineraryBtn = document.getElementById('viewItinerary');
-        if (viewItineraryBtn) {
-            viewItineraryBtn.addEventListener('click', function() {
-                itineraryModal.style.display = 'block';
+            // Reschedule appointment button
+            const rescheduleAppointmentBtn = document.getElementById('rescheduleAppointmentBtn');
+            if (rescheduleAppointmentBtn) {
+                rescheduleAppointmentBtn.addEventListener('click', function () {
+                    if (rescheduleModal) rescheduleModal.style.display = 'block';
+                });
+            }
+
+            // Submit reschedule request
+            const submitRescheduleBtn = document.getElementById('submitReschedule');
+            if (submitRescheduleBtn) {
+                submitRescheduleBtn.addEventListener('click', async function () {
+                    const date = document.getElementById('rescheduleDate').value;
+                    const time = document.getElementById('rescheduleTime').value;
+                    const reason = document.getElementById('rescheduleReason').value;
+
+                    try {
+                        // In real implementation, send to server
+                        alert("Reschedule request submitted successfully. Waiting for doctor's approval.");
+                        rescheduleModal.style.display = 'none';
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert("Failed to submit request. Please try again.");
+                    }
+                });
+            }
+
+            // View itinerary
+            const viewItineraryBtn = document.getElementById('viewItinerary');
+            if (viewItineraryBtn) {
+                viewItineraryBtn.addEventListener('click', function () {
+                    itineraryModal.style.display = 'block';
+                });
+            }
+
+            // Travel plan selection
+            const travelPlanOptions = document.querySelectorAll('.travel-plan-option');
+            let selectedPlan = null;
+
+            travelPlanOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    travelPlanOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedPlan = this.dataset.plan;
+                });
             });
-        }
 
-        // Travel plan selection
-        const travelPlanOptions = document.querySelectorAll('.travel-plan-option');
-        let selectedPlan = null;
+            const selectTravelPlanBtn = document.getElementById('selectTravelPlan');
+            if (selectTravelPlanBtn) {
+                selectTravelPlanBtn.addEventListener('click', function () {
+                    if (!selectedPlan) {
+                        alert("Please select a travel plan");
+                        return;
+                    }
 
-        travelPlanOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                travelPlanOptions.forEach(opt => opt.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedPlan = this.dataset.plan;
-            });
+                    // In real implementation, send to server
+                    alert(`${selectedPlan === 'premium' ? 'Premium' : 'Basic'} plan selected successfully!`);
+                    window.location.reload();
+                });
+            }
         });
-
-        const selectTravelPlanBtn = document.getElementById('selectTravelPlan');
-        if (selectTravelPlanBtn) {
-            selectTravelPlanBtn.addEventListener('click', function() {
-                if (!selectedPlan) {
-                    alert("Please select a travel plan");
-                    return;
-                }
-
-                // In real implementation, send to server
-                alert(`${selectedPlan === 'premium' ? 'Premium' : 'Basic'} plan selected successfully!`);
-                window.location.reload();
-            });
-        }
-    });
-</script>
+    </script>
 </body>
 
 </html>

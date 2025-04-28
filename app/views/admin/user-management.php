@@ -2,7 +2,7 @@
 
 <body>
     <link rel="stylesheet" href="<?php echo $basePath; ?>/public/assets/css/admin/user_management.css">
-    <?php require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
+    <?php $page = 'userManagement'; require_once ROOT_PATH . '/app/views/admin/layouts/navbar.php'; ?>
 
 
     <div class="main-content">
