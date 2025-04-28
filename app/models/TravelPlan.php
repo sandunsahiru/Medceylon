@@ -387,7 +387,44 @@ class TravelPlan {
     }
 
 
-
+    public function editTravelPlanDates($travelId, $destinationId, $startDate, $endDate, $travelTime, $stayDuration) 
+    {
+        try {
+            $sql = "UPDATE travel_plans SET 
+                    check_in = ?,
+                    check_out = ?,
+                    travel_time_hours = ?,
+                    time_spent_hours = ?
+                    WHERE travel_plan_id = ? 
+                    AND destination_id = ?";
+            
+            $stmt = $this->db->prepare($sql);
+            
+            if (!$stmt) {
+                throw new \Exception("Prepare failed: " . $this->db->error);
+            }
+            
+            $stmt->bind_param(
+                "ssddii", 
+                $startDate, 
+                $endDate,
+                $travelTime,
+                $stayDuration,
+                $travelId,
+                $destinationId
+            );
+            
+            if (!$stmt->execute()) {
+                throw new \Exception("Execute failed: " . $stmt->error);
+            }
+            
+            return $stmt->affected_rows > 0;
+            
+        } catch (\Exception $e) {
+            error_log("Error in editTravelPlanDates: " . $e->getMessage());
+            return false;
+        }
+    }
 
 
     public function deleteTravelPlan($travel_plan_id) {
@@ -415,7 +452,34 @@ class TravelPlan {
     }
     
     
-    
+    public function updateDestinationDates(array $items, int $editedIndex): array
+    {
+        if (!isset($items[$editedIndex])) {
+            throw new \Exception("Invalid edited index");
+        }
+
+        $editedItem = $items[$editedIndex];
+        $endDate = new \DateTime($editedItem['end_date']);
+
+        for ($i = $editedIndex + 1; $i < count($items); $i++) {
+            $items[$i]['start_date'] = $endDate->format('Y-m-d');
+            $nextEndDate = clone $endDate;
+            $totalHours = $items[$i]['travel_time_hours'] + $items[$i]['time_spent_hours'];
+            $nextEndDate->modify("+{$totalHours} hours");
+            $items[$i]['end_date'] = $nextEndDate->format('Y-m-d');
+            $endDate = $nextEndDate;
+        }
+
+        $totalTripTime = array_reduce($items, function($carry, $item) {
+            return $carry + $item['travel_time_hours'] + $item['time_spent_hours'];
+        }, 0);
+
+        return [
+            'items' => $items,
+            'total_trip_time_hours' => round($totalTripTime, 2)
+        ];
+    }
+
 
     public function editTravelPlan($travel_plan_id, $startDate, $endDate) {
         try {
@@ -546,7 +610,6 @@ class TravelPlan {
     
     public function migrateExistingPlans()
     {
-        // 1. Group existing plans by user and date ranges that likely belong together
         $sql = "SELECT user_id, 
                     DATE(MIN(check_in)) as start_date,
                     DATE(MAX(check_out)) as end_date,
@@ -565,26 +628,25 @@ class TravelPlan {
                 "Migrated Trip",
                 $group['start_date'],
                 $group['end_date'],
-                0 // We'll calculate this later
+                0 
             );
             
-            // 3. Update the existing plans with trip_id
             $planIds = explode(',', $group['plan_ids']);
             $sequence = 1;
             $totalHours = 0;
             
             foreach ($planIds as $planId) {
-                // Get the existing plan
+                
                 $plan = $this->db->query("SELECT * FROM travel_plans WHERE travel_plan_id = $planId")->fetch_assoc();
                 
-                // Calculate duration if not exists
+               
                 $hours = $plan['travel_time_hours'] ?? 0;
                 $hours += $plan['time_spent_hours'] ?? 
                         (strtotime($plan['check_out']) - strtotime($plan['check_in'])) / 3600;
                 
                 $totalHours += $hours;
                 
-                // Update with trip_id and sequence
+                
                 $this->db->query("UPDATE travel_plans 
                                 SET trip_id = $tripId, 
                                     sequence = $sequence,
@@ -593,7 +655,7 @@ class TravelPlan {
                 $sequence++;
             }
             
-            // Update trip with total duration
+          
             $this->db->query("UPDATE trips SET total_duration_hours = $totalHours WHERE trip_id = $tripId");
         }
     }

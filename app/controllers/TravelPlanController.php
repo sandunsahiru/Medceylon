@@ -501,19 +501,18 @@ class TravelPlanController extends BaseController
         ];
     }
 
-    // Remove any TravelDestination model references and use these methods instead:
-
+    
     public function calculateTravelDates()
     {
-        // Start with clean output buffer
+       
         if (ob_get_length()) ob_clean();
         
         try {
-            // Set proper headers first
+            
             header('Content-Type: application/json');
             header('Cache-Control: no-store, no-cache, must-revalidate');
             
-            // Get and validate input
+            
             $json = file_get_contents('php://input');
             if (empty($json)) {
                 throw new \Exception("No input data received");
@@ -530,12 +529,12 @@ class TravelPlanController extends BaseController
 
             error_log("Starting calculation for user: " . $this->session->getUserId());
             
-            // Get accommodation data
+            
             $accommodationData = $this->travelPlanModel->getUserActiveAccommodation(
                 $this->session->getUserId()
             );
             
-            // Set default accommodation values
+            
             $accommodation = [
                 'name' => 'Default Location',
                 'check_out' => date('Y-m-d', strtotime('+1 day')),
@@ -543,7 +542,7 @@ class TravelPlanController extends BaseController
                 'longitude' => 79.861244
             ];
             
-            // Override with actual data if available
+           
             if ($accommodationData) {
                 $accommodation = [
                     'name' => $accommodationData['name'],
@@ -553,7 +552,7 @@ class TravelPlanController extends BaseController
                 ];
             }
 
-            // Get destination details from model
+            
             $destinations = [];
             foreach ($data['destination_ids'] as $destinationId) {
                 $destination = $this->travelPlanModel->getDestinationById($destinationId);
@@ -563,10 +562,10 @@ class TravelPlanController extends BaseController
                 $destinations[] = $destination;
             }
 
-            // Calculate plan dates
+           
             $plan = $this->calculatePlanDates($accommodation, $destinations);
 
-            // Final JSON response
+            
             echo json_encode([
                 'success' => true,
                 'plan' => $plan,
@@ -576,7 +575,7 @@ class TravelPlanController extends BaseController
             exit();
 
         } catch (\Exception $e) {
-            // Ensure clean error response
+            
             if (ob_get_length()) ob_clean();
             header('Content-Type: application/json');
             http_response_code(400);
@@ -682,5 +681,52 @@ class TravelPlanController extends BaseController
         }
         exit();
     }
+
+    public function editDestinationDates()
+{
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $rawInput = file_get_contents('php://input');
+        $data = json_decode($rawInput, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception("Invalid JSON: " . json_last_error_msg());
+        }
+
+        if (!$this->session->verifyCSRFToken($data['csrf_token'] ?? '')) {
+            throw new \Exception("Invalid CSRF token");
+        }
+
+        if (empty($data['items']) || !is_array($data['items'])) {
+            throw new \Exception("No items provided");
+        }
+
+        if (!isset($data['edited_index'])) {
+            throw new \Exception("No edited index provided");
+        }
+
+        $items = $data['items'];
+        $editedIndex = (int)$data['edited_index'];
+
+        $plan = $this->yourModel->updateDestinationDates($items, $editedIndex);
+
+        echo json_encode([
+            'success' => true,
+            'plan' => $plan
+        ]);
+
+    } catch (\Exception $e) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
+    }
+    exit();
+}
+
+
 
 }

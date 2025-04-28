@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const selectedDestinations = [];
     
-    // Add destination to selection
+    
     document.querySelectorAll('.add-destination-button').forEach(btn => {
         btn.addEventListener('click', function() {
             const destId = this.getAttribute('data-id');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Calculate plan
+    
     calculateBtn.addEventListener('click', async function() {
         if (selectedDestinations.length === 0) {
             alert('Please select at least one destination');
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(modal);
     }
     
-    // Save plan
+    
     savePlanBtn?.addEventListener('click', async function () {
         try {
             console.log("Save button clicked - starting save process");
@@ -226,7 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                         data-min-start="${formatDate(dates.minStartDate)}"
                                         data-min-end="${formatDate(dates.minEndDate)}"
                                         data-min-hours="${item.time_spent_hours}"
-                                        data-travel-hours="${item.travel_time_hours}">Edit Dates
+                                        data-travel-hours="${item.travel_time_hours}">
+                                    Edit Dates
                                 </button>
                             </div>
                             <div class="plan-item-details">
@@ -243,68 +244,154 @@ document.addEventListener('DOMContentLoaded', () => {
         planContainer.innerHTML = planHTML;
         if (savePlanBtn) savePlanBtn.style.display = 'block';
         
-        // Now add event listeners to new edit buttons
+        document.getElementById('editPlanForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const formData = {
+                travel_id: document.getElementById('modalTravelID').value,
+                destination_id: document.getElementById('modalDestinationID').value,
+                check_in: document.getElementById('check_in').value,
+                check_out: document.getElementById('check_out').value,
+                travel_time: document.getElementById('travel_time').value,
+                min_hours: document.getElementById('min_hours').value,
+                csrf_token: document.getElementById('csrf_token').value
+            };
+        
+            try {
+                const response = await fetch('/Medceylon/travelplan/edit-destination-dates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': formData.csrf_token
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Changes saved successfully!');
+                    closeEditModal(); 
+                    if (typeof refreshTravelPlan === 'function') {
+                        refreshTravelPlan();
+                    }
+                } else {
+                    throw new Error(result.message || 'Failed to save changes');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error saving changes: ' + error.message);
+            }
+        });
+        
         const editButtons = document.querySelectorAll('.edit-dates-btn');
         editButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const travelData = {
-                    travel_id: button.getAttribute('data-travel-id'),
-                    destination_id: button.getAttribute('data-id'),
-                    destination_name: button.getAttribute('data-name'),
-                    start_date: button.getAttribute('data-min-start'),
-                    end_date: button.getAttribute('data-min-end'),
-                    min_hours: button.getAttribute('data-min-hours'),
-                    travel_time: button.getAttribute('data-travel-hours')
+                    id: this.getAttribute('data-id'),
+                    name: this.getAttribute('data-name'),
+                    minStartDate: this.getAttribute('data-min-start'),
+                    minEndDate: this.getAttribute('data-min-end'),
+                    minHours: this.getAttribute('data-min-hours'),
+                    travelTime: this.getAttribute('data-travel-hours')
                 };
                 openEditModal(travelData);
             });
         });
     }
     
-    // Modal elements
+  
     const modal = document.getElementById('editPlanModal');
     const closeModalButton = document.getElementById('closeEditModal');
 
-    // Function to open the modal
-    function openEditModal(travelData) {
-        // Check if travelData has the expected fields
-        if (!travelData) {
-            console.error("No travel data available");
-            return;
-        }
-    
-        console.log("Opening modal with data:", travelData);
-    
-        // Ensure travel_id is not null or undefined
-        if (travelData.travel_id) {
-            document.getElementById('modalTravelID').value = travelData.travel_id;
-        } else {
-            // Handle the case where travel_id is missing or null
-            console.warn("Travel ID is missing or null");
-        }
 
-        document.getElementById('modalTravelID').value = travelData.travel_id;
-        document.getElementById('modalDestinationID').value = travelData.destination_id;
-        document.getElementById('check_in').value = travelData.start_date;
-        document.getElementById('check_out').value = travelData.end_date;
-        document.getElementById('travel_time').value = travelData.travel_time;
-        document.getElementById('min_hours').value = travelData.min_hours;
+
+function openEditModal(travelData) {
+    if (!travelData) {
+        console.error("No travel data available");
+        return;
+    }
+
+    console.log("Opening modal with data:", travelData);
+
+    
+    document.getElementById('modalTravelID').value = travelData.travel_id || '';
+    document.getElementById('modalDestinationID').value = travelData.id;
+    document.getElementById('modalDestinationName').textContent = travelData.name;
+    document.getElementById('check_in').value = travelData.minStartDate;
+    document.getElementById('travel_time').value = travelData.travelTime;
+    document.getElementById('min_hours').value = travelData.minHours;
+    
+    
+    document.getElementById('editStartDate').value = travelData.minStartDate;
+    document.getElementById('travelTime').value = travelData.travelTime;
+    document.getElementById('editStayDuration').value = travelData.minHours;
+    document.getElementById('minStayDuration').textContent = travelData.minHours;
+    
+   
+    const endDate = new Date(travelData.minStartDate);
+    endDate.setHours(endDate.getHours() + parseInt(travelData.minHours));
+    document.getElementById('check_out').value = endDate.toISOString().split('T')[0];
+    document.getElementById('editEndDate').value = endDate.toISOString().split('T')[0];
+
+   
+    modal.classList.add('active');
+    modal.style.display = 'block';
+}
+
+
+function closeEditModal() {
+    modal.classList.remove('active');
+    modal.style.display = 'none';
+}
+
+
+closeModalButton.addEventListener('click', closeEditModal);
+window.addEventListener('click', (event) => {
+    if (event.target === modal) closeEditModal();
+});
+
+
+document.getElementById('editPlanForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        travel_id: document.getElementById('modalTravelID').value,
+        destination_id: document.getElementById('modalDestinationID').value,
+        check_in: document.getElementById('check_in').value,
+        check_out: document.getElementById('check_out').value,
+        travel_time: document.getElementById('travel_time').value,
+        min_hours: document.getElementById('min_hours').value,
+        csrf_token: document.getElementById('csrf_token').value
+    };
+
+    try {
+        const response = await fetch('/Medceylon/travelplan/edit-destination-dates', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': formData.csrf_token
+            },
+            body: JSON.stringify(formData)
+        });
         
-        document.getElementById('modalDestinationName').textContent = travelData.destination_name;
-        modal.classList.add('active');
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Changes saved successfully!');
+            closeEditModal();
+            // Refresh the plan display without full page reload
+            if (typeof displayTravelPlan === 'function' && typeof refreshPlanData === 'function') {
+                const newPlan = await refreshPlanData();
+                displayTravelPlan(newPlan.plan, newPlan.accommodation);
+            }
+        } else {
+            throw new Error(result.message || 'Failed to save changes');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving changes: ' + error.message);
     }
-
-    // Function to close the modal
-    function closeEditModal() {
-        modal.classList.remove('active');
-    }
-
-    // Attach event listener for the close button
-    closeModalButton.addEventListener('click', closeEditModal);
-
-    // Close modal when clicking outside
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) closeEditModal();
-    });
+});
 
 });

@@ -220,9 +220,10 @@ try {
     $router->get('/travelplan/travel-plans', 'TravelPlanController', 'TravelPlans', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/travel-preferences', 'TravelPlanController', 'travelPreferences', \App\Core\Middleware\AuthMiddleware::class);
 
-    $router->post('/travelplan/edit-plan', 'TravelPlanController', 'editDestination', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/edit-destination', 'TravelPlanController', 'editDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/delete-destination', 'TravelPlanController', 'deleteDestination', \App\Core\Middleware\AuthMiddleware::class);
     $router->get('/travelplan/provinces', 'TravelPlanController', 'provinces', \App\Core\Middleware\AuthMiddleware::class);
+    $router->post('/travelplan/edit-destination-dates', 'TravelPlanController', 'editDestinationDates', \App\Core\Middleware\AuthMiddleware::class);
 
     $router->post('/travelplan/calculate-travel-dates', 'TravelPlanController', 'calculateTravelDates', \App\Core\Middleware\AuthMiddleware::class);
     $router->post('/travelplan/save-plan', 'TravelPlanController', 'savePlan', \App\Core\Middleware\AuthMiddleware::class);
